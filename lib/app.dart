@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'core/greek_theme.dart';
 import 'core/notification_service.dart';
 import 'data/database.dart';
 import 'features/screens.dart';
+import 'ui/greek/greek.dart';
 
 final databaseProvider = Provider<AppDatabase>(
   (ref) => throw UnimplementedError(),
@@ -98,49 +98,18 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell shell;
   @override
   Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.transparent,
     body: shell,
-    bottomNavigationBar: DecoratedBox(
-      decoration: const BoxDecoration(
-        color: GreekPalette.ivory,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x24272821),
-            blurRadius: 12,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const GreekKeyBorder(height: 10),
-          NavigationBar(
-            selectedIndex: shell.currentIndex,
-            onDestinationSelected: (index) => shell.goBranch(
-              index,
-              initialLocation: index == shell.currentIndex,
-            ),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.fitness_center),
-                label: 'Latihan',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.history),
-                label: 'Riwayat',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.show_chart),
-                label: 'Progres',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.settings),
-                label: 'Pengaturan',
-              ),
-            ],
-          ),
-        ],
-      ),
+    bottomNavigationBar: GreekBottomNav(
+      currentIndex: shell.currentIndex,
+      onSelected: (index) =>
+          shell.goBranch(index, initialLocation: index == shell.currentIndex),
+      destinations: const [
+        GreekBottomDestination(icon: Icons.fitness_center, label: 'Latihan'),
+        GreekBottomDestination(icon: Icons.history, label: 'Riwayat'),
+        GreekBottomDestination(icon: Icons.show_chart, label: 'Progres'),
+        GreekBottomDestination(icon: Icons.settings, label: 'Pengaturan'),
+      ],
     ),
   );
 }
