@@ -780,17 +780,18 @@ class AppDatabase extends _$AppDatabase {
     },
   };
 
+  BackupRecordCounts validateBackup(String source) {
+    final backup = _decodeBackup(source);
+    return BackupRecordCounts(
+      exercises: backup.exercises.length,
+      routines: backup.routines.length,
+      workouts: backup.workouts.length,
+      workoutSets: backup.workoutSets.length,
+    );
+  }
+
   Future<void> importJson(String source) async {
-    final document = jsonDecode(source);
-    if (document is! Map<String, dynamic> ||
-        document['format'] != 'repr-backup' ||
-        document['schemaVersion'] != 1 ||
-        document['data'] is! Map<String, dynamic>) {
-      throw const FormatException('File bukan backup Repr versi 1 yang valid.');
-    }
-    final data = document['data'] as Map<String, dynamic>;
-    List<Map<String, dynamic>> rows(String key) =>
-        (data[key] as List? ?? const []).cast<Map<String, dynamic>>();
+    final backup = _decodeBackup(source);
     await transaction(() async {
       await delete(workoutSets).go();
       await delete(workoutExercises).go();
@@ -800,41 +801,170 @@ class AppDatabase extends _$AppDatabase {
       await delete(routines).go();
       await delete(exercises).go();
       await delete(appSettings).go();
-      for (final row in rows('exercises')) {
-        await into(exercises).insert(Exercise.fromJson(row).toCompanion(true));
+      for (final row in backup.exercises) {
+        await into(exercises).insert(row.toCompanion(true));
       }
-      for (final row in rows('routines')) {
-        await into(routines).insert(Routine.fromJson(row).toCompanion(true));
+      for (final row in backup.routines) {
+        await into(routines).insert(row.toCompanion(true));
       }
-      for (final row in rows('routineExercises')) {
-        await into(
-          routineExercises,
-        ).insert(RoutineExercise.fromJson(row).toCompanion(true));
+      for (final row in backup.routineExercises) {
+        await into(routineExercises).insert(row.toCompanion(true));
       }
-      for (final row in rows('routineSets')) {
-        await into(
-          routineSets,
-        ).insert(RoutineSet.fromJson(row).toCompanion(true));
+      for (final row in backup.routineSets) {
+        await into(routineSets).insert(row.toCompanion(true));
       }
-      for (final row in rows('workouts')) {
-        await into(workouts).insert(Workout.fromJson(row).toCompanion(true));
+      for (final row in backup.workouts) {
+        await into(workouts).insert(row.toCompanion(true));
       }
-      for (final row in rows('workoutExercises')) {
-        await into(
-          workoutExercises,
-        ).insert(WorkoutExercise.fromJson(row).toCompanion(true));
+      for (final row in backup.workoutExercises) {
+        await into(workoutExercises).insert(row.toCompanion(true));
       }
-      for (final row in rows('workoutSets')) {
-        await into(
-          workoutSets,
-        ).insert(WorkoutSet.fromJson(row).toCompanion(true));
+      for (final row in backup.workoutSets) {
+        await into(workoutSets).insert(row.toCompanion(true));
       }
-      for (final row in rows('settings')) {
-        await into(
-          appSettings,
-        ).insert(AppSetting.fromJson(row).toCompanion(true));
+      for (final row in backup.settings) {
+        await into(appSettings).insert(row.toCompanion(true));
       }
     });
+  }
+
+  _ValidatedBackup _decodeBackup(String source) {
+    Object? decoded;
+    try {
+      decoded = jsonDecode(source);
+    } on Object {
+      throw const FormatException('JSON backup tidak dapat dibaca.');
+    }
+    if (decoded is! Map<String, dynamic> ||
+        decoded['format'] != 'repr-backup' ||
+        decoded['schemaVersion'] != 1 ||
+        decoded['exportedAt'] is! String ||
+        DateTime.tryParse(decoded['exportedAt'] as String) == null ||
+        decoded['appVersion'] is! String ||
+        (decoded['appVersion'] as String).trim().isEmpty ||
+        decoded['data'] is! Map<String, dynamic>) {
+      throw const FormatException('File bukan backup Repr versi 1 yang valid.');
+    }
+    final data = decoded['data'] as Map<String, dynamic>;
+    const requiredKeys = {
+      'exercises',
+      'routines',
+      'routineExercises',
+      'routineSets',
+      'workouts',
+      'workoutExercises',
+      'workoutSets',
+      'settings',
+    };
+    if (!requiredKeys.every(data.containsKey)) {
+      throw const FormatException('Backup tidak memiliki seluruh data Repr.');
+    }
+
+    List<T> parseRows<T>(
+      String key,
+      T Function(Map<String, dynamic>) fromJson,
+    ) {
+      final value = data[key];
+      if (value is! List) {
+        throw FormatException('Data "$key" pada backup harus berupa daftar.');
+      }
+      try {
+        return [
+          for (final row in value)
+            if (row is Map<String, dynamic>)
+              fromJson(row)
+            else if (row is Map)
+              fromJson(Map<String, dynamic>.from(row))
+            else
+              throw FormatException('Record "$key" tidak valid.'),
+        ];
+      } on FormatException {
+        rethrow;
+      } on Object {
+        throw FormatException('Record "$key" tidak valid.');
+      }
+    }
+
+    final backup = _ValidatedBackup(
+      exercises: parseRows('exercises', Exercise.fromJson),
+      routines: parseRows('routines', Routine.fromJson),
+      routineExercises: parseRows('routineExercises', RoutineExercise.fromJson),
+      routineSets: parseRows('routineSets', RoutineSet.fromJson),
+      workouts: parseRows('workouts', Workout.fromJson),
+      workoutExercises: parseRows('workoutExercises', WorkoutExercise.fromJson),
+      workoutSets: parseRows('workoutSets', WorkoutSet.fromJson),
+      settings: parseRows('settings', AppSetting.fromJson),
+    );
+    _validateBackupRelations(backup);
+    return backup;
+  }
+
+  void _validateBackupRelations(_ValidatedBackup backup) {
+    const setTypes = {'working', 'warmUp', 'drop', 'failure'};
+    final exerciseIds = backup.exercises.map((row) => row.id).toSet();
+    final routineIds = backup.routines.map((row) => row.id).toSet();
+    final routineExerciseIds = backup.routineExercises
+        .map((row) => row.id)
+        .toSet();
+    final workoutIds = backup.workouts.map((row) => row.id).toSet();
+    final workoutExerciseIds = backup.workoutExercises
+        .map((row) => row.id)
+        .toSet();
+    bool unique<T>(Iterable<T> values) =>
+        values.toSet().length == values.length;
+    if (!unique(backup.exercises.map((row) => row.id)) ||
+        !unique(backup.routines.map((row) => row.id)) ||
+        !unique(backup.routineExercises.map((row) => row.id)) ||
+        !unique(backup.routineSets.map((row) => row.id)) ||
+        !unique(backup.workouts.map((row) => row.id)) ||
+        !unique(backup.workoutExercises.map((row) => row.id)) ||
+        !unique(backup.workoutSets.map((row) => row.id)) ||
+        !unique(backup.settings.map((row) => row.key))) {
+      throw const FormatException('Backup memiliki ID record duplikat.');
+    }
+    if (backup.routineExercises.any(
+          (row) =>
+              !routineIds.contains(row.routineId) ||
+              !exerciseIds.contains(row.exerciseId) ||
+              row.position < 0 ||
+              row.restSeconds < 0,
+        ) ||
+        backup.routineSets.any(
+          (row) =>
+              !routineExerciseIds.contains(row.routineExerciseId) ||
+              row.position < 0 ||
+              !setTypes.contains(row.type),
+        ) ||
+        backup.workouts.any(
+          (row) =>
+              !{'active', 'completed'}.contains(row.status) ||
+              (row.routineId != null && !routineIds.contains(row.routineId)),
+        ) ||
+        backup.workoutExercises.any(
+          (row) =>
+              !workoutIds.contains(row.workoutId) ||
+              !exerciseIds.contains(row.exerciseId) ||
+              row.position < 0 ||
+              row.restSeconds < 0,
+        ) ||
+        backup.workoutSets.any(
+          (row) =>
+              !workoutExerciseIds.contains(row.workoutExerciseId) ||
+              row.position < 0 ||
+              row.weightGrams < 0 ||
+              row.reps < 0 ||
+              (row.rpe != null && (row.rpe! < 1 || row.rpe! > 10)) ||
+              !setTypes.contains(row.type),
+        )) {
+      throw const FormatException(
+        'Relasi atau nilai record backup tidak valid.',
+      );
+    }
+    if (backup.workouts.where((row) => row.status == 'active').length > 1) {
+      throw const FormatException(
+        'Backup memiliki lebih dari satu workout aktif.',
+      );
+    }
   }
 }
 
@@ -872,4 +1002,40 @@ class RoutineExerciseTemplate {
   final String notes;
   final int restSeconds;
   final List<String> setTypes;
+}
+
+class BackupRecordCounts {
+  const BackupRecordCounts({
+    required this.exercises,
+    required this.routines,
+    required this.workouts,
+    required this.workoutSets,
+  });
+
+  final int exercises;
+  final int routines;
+  final int workouts;
+  final int workoutSets;
+}
+
+class _ValidatedBackup {
+  const _ValidatedBackup({
+    required this.exercises,
+    required this.routines,
+    required this.routineExercises,
+    required this.routineSets,
+    required this.workouts,
+    required this.workoutExercises,
+    required this.workoutSets,
+    required this.settings,
+  });
+
+  final List<Exercise> exercises;
+  final List<Routine> routines;
+  final List<RoutineExercise> routineExercises;
+  final List<RoutineSet> routineSets;
+  final List<Workout> workouts;
+  final List<WorkoutExercise> workoutExercises;
+  final List<WorkoutSet> workoutSets;
+  final List<AppSetting> settings;
 }

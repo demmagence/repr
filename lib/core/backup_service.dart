@@ -32,20 +32,12 @@ class BackupService {
     if (files.isEmpty) return null;
     final bytes = await files.first.readAsBytes();
     final source = utf8.decode(bytes);
-    final value = jsonDecode(source);
-    if (value is! Map<String, dynamic> ||
-        value['format'] != 'repr-backup' ||
-        value['schemaVersion'] != 1 ||
-        value['data'] is! Map<String, dynamic>) {
-      throw const FormatException('File bukan backup Repr versi 1 yang valid.');
-    }
-    final data = value['data'] as Map<String, dynamic>;
-    int count(String key) => (data[key] as List?)?.length ?? 0;
+    final counts = database.validateBackup(source);
     return BackupPreview(
       source,
-      count('routines'),
-      count('workouts'),
-      count('workoutSets'),
+      counts.routines,
+      counts.workouts,
+      counts.workoutSets,
     );
   }
 }

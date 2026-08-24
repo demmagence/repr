@@ -119,4 +119,52 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test(
+    'backup tidak lengkap atau versi baru ditolak tanpa mengubah data',
+    () async {
+      final exercise = (await database.watchExercises().first).first;
+      await database.createRoutine('Data aman', [exercise.id]);
+      final original = await database.exportDocument();
+
+      final incomplete =
+          jsonDecode(jsonEncode(original)) as Map<String, dynamic>;
+      (incomplete['data'] as Map<String, dynamic>).remove('exercises');
+      await expectLater(
+        database.importJson(jsonEncode(incomplete)),
+        throwsFormatException,
+      );
+      expect((await database.watchRoutines().first).single.name, 'Data aman');
+      expect(await database.watchExercises().first, hasLength(80));
+
+      final newer = jsonDecode(jsonEncode(original)) as Map<String, dynamic>;
+      newer['schemaVersion'] = 2;
+      await expectLater(
+        database.importJson(jsonEncode(newer)),
+        throwsFormatException,
+      );
+      expect((await database.watchRoutines().first).single.name, 'Data aman');
+    },
+  );
+
+  test('backup dengan relasi rusak ditolak sebelum restore', () async {
+    final exercise = (await database.watchExercises().first).first;
+    await database.createRoutine('Tetap ada', [exercise.id]);
+    final document =
+        jsonDecode(jsonEncode(await database.exportDocument()))
+            as Map<String, dynamic>;
+    final data = document['data'] as Map<String, dynamic>;
+    data['exercises'] = <Object>[];
+
+    expect(
+      () => database.validateBackup(jsonEncode(document)),
+      throwsFormatException,
+    );
+    await expectLater(
+      database.importJson(jsonEncode(document)),
+      throwsFormatException,
+    );
+    expect((await database.watchRoutines().first).single.name, 'Tetap ada');
+    expect(await database.watchExercises().first, hasLength(80));
+  });
 }
