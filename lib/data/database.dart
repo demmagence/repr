@@ -679,6 +679,104 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  Future<WorkoutCompletionSummary> finishWorkoutWithSummary(String id) async {
+    final workout = await (select(
+      workouts,
+    )..where((row) => row.id.equals(id))).getSingle();
+    final views = await getWorkoutExercises(id);
+    final records = <WorkoutPersonalRecord>[];
+    var completedSets = 0;
+    var volume = 0.0;
+    for (final view in views) {
+      final relevant = view.sets
+          .where((set) => set.completed && set.type != 'warmUp')
+          .toList();
+      completedSets += view.sets.where((set) => set.completed).length;
+      volume += relevant.fold<double>(
+        0,
+        (sum, set) => sum + set.weightGrams / 1000 * set.reps,
+      );
+      if (relevant.isEmpty) continue;
+      final previous = await _bestPerformanceBefore(view.exercise.id, id);
+      final maxWeightGrams = relevant
+          .map((set) => set.weightGrams)
+          .reduce((a, b) => a > b ? a : b);
+      if (maxWeightGrams > 0 && maxWeightGrams > previous.maxWeightGrams) {
+        records.add(
+          WorkoutPersonalRecord(
+            exerciseName: view.exercise.name,
+            kind: PersonalRecordKind.maxWeight,
+            valueKg: maxWeightGrams / 1000,
+          ),
+        );
+      }
+      final e1rms = relevant
+          .where(
+            (set) => set.weightGrams > 0 && set.reps >= 1 && set.reps <= 12,
+          )
+          .map((set) => set.weightGrams / 1000 * (1 + set.reps / 30));
+      if (e1rms.isNotEmpty) {
+        final best = e1rms.reduce((a, b) => a > b ? a : b);
+        if (best > previous.e1rm) {
+          records.add(
+            WorkoutPersonalRecord(
+              exerciseName: view.exercise.name,
+              kind: PersonalRecordKind.estimatedOneRepMax,
+              valueKg: best,
+            ),
+          );
+        }
+      }
+    }
+    final endedAt = DateTime.now();
+    await finishWorkout(id);
+    return WorkoutCompletionSummary(
+      duration: endedAt.difference(workout.startedAt),
+      completedSets: completedSets,
+      volumeKg: volume,
+      personalRecords: records,
+    );
+  }
+
+  Future<_BestPerformance> _bestPerformanceBefore(
+    String exerciseId,
+    String excludedWorkoutId,
+  ) async {
+    final exerciseRows =
+        await (select(workoutExercises).join([
+              innerJoin(
+                workouts,
+                workouts.id.equalsExp(workoutExercises.workoutId),
+              ),
+            ])..where(
+              workoutExercises.exerciseId.equals(exerciseId) &
+                  workouts.status.equals('completed') &
+                  workouts.id.equals(excludedWorkoutId).not(),
+            ))
+            .get();
+    var maxWeightGrams = 0;
+    var e1rm = 0.0;
+    for (final row in exerciseRows) {
+      final workoutExercise = row.readTable(workoutExercises);
+      final sets =
+          await (select(workoutSets)..where(
+                (set) =>
+                    set.workoutExerciseId.equals(workoutExercise.id) &
+                    set.completed.equals(true) &
+                    set.type.equals('warmUp').not(),
+              ))
+              .get();
+      for (final set in sets) {
+        if (set.weightGrams > maxWeightGrams) maxWeightGrams = set.weightGrams;
+        if (set.weightGrams > 0 && set.reps >= 1 && set.reps <= 12) {
+          final value = set.weightGrams / 1000 * (1 + set.reps / 30);
+          if (value > e1rm) e1rm = value;
+        }
+      }
+    }
+    return _BestPerformance(maxWeightGrams: maxWeightGrams, e1rm: e1rm);
+  }
+
   Future<void> discardWorkout(String id) => _deleteWorkout(id);
 
   Future<void> deleteWorkout(String id) => _deleteWorkout(id);
@@ -1037,6 +1135,41 @@ class BackupRecordCounts {
   final int routines;
   final int workouts;
   final int workoutSets;
+}
+
+enum PersonalRecordKind { maxWeight, estimatedOneRepMax }
+
+class WorkoutPersonalRecord {
+  const WorkoutPersonalRecord({
+    required this.exerciseName,
+    required this.kind,
+    required this.valueKg,
+  });
+
+  final String exerciseName;
+  final PersonalRecordKind kind;
+  final double valueKg;
+}
+
+class WorkoutCompletionSummary {
+  const WorkoutCompletionSummary({
+    required this.duration,
+    required this.completedSets,
+    required this.volumeKg,
+    required this.personalRecords,
+  });
+
+  final Duration duration;
+  final int completedSets;
+  final double volumeKg;
+  final List<WorkoutPersonalRecord> personalRecords;
+}
+
+class _BestPerformance {
+  const _BestPerformance({required this.maxWeightGrams, required this.e1rm});
+
+  final int maxWeightGrams;
+  final double e1rm;
 }
 
 class _ValidatedBackup {

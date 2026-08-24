@@ -147,6 +147,47 @@ void main() {
     expect(matches[currentView.sets[2].id]?.weightGrams, 30000);
   });
 
+  test('finish menghasilkan ringkasan dan hanya menandai PR baru', () async {
+    final exercise = (await database.watchExercises().first).first;
+    final firstWorkout = await database.startWorkout();
+    await database.addExerciseToWorkout(firstWorkout, exercise.id);
+    final firstSet = (await database.getWorkoutExercises(
+      firstWorkout,
+    )).single.sets.first;
+    await database.updateWorkoutSet(
+      id: firstSet.id,
+      weightGrams: 60000,
+      reps: 10,
+      completed: true,
+    );
+    final firstSummary = await database.finishWorkoutWithSummary(firstWorkout);
+    expect(firstSummary.completedSets, 1);
+    expect(firstSummary.volumeKg, 600);
+    expect(
+      firstSummary.personalRecords.map((record) => record.kind),
+      containsAll([
+        PersonalRecordKind.maxWeight,
+        PersonalRecordKind.estimatedOneRepMax,
+      ]),
+    );
+
+    final secondWorkout = await database.startWorkout();
+    await database.addExerciseToWorkout(secondWorkout, exercise.id);
+    final secondSet = (await database.getWorkoutExercises(
+      secondWorkout,
+    )).single.sets.first;
+    await database.updateWorkoutSet(
+      id: secondSet.id,
+      weightGrams: 50000,
+      reps: 8,
+      completed: true,
+    );
+    final secondSummary = await database.finishWorkoutWithSummary(
+      secondWorkout,
+    );
+    expect(secondSummary.personalRecords, isEmpty);
+  });
+
   test('backup JSON round-trip mengganti data secara transaksional', () async {
     final exercise = (await database.watchExercises().first).first;
     await database.createRoutine('Pull day', [exercise.id]);

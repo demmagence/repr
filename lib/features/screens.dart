@@ -724,12 +724,81 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       ),
     );
     if (confirmed != true) return;
-    await database.finishWorkout(widget.id);
+    final summary = await database.finishWorkoutWithSummary(widget.id);
     await ref.read(notificationProvider).cancelRestTimer();
-    if (mounted) {
-      showMessage(context, 'Workout tersimpan. Mantap!');
-      context.go('/riwayat');
-    }
+    if (!mounted) return;
+    await showGreekDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => GreekDialog(
+        title: 'Workout selesai',
+        actions: [
+          GreekButton(
+            label: 'Lihat riwayat',
+            expand: false,
+            compact: true,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: GreekStatPlaque(
+                    label: 'Durasi',
+                    value: '${summary.duration.inMinutes} mnt',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GreekStatPlaque(
+                    label: 'Set',
+                    value: '${summary.completedSets}',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GreekStatPlaque(
+                    label: 'Volume',
+                    value: '${summary.volumeKg.toStringAsFixed(0)} kg',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (summary.personalRecords.isEmpty)
+              const GreekEmptyState(
+                icon: Icons.emoji_events_outlined,
+                title: 'Belum ada PR baru',
+                body: 'Konsistensi hari ini tetap tercatat.',
+              )
+            else ...[
+              Text(
+                'PR BARU',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: GreekColors.terracotta,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              for (final record in summary.personalRecords)
+                GreekListRow(
+                  leading: const GreekMedallion(
+                    active: true,
+                    child: Icon(Icons.emoji_events, size: 18),
+                  ),
+                  title: record.exerciseName,
+                  subtitle:
+                      '${record.kind == PersonalRecordKind.maxWeight ? 'Max weight' : 'Estimated 1RM'} • ${record.valueKg.toStringAsFixed(1)} kg',
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+    if (mounted) context.go('/riwayat');
   }
 
   Future<void> _discard() async {
