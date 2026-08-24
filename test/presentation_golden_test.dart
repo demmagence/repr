@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:repr/app.dart';
@@ -95,6 +96,12 @@ void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     await initializeDateFormatting('id_ID');
+    await (FontLoader(
+      'NotoSans',
+    )..addFont(rootBundle.load('assets/fonts/NotoSans-Variable.ttf'))).load();
+    await (FontLoader(
+      'NotoSerif',
+    )..addFont(rootBundle.load('assets/fonts/NotoSerif-Variable.ttf'))).load();
   });
 
   Future<void> disposePage(WidgetTester tester, AppDatabase database) async {
@@ -200,6 +207,88 @@ void main() {
         find.byType(SettingsScreen),
         matchesGoldenFile('goldens/pengaturan-${entry.key}.png'),
       );
+      await disposePage(tester, database);
+    });
+
+    testWidgets('golden dialog dan action sheet ${entry.key}', (tester) async {
+      final database = AppDatabase(NativeDatabase.memory());
+      await _pumpPage(
+        tester,
+        database: database,
+        size: entry.value,
+        child: GreekPageShell(
+          body: Builder(
+            builder: (context) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GreekButton(
+                    key: const Key('show-dialog'),
+                    label: 'Buka dialog',
+                    onPressed: () => showGreekDialog<void>(
+                      context: context,
+                      builder: (context) => GreekDialog(
+                        title: 'Selesaikan workout?',
+                        actions: [
+                          GreekButton(
+                            label: 'Batal',
+                            expand: false,
+                            compact: true,
+                            variant: GreekActionVariant.secondary,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          GreekButton(
+                            label: 'Selesaikan',
+                            expand: false,
+                            compact: true,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                        child: const Text(
+                          'Set yang belum selesai tidak akan disimpan.',
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  GreekButton(
+                    key: const Key('show-sheet'),
+                    label: 'Buka pilihan',
+                    onPressed: () => showGreekActionSheet<int>(
+                      context: context,
+                      title: 'Jenis set',
+                      actions: const [
+                        GreekAction(value: 1, label: 'Working'),
+                        GreekAction(value: 2, label: 'Warm-up'),
+                        GreekAction(value: 3, label: 'Drop'),
+                        GreekAction(value: 4, label: 'Failure', danger: true),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('show-dialog')));
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(Overlay),
+        matchesGoldenFile('goldens/dialog-${entry.key}.png'),
+      );
+      await tester.tap(find.text('BATAL'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('show-sheet')));
+      await tester.pumpAndSettle();
+      await expectLater(
+        find.byType(Overlay),
+        matchesGoldenFile('goldens/action-sheet-${entry.key}.png'),
+      );
+      await tester.tap(find.text('Working'));
+      await tester.pumpAndSettle();
       await disposePage(tester, database);
     });
   }
