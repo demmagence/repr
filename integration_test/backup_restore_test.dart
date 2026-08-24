@@ -26,6 +26,11 @@ void main() {
         (await database.watchRoutines().first).single.name,
         'Integration routine',
       );
+      final restored = await database.exportDocument();
+      expect(
+        restored['data'],
+        (jsonDecode(source) as Map<String, dynamic>)['data'],
+      );
 
       final invalid = jsonDecode(source) as Map<String, dynamic>;
       invalid['schemaVersion'] = 999;
