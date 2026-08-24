@@ -617,6 +617,27 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
+  Future<Map<String, WorkoutSet>> previousSetMatches(
+    String exerciseId,
+    String workoutId,
+    String workoutExerciseId,
+  ) async {
+    final currentSets =
+        await (select(workoutSets)
+              ..where((set) => set.workoutExerciseId.equals(workoutExerciseId))
+              ..orderBy([(set) => OrderingTerm.asc(set.position)]))
+            .get();
+    final previous = await previousSets(exerciseId, workoutId);
+    final previousBySignature = {
+      for (final set in previous) (set.position, set.type): set,
+    };
+    return {
+      for (final set in currentSets)
+        if (previousBySignature[(set.position, set.type)] != null)
+          set.id: previousBySignature[(set.position, set.type)]!,
+    };
+  }
+
   Future<int> completedSetCount(String workoutId) async {
     final ids =
         await (select(workoutExercises)

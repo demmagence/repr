@@ -994,55 +994,47 @@ class WorkoutExerciseCard extends ConsumerWidget {
               ),
             ],
           ),
-          FutureBuilder<List<WorkoutSet>>(
+          FutureBuilder<Map<String, WorkoutSet>>(
             future: ref
                 .read(databaseProvider)
-                .previousSets(view.exercise.id, workoutId),
+                .previousSetMatches(view.exercise.id, workoutId, view.item.id),
             builder: (context, snapshot) {
-              final sets = snapshot.data ?? const <WorkoutSet>[];
-              if (sets.isEmpty)
-                return const Text(
-                  'Previous: belum ada data',
-                  style: TextStyle(color: GreekColors.inkMuted, fontSize: 12),
-                );
-              return Text(
-                'Previous: ${sets.map((s) => '${formatKg(s.weightGrams)} kg × ${s.reps}').join('  •  ')}',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: GreekColors.inkMuted,
-                  fontSize: 12,
-                ),
+              final matches = snapshot.data ?? const <String, WorkoutSet>{};
+              return Column(
+                children: [
+                  const SizedBox(height: 10),
+                  const Row(
+                    children: [
+                      SizedBox(
+                        width: 38,
+                        child: Text('Set', textAlign: TextAlign.center),
+                      ),
+                      SizedBox(
+                        width: 64,
+                        child: Text('kg', textAlign: TextAlign.center),
+                      ),
+                      SizedBox(
+                        width: 48,
+                        child: Text('Reps', textAlign: TextAlign.center),
+                      ),
+                      SizedBox(
+                        width: 48,
+                        child: Text('RPE', textAlign: TextAlign.center),
+                      ),
+                      Spacer(),
+                    ],
+                  ),
+                  ...view.sets.map(
+                    (set) => SetInputRow(
+                      set: set,
+                      previous: matches[set.id],
+                      onComplete: (value) =>
+                          _complete(context, ref, set, value),
+                    ),
+                  ),
+                ],
               );
             },
-          ),
-          const SizedBox(height: 10),
-          const Row(
-            children: [
-              SizedBox(
-                width: 38,
-                child: Text('Set', textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 64,
-                child: Text('kg', textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 48,
-                child: Text('Reps', textAlign: TextAlign.center),
-              ),
-              SizedBox(
-                width: 48,
-                child: Text('RPE', textAlign: TextAlign.center),
-              ),
-              Spacer(),
-            ],
-          ),
-          ...view.sets.map(
-            (set) => SetInputRow(
-              set: set,
-              onComplete: (value) => _complete(context, ref, set, value),
-            ),
           ),
           GreekButton(
             onPressed: () => ref.read(databaseProvider).addSet(view.item.id),
@@ -1059,159 +1051,182 @@ class WorkoutExerciseCard extends ConsumerWidget {
 }
 
 class SetInputRow extends ConsumerWidget {
-  const SetInputRow({required this.set, required this.onComplete, super.key});
+  const SetInputRow({
+    required this.set,
+    required this.onComplete,
+    this.previous,
+    super.key,
+  });
   final WorkoutSet set;
+  final WorkoutSet? previous;
   final ValueChanged<bool> onComplete;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final database = ref.read(databaseProvider);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 38,
-            height: 48,
-            child: Semantics(
-              button: true,
-              label: 'Jenis set',
-              child: InkWell(
-                onTap: set.completed
-                    ? null
-                    : () async {
-                        final value = await showGreekActionSheet<String>(
-                          context: context,
-                          title: 'Set ${set.position + 1}',
-                          actions: const [
-                            GreekAction(value: 'working', label: 'Working'),
-                            GreekAction(value: 'warmUp', label: 'Warm-up'),
-                            GreekAction(value: 'drop', label: 'Drop'),
-                            GreekAction(value: 'failure', label: 'Failure'),
-                            GreekAction(
-                              value: 'delete',
-                              label: 'Hapus set',
-                              danger: true,
-                            ),
-                          ],
-                        );
-                        if (value == 'delete') {
-                          await database.removeSet(set.id);
-                        } else if (value != null) {
-                          await database.updateWorkoutSet(
-                            id: set.id,
-                            type: value,
-                          );
-                        }
-                      },
-                child: Center(
-                  child: GreekMedallion(
-                    active: set.completed,
-                    child: Text(switch (set.type) {
-                      'warmUp' => 'W',
-                      'drop' => 'D',
-                      'failure' => 'F',
-                      _ => '${set.position + 1}',
-                    }),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          SizedBox(
-            width: 64,
-            child: _GreekCompactNumberField(
-              key: ValueKey('weight-${set.id}-${set.weightGrams}'),
-              initialValue: set.weightGrams == 0
-                  ? ''
-                  : formatKg(set.weightGrams),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
-              ],
-              enabled: !set.completed,
-              onChanged: (value) {
-                final grams = parseKg(value);
-                if (grams >= 0)
-                  database.updateWorkoutSet(id: set.id, weightGrams: grams);
-              },
-            ),
-          ),
-          const SizedBox(width: 4),
-          SizedBox(
-            width: 48,
-            child: _GreekCompactNumberField(
-              key: ValueKey('reps-${set.id}-${set.reps}'),
-              initialValue: set.reps == 0 ? '' : '${set.reps}',
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              enabled: !set.completed,
-              onChanged: (value) => database.updateWorkoutSet(
-                id: set.id,
-                reps: int.tryParse(value) ?? 0,
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          SizedBox(
-            width: 48,
-            child: _GreekCompactSelect(
-              value: set.rpe == null
-                  ? '—'
-                  : set.rpe!.toStringAsFixed(set.rpe! % 1 == 0 ? 0 : 1),
-              enabled: !set.completed,
-              onTap: () async {
-                final value = await showGreekActionSheet<double>(
-                  context: context,
-                  title: 'Pilih RPE',
-                  actions: List.generate(19, (i) {
-                    final value = 1 + i * .5;
-                    return GreekAction(
-                      value: value,
-                      label: value.toStringAsFixed(value % 1 == 0 ? 0 : 1),
-                    );
-                  }),
-                );
-                if (value != null) {
-                  await database.updateWorkoutSet(id: set.id, rpe: value);
-                }
-              },
-            ),
-          ),
-          const Spacer(),
-          SizedBox.square(
-            dimension: 48,
-            child: Semantics(
-              checked: set.completed,
-              button: true,
-              label: 'Selesaikan set ${set.position + 1}',
-              child: InkWell(
-                onTap: () => onComplete(!set.completed),
-                child: Container(
-                  margin: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: set.completed
-                        ? GreekColors.olive
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: set.completed
-                          ? GreekColors.olive
-                          : GreekColors.bronze,
+          Row(
+            children: [
+              SizedBox(
+                width: 38,
+                height: 48,
+                child: Semantics(
+                  button: true,
+                  label: 'Jenis set',
+                  child: InkWell(
+                    onTap: set.completed
+                        ? null
+                        : () async {
+                            final value = await showGreekActionSheet<String>(
+                              context: context,
+                              title: 'Set ${set.position + 1}',
+                              actions: const [
+                                GreekAction(value: 'working', label: 'Working'),
+                                GreekAction(value: 'warmUp', label: 'Warm-up'),
+                                GreekAction(value: 'drop', label: 'Drop'),
+                                GreekAction(value: 'failure', label: 'Failure'),
+                                GreekAction(
+                                  value: 'delete',
+                                  label: 'Hapus set',
+                                  danger: true,
+                                ),
+                              ],
+                            );
+                            if (value == 'delete') {
+                              await database.removeSet(set.id);
+                            } else if (value != null) {
+                              await database.updateWorkoutSet(
+                                id: set.id,
+                                type: value,
+                              );
+                            }
+                          },
+                    child: Center(
+                      child: GreekMedallion(
+                        active: set.completed,
+                        child: Text(switch (set.type) {
+                          'warmUp' => 'W',
+                          'drop' => 'D',
+                          'failure' => 'F',
+                          _ => '${set.position + 1}',
+                        }),
+                      ),
                     ),
                   ),
-                  child: set.completed
-                      ? const Icon(
-                          Icons.check,
-                          size: 17,
-                          color: GreekColors.white,
-                        )
-                      : null,
+                ),
+              ),
+              const SizedBox(width: 4),
+              SizedBox(
+                width: 64,
+                child: _GreekCompactNumberField(
+                  key: ValueKey('weight-${set.id}-${set.weightGrams}'),
+                  initialValue: set.weightGrams == 0
+                      ? ''
+                      : formatKg(set.weightGrams),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
+                  ],
+                  enabled: !set.completed,
+                  onChanged: (value) {
+                    final grams = parseKg(value);
+                    if (grams >= 0)
+                      database.updateWorkoutSet(id: set.id, weightGrams: grams);
+                  },
+                ),
+              ),
+              const SizedBox(width: 4),
+              SizedBox(
+                width: 48,
+                child: _GreekCompactNumberField(
+                  key: ValueKey('reps-${set.id}-${set.reps}'),
+                  initialValue: set.reps == 0 ? '' : '${set.reps}',
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  enabled: !set.completed,
+                  onChanged: (value) => database.updateWorkoutSet(
+                    id: set.id,
+                    reps: int.tryParse(value) ?? 0,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              SizedBox(
+                width: 48,
+                child: _GreekCompactSelect(
+                  value: set.rpe == null
+                      ? '—'
+                      : set.rpe!.toStringAsFixed(set.rpe! % 1 == 0 ? 0 : 1),
+                  enabled: !set.completed,
+                  onTap: () async {
+                    final value = await showGreekActionSheet<double>(
+                      context: context,
+                      title: 'Pilih RPE',
+                      actions: List.generate(19, (i) {
+                        final value = 1 + i * .5;
+                        return GreekAction(
+                          value: value,
+                          label: value.toStringAsFixed(value % 1 == 0 ? 0 : 1),
+                        );
+                      }),
+                    );
+                    if (value != null) {
+                      await database.updateWorkoutSet(id: set.id, rpe: value);
+                    }
+                  },
+                ),
+              ),
+              const Spacer(),
+              SizedBox.square(
+                dimension: 48,
+                child: Semantics(
+                  checked: set.completed,
+                  button: true,
+                  label: 'Selesaikan set ${set.position + 1}',
+                  child: InkWell(
+                    onTap: () => onComplete(!set.completed),
+                    child: Container(
+                      margin: const EdgeInsets.all(9),
+                      decoration: BoxDecoration(
+                        color: set.completed
+                            ? GreekColors.olive
+                            : Colors.transparent,
+                        border: Border.all(
+                          color: set.completed
+                              ? GreekColors.olive
+                              : GreekColors.bronze,
+                        ),
+                      ),
+                      child: set.completed
+                          ? const Icon(
+                              Icons.check,
+                              size: 17,
+                              color: GreekColors.white,
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (previous != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 42, bottom: 2),
+              child: Text(
+                'Sebelumnya: ${formatKg(previous!.weightGrams)} kg × ${previous!.reps}${previous!.rpe == null ? '' : ' • RPE ${previous!.rpe}'}',
+                style: const TextStyle(
+                  color: GreekColors.inkMuted,
+                  fontSize: 10,
+                  fontFeatures: tabularFigures,
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

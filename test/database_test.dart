@@ -107,6 +107,46 @@ void main() {
     );
   });
 
+  test('previous set dicocokkan berdasarkan posisi dan jenis', () async {
+    final exercise = (await database.watchExercises().first).first;
+    final previousWorkout = await database.startWorkout();
+    await database.addExerciseToWorkout(previousWorkout, exercise.id);
+    final previousView = (await database.getWorkoutExercises(
+      previousWorkout,
+    )).single;
+    const previousTypes = ['warmUp', 'working', 'failure'];
+    for (var index = 0; index < previousView.sets.length; index++) {
+      await database.updateWorkoutSet(
+        id: previousView.sets[index].id,
+        type: previousTypes[index],
+        weightGrams: (index + 1) * 10000,
+        reps: 10 - index,
+        completed: true,
+      );
+    }
+    await database.finishWorkout(previousWorkout);
+
+    final currentWorkout = await database.startWorkout();
+    await database.addExerciseToWorkout(currentWorkout, exercise.id);
+    final currentView = (await database.getWorkoutExercises(
+      currentWorkout,
+    )).single;
+    await database.updateWorkoutSet(
+      id: currentView.sets[2].id,
+      type: 'failure',
+    );
+    final matches = await database.previousSetMatches(
+      exercise.id,
+      currentWorkout,
+      currentView.item.id,
+    );
+
+    expect(matches.containsKey(currentView.sets[0].id), isFalse);
+    expect(matches[currentView.sets[1].id]?.weightGrams, 20000);
+    expect(matches[currentView.sets[2].id]?.type, 'failure');
+    expect(matches[currentView.sets[2].id]?.weightGrams, 30000);
+  });
+
   test('backup JSON round-trip mengganti data secara transaksional', () async {
     final exercise = (await database.watchExercises().first).first;
     await database.createRoutine('Pull day', [exercise.id]);
