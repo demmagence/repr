@@ -116,7 +116,7 @@ class AppDatabase extends _$AppDatabase {
   static const uuid = Uuid();
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -128,11 +128,19 @@ class AppDatabase extends _$AppDatabase {
       await customStatement(
         'CREATE INDEX workout_exercise_idx ON workout_exercises(exercise_id, workout_id)',
       );
+      await _createSingleActiveWorkoutIndex();
       await _seed();
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await _createSingleActiveWorkoutIndex();
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
+  );
+
+  Future<void> _createSingleActiveWorkoutIndex() => customStatement(
+    "CREATE UNIQUE INDEX one_active_workout_idx ON workouts(status) WHERE status = 'active'",
   );
 
   Future<void> _seed() async {

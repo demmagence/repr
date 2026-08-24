@@ -15,6 +15,66 @@ void main() {
     expect(await database.getDefaultRestSeconds(), 90);
   });
 
+  test('constraint database hanya mengizinkan satu workout aktif', () async {
+    final outcomes = await Future.wait(
+      List.generate(2, (_) async {
+        try {
+          return await database.startWorkout();
+        } catch (error) {
+          return error;
+        }
+      }),
+    );
+
+    expect(outcomes.whereType<String>(), hasLength(1));
+    expect(outcomes.where((value) => value is! String), hasLength(1));
+    await expectLater(
+      database.customStatement(
+        "INSERT INTO workouts (id, name, notes, status, started_at) VALUES ('forced-active', 'Paksa', '', 'active', 0)",
+      ),
+      throwsA(anything),
+    );
+    final activeCount = await database
+        .customSelect(
+          "SELECT COUNT(*) AS amount FROM workouts WHERE status = 'active'",
+        )
+        .getSingle();
+    expect(activeCount.read<int>('amount'), 1);
+  });
+
+  test('migrasi schema 1 menambahkan constraint workout aktif', () async {
+    await database.close();
+    final legacy = AppDatabase(
+      NativeDatabase.memory(
+        setup: (raw) {
+          raw.execute('''
+            CREATE TABLE workouts (
+              id TEXT NOT NULL PRIMARY KEY,
+              routine_id TEXT NULL,
+              name TEXT NOT NULL,
+              notes TEXT NOT NULL DEFAULT '',
+              status TEXT NOT NULL,
+              started_at INTEGER NOT NULL,
+              ended_at INTEGER NULL,
+              rest_ends_at INTEGER NULL
+            )
+          ''');
+          raw.userVersion = 1;
+        },
+      ),
+    );
+    addTearDown(legacy.close);
+
+    final index = await legacy
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'one_active_workout_idx'",
+        )
+        .getSingleOrNull();
+
+    expect(legacy.schemaVersion, 2);
+    expect(index?.read<String>('name'), 'one_active_workout_idx');
+  });
+
   test('routine dapat dimulai dan draft bertahan di database', () async {
     final exercise = (await database.watchExercises().first).first;
     final routine = await database.createRoutine('Push day', [exercise.id]);
