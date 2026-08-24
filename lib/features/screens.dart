@@ -51,9 +51,6 @@ class TrainingScreen extends ConsumerWidget {
         context: context,
         builder: (context) => GreekDialog(
           title: 'Workout masih aktif',
-          child: const Text(
-            'Lanjutkan workout yang sedang berjalan atau buang draftnya.',
-          ),
           actions: [
             GreekButton(
               label: 'Lanjutkan',
@@ -73,6 +70,9 @@ class TrainingScreen extends ConsumerWidget {
               onPressed: () => Navigator.pop(context, true),
             ),
           ],
+          child: const Text(
+            'Lanjutkan workout yang sedang berjalan atau buang draftnya.',
+          ),
         ),
       );
       if (discard != true) return;
@@ -193,6 +193,7 @@ class TrainingScreen extends ConsumerWidget {
                                             ),
                                           ],
                                         );
+                                    if (!context.mounted) return;
                                     if (value == 'start') {
                                       await _start(
                                         context,
@@ -329,6 +330,27 @@ Future<void> showRoutineCreator(BuildContext context, WidgetRef ref) async {
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setState) => GreekDialog(
         title: 'Routine baru',
+        actions: [
+          GreekButton(
+            label: 'Batal',
+            expand: false,
+            compact: true,
+            variant: GreekActionVariant.quiet,
+            onPressed: () => Navigator.pop(context),
+          ),
+          GreekButton(
+            label: 'Simpan',
+            expand: false,
+            compact: true,
+            onPressed: () async {
+              if (name.text.trim().isEmpty || selected.isEmpty) return;
+              await ref
+                  .read(databaseProvider)
+                  .createRoutine(name.text, selected.map((e) => e.id).toList());
+              if (context.mounted) Navigator.pop(context);
+            },
+          ),
+        ],
         child: SizedBox(
           width: 420,
           child: Column(
@@ -367,27 +389,6 @@ Future<void> showRoutineCreator(BuildContext context, WidgetRef ref) async {
             ],
           ),
         ),
-        actions: [
-          GreekButton(
-            label: 'Batal',
-            expand: false,
-            compact: true,
-            variant: GreekActionVariant.quiet,
-            onPressed: () => Navigator.pop(context),
-          ),
-          GreekButton(
-            label: 'Simpan',
-            expand: false,
-            compact: true,
-            onPressed: () async {
-              if (name.text.trim().isEmpty || selected.isEmpty) return;
-              await ref
-                  .read(databaseProvider)
-                  .createRoutine(name.text, selected.map((e) => e.id).toList());
-              if (context.mounted) Navigator.pop(context);
-            },
-          ),
-        ],
       ),
     ),
   );
@@ -425,9 +426,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       context: context,
       builder: (context) => GreekDialog(
         title: 'Selesaikan workout?',
-        child: Text(
-          '$count set selesai akan disimpan. Set yang belum selesai akan dibuang.',
-        ),
         actions: [
           GreekButton(
             label: 'Kembali',
@@ -443,6 +441,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
             onPressed: () => Navigator.pop(context, true),
           ),
         ],
+        child: Text(
+          '$count set selesai akan disimpan. Set yang belum selesai akan dibuang.',
+        ),
       ),
     );
     if (confirmed != true) return;
@@ -459,7 +460,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       context: context,
       builder: (context) => GreekDialog(
         title: 'Buang workout?',
-        child: const Text('Seluruh draft workout ini akan dihapus permanen.'),
         actions: [
           GreekButton(
             label: 'Batal',
@@ -476,6 +476,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
             onPressed: () => Navigator.pop(context, true),
           ),
         ],
+        child: const Text('Seluruh draft workout ini akan dihapus permanen.'),
       ),
     );
     if (confirmed != true) return;
@@ -1104,6 +1105,7 @@ class HistoryDetailScreen extends ConsumerWidget {
                     GreekAction(value: 'delete', label: 'Hapus', danger: true),
                   ],
                 );
+                if (!context.mounted) return;
                 if (value == 'repeat') return _repeat(context, ref, workout);
                 if (value == 'date') {
                   final date = await showDatePicker(
@@ -1132,9 +1134,6 @@ class HistoryDetailScreen extends ConsumerWidget {
                     context: context,
                     builder: (context) => GreekDialog(
                       title: 'Hapus workout?',
-                      child: const Text(
-                        'Riwayat dan statistik dari workout ini akan dihapus.',
-                      ),
                       actions: [
                         GreekButton(
                           label: 'Batal',
@@ -1151,6 +1150,9 @@ class HistoryDetailScreen extends ConsumerWidget {
                           onPressed: () => Navigator.pop(context, true),
                         ),
                       ],
+                      child: const Text(
+                        'Riwayat dan statistik dari workout ini akan dihapus.',
+                      ),
                     ),
                   );
                   if (yes == true) {
@@ -1527,9 +1529,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         context: context,
         builder: (context) => GreekDialog(
           title: 'Pulihkan backup?',
-          child: Text(
-            'Backup berisi ${preview.routines} routine, ${preview.workouts} workout, dan ${preview.sets} set. Semua data saat ini akan diganti.',
-          ),
           actions: [
             GreekButton(
               label: 'Batal',
@@ -1545,6 +1544,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onPressed: () => Navigator.pop(context, true),
             ),
           ],
+          child: Text(
+            'Backup berisi ${preview.routines} routine, ${preview.workouts} workout, dan ${preview.sets} set. Semua data saat ini akan diganti.',
+          ),
         ),
       );
       if (confirmed != true) return;
@@ -1564,6 +1566,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => GreekDialog(
           title: 'Exercise custom',
+          actions: [
+            GreekButton(
+              label: 'Batal',
+              expand: false,
+              compact: true,
+              variant: GreekActionVariant.quiet,
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            GreekButton(
+              label: 'Simpan',
+              expand: false,
+              compact: true,
+              onPressed: () =>
+                  Navigator.pop(context, name.text.trim().isNotEmpty),
+            ),
+          ],
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1607,22 +1625,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
-          actions: [
-            GreekButton(
-              label: 'Batal',
-              expand: false,
-              compact: true,
-              variant: GreekActionVariant.quiet,
-              onPressed: () => Navigator.pop(context, false),
-            ),
-            GreekButton(
-              label: 'Simpan',
-              expand: false,
-              compact: true,
-              onPressed: () =>
-                  Navigator.pop(context, name.text.trim().isNotEmpty),
-            ),
-          ],
         ),
       ),
     );
