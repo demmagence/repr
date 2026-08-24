@@ -49,6 +49,8 @@ dev_dependencies:
     sdk: flutter
   build_runner: ^2.10.4
   drift_dev: 2.34.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -67,6 +69,29 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/icon/repr_icon.png
+  fonts:
+    - family: NotoSerif
+      fonts:
+        - asset: assets/fonts/NotoSerif-Variable.ttf
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans-Variable.ttf
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  image_path_android: "assets/icon/repr_icon.png"
+  min_sdk_android: 23
+
+flutter_native_splash:
+  color: "#103F56"
+  image: "assets/icon/repr_icon.png"
+  android: true
+  ios: false
+  android_12:
+    color: "#103F56"
+    image: "assets/icon/repr_icon.png"
 
   # To add assets to your application, add an assets section, like this:
   # assets:
