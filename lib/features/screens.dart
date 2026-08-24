@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../app.dart';
 import '../core/backup_service.dart';
+import '../core/greek_theme.dart';
 import '../core/metrics.dart';
 import '../data/database.dart';
 
@@ -97,20 +98,21 @@ class TrainingScreen extends ConsumerWidget {
     final routines = ref.watch(routinesProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Repr', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text('Track every rep.', style: TextStyle(fontSize: 12)),
-          ],
+        toolbarHeight: 66,
+        title: const GreekBrandMark(),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(11),
+          child: GreekKeyBorder(height: 11),
         ),
       ),
       body: ListView(
         padding: pagePadding,
         children: [
+          const GreekMottoBanner(),
+          const SizedBox(height: 16),
           if (active != null) ...[
             Card(
-              color: Theme.of(context).colorScheme.primaryContainer,
+              color: const Color(0xFFE7DFCA),
               child: ListTile(
                 minTileHeight: 72,
                 leading: const Icon(Icons.timer_outlined),
@@ -170,6 +172,8 @@ class TrainingScreen extends ConsumerWidget {
                               child: ListTile(
                                 minTileHeight: 72,
                                 leading: CircleAvatar(
+                                  backgroundColor: GreekPalette.aegean,
+                                  foregroundColor: GreekPalette.ivory,
                                   child: Text(
                                     routine.name.substring(0, 1).toUpperCase(),
                                   ),
@@ -262,6 +266,10 @@ class _ExercisePickerState extends State<_ExercisePicker> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pilih exercise'),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(9),
+          child: GreekKeyBorder(height: 9),
+        ),
         actions: widget.multiple
             ? [
                 TextButton(
@@ -528,13 +536,17 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                   ],
                 ),
               ],
+              bottom: const PreferredSize(
+                preferredSize: Size.fromHeight(9),
+                child: GreekKeyBorder(height: 9),
+              ),
             ),
             body: Column(
               children: [
                 if (rest != null && !rest.isNegative)
                   Container(
                     width: double.infinity,
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    color: const Color(0xFFE7DFCA),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 10,
@@ -776,7 +788,7 @@ class SetInputRow extends ConsumerWidget {
               child: CircleAvatar(
                 radius: 15,
                 backgroundColor: set.completed
-                    ? const Color(0xFF2E7D32)
+                    ? GreekPalette.olive
                     : Theme.of(context).colorScheme.secondaryContainer,
                 foregroundColor: set.completed ? Colors.white : null,
                 child: Text(switch (set.type) {
@@ -876,6 +888,10 @@ class HistoryScreen extends ConsumerWidget {
         title: const Text(
           'Riwayat',
           style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(9),
+          child: GreekKeyBorder(height: 9),
         ),
       ),
       body: history.when(
@@ -1010,6 +1026,10 @@ class HistoryDetailScreen extends ConsumerWidget {
               ],
             ),
           ],
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(9),
+            child: GreekKeyBorder(height: 9),
+          ),
         ),
         body: FutureBuilder<List<WorkoutExerciseView>>(
           future: ref.read(databaseProvider).getWorkoutExercises(id),
@@ -1167,6 +1187,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         title: const Text(
           'Progres',
           style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(9),
+          child: GreekKeyBorder(height: 9),
         ),
       ),
       body: ListView(
@@ -1518,6 +1542,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: const Text(
           'Pengaturan',
           style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(9),
+          child: GreekKeyBorder(height: 9),
         ),
       ),
       body: !loaded
