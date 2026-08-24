@@ -1319,7 +1319,7 @@ class _GreekCompactNumberField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    height: 42,
+    height: 48,
     alignment: Alignment.center,
     decoration: BoxDecoration(
       color: enabled ? GreekColors.marbleLight : GreekColors.limestone,
@@ -1357,7 +1357,7 @@ class _GreekCompactSelect extends StatelessWidget {
     child: InkWell(
       onTap: enabled ? onTap : null,
       child: Container(
-        height: 42,
+        height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: enabled ? GreekColors.marbleLight : GreekColors.limestone,

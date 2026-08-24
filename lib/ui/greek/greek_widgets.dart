@@ -368,7 +368,7 @@ class GreekButton extends StatelessWidget {
             child: InkWell(
               onTap: onPressed,
               child: Container(
-                constraints: BoxConstraints(minHeight: compact ? 42 : 50),
+                constraints: const BoxConstraints(minHeight: 48),
                 decoration: BoxDecoration(border: Border.all(color: border)),
                 padding: EdgeInsets.symmetric(
                   horizontal: compact ? 12 : 18,
@@ -491,6 +491,7 @@ class GreekTextField extends StatelessWidget {
         ClipPath(
           clipper: const GreekCutCornerClipper(cut: 5),
           child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
             decoration: BoxDecoration(
               color: GreekColors.marbleLight,
               border: Border.all(
@@ -568,7 +569,7 @@ class GreekSegmentedControl<T> extends StatelessWidget {
       child: Row(
         children: [
           for (var i = 0; i < segments.length; i++) ...[
-            if (i > 0) const SizedBox(height: 38, child: VerticalDivider()),
+            if (i > 0) const SizedBox(height: 48, child: VerticalDivider()),
             Expanded(
               child: Semantics(
                 selected: segments[i].value == value,
@@ -577,6 +578,7 @@ class GreekSegmentedControl<T> extends StatelessWidget {
                   onTap: () => onChanged(segments[i].value),
                   child: AnimatedContainer(
                     duration: GreekMotion.resolve(context, GreekMotion.quick),
+                    constraints: const BoxConstraints(minHeight: 48),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 11,
@@ -617,29 +619,40 @@ class GreekToggle extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     toggled: value,
     button: true,
-    child: GestureDetector(
-      onTap: onChanged == null ? null : () => onChanged!(!value),
-      child: AnimatedContainer(
-        duration: GreekMotion.resolve(context, GreekMotion.quick),
-        width: 52,
-        height: 30,
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: value ? GreekColors.olive : GreekColors.limestone,
-          border: Border.all(
-            color: value ? GreekColors.olive : GreekColors.limestoneDark,
-          ),
-        ),
-        child: AnimatedAlign(
-          duration: GreekMotion.resolve(context, GreekMotion.quick),
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 22,
-            height: 22,
-            color: GreekColors.marbleLight,
-            child: value
-                ? const Icon(Icons.check, size: 15, color: GreekColors.olive)
-                : null,
+    child: SizedBox(
+      width: 56,
+      height: 48,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onChanged == null ? null : () => onChanged!(!value),
+        child: Center(
+          child: AnimatedContainer(
+            duration: GreekMotion.resolve(context, GreekMotion.quick),
+            width: 52,
+            height: 30,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: value ? GreekColors.olive : GreekColors.limestone,
+              border: Border.all(
+                color: value ? GreekColors.olive : GreekColors.limestoneDark,
+              ),
+            ),
+            child: AnimatedAlign(
+              duration: GreekMotion.resolve(context, GreekMotion.quick),
+              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                width: 22,
+                height: 22,
+                color: GreekColors.marbleLight,
+                child: value
+                    ? const Icon(
+                        Icons.check,
+                        size: 15,
+                        color: GreekColors.olive,
+                      )
+                    : null,
+              ),
+            ),
           ),
         ),
       ),

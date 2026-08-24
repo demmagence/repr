@@ -75,4 +75,54 @@ void main() {
     expect(find.text('Pilihan 19'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('kontrol interaktif memiliki target sentuh minimal 48 px', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildGreekTheme(),
+        home: Scaffold(
+          body: Column(
+            children: [
+              GreekButton(
+                key: const Key('compact-button'),
+                label: 'Aksi',
+                compact: true,
+                onPressed: () {},
+              ),
+              GreekTextField(
+                key: const Key('text-field'),
+                hint: 'Input',
+                onChanged: (_) {},
+              ),
+              GreekSegmentedControl<int>(
+                key: const Key('segments'),
+                segments: const [
+                  GreekSegment(value: 1, label: 'Satu'),
+                  GreekSegment(value: 2, label: 'Dua'),
+                ],
+                value: 1,
+                onChanged: (_) {},
+              ),
+              GreekToggle(
+                key: const Key('toggle'),
+                value: true,
+                onChanged: (_) {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    for (final key in const [
+      Key('compact-button'),
+      Key('text-field'),
+      Key('segments'),
+      Key('toggle'),
+    ]) {
+      expect(tester.getSize(find.byKey(key)).height, greaterThanOrEqualTo(48));
+    }
+  });
 }
