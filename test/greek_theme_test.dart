@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:repr/core/greek_theme.dart';
+import 'package:repr/ui/greek/greek.dart';
 
 void main() {
   test('tema memakai palet Yunani klasik', () {
     final theme = buildGreekTheme();
-    expect(theme.colorScheme.primary, GreekPalette.aegean);
-    expect(theme.colorScheme.secondary, GreekPalette.terracotta);
-    expect(theme.scaffoldBackgroundColor, GreekPalette.marble);
+    expect(theme.useMaterial3, isFalse);
+    expect(theme.colorScheme.primary, GreekColors.aegean);
+    expect(theme.colorScheme.secondary, GreekColors.terracotta);
+    expect(theme.scaffoldBackgroundColor, Colors.transparent);
   });
 
   testWidgets('ornamen dan motto aman pada layar Android sempit', (
@@ -21,10 +22,10 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildGreekTheme(),
-        home: const Scaffold(
+        home: const GreekPageShell(
           body: Column(
             children: [
-              GreekKeyBorder(),
+              GreekBrandMark(),
               Padding(padding: EdgeInsets.all(12), child: GreekMottoBanner()),
             ],
           ),
