@@ -188,6 +188,52 @@ void main() {
     expect(secondSummary.personalRecords, isEmpty);
   });
 
+  test('edit riwayat langsung menghitung ulang statistik', () async {
+    final exercise = (await database.watchExercises().first).first;
+    final workoutId = await database.startWorkout();
+    await database.addExerciseToWorkout(workoutId, exercise.id);
+    final view = (await database.getWorkoutExercises(workoutId)).single;
+    await database.updateWorkoutSet(
+      id: view.sets.first.id,
+      weightGrams: 50000,
+      reps: 10,
+      completed: true,
+    );
+    await database.finishWorkout(workoutId);
+
+    await database.updateHistoricalWorkout(
+      id: workoutId,
+      name: 'Riwayat diperbarui',
+      notes: 'Catatan baru',
+      exercises: [
+        HistoricalExerciseUpdate(
+          id: view.item.id,
+          notes: 'Catatan exercise baru',
+          sets: [
+            HistoricalSetUpdate(
+              id: view.sets.first.id,
+              weightGrams: 70000,
+              reps: 5,
+              type: 'working',
+              rpe: 8.5,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    final workout = await database.watchWorkout(workoutId).first;
+    expect(workout?.name, 'Riwayat diperbarui');
+    expect(workout?.notes, 'Catatan baru');
+    final editedView = (await database.getWorkoutExercises(workoutId)).single;
+    expect(editedView.item.notes, 'Catatan exercise baru');
+    expect(editedView.sets.single.weightGrams, 70000);
+    expect(editedView.sets.single.rpe, 8.5);
+    final point = (await database.progress(exercise.id, null)).single;
+    expect(point.maxWeight, 70);
+    expect(point.volume, 350);
+  });
+
   test('backup JSON round-trip mengganti data secara transaksional', () async {
     final exercise = (await database.watchExercises().first).first;
     await database.createRoutine('Pull day', [exercise.id]);

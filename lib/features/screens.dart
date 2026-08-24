@@ -1422,6 +1422,134 @@ class HistoryDetailScreen extends ConsumerWidget {
   const HistoryDetailScreen({required this.id, super.key});
   final String id;
 
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref,
+    Workout workout,
+  ) async {
+    final database = ref.read(databaseProvider);
+    final views = await database.getWorkoutExercises(workout.id);
+    if (!context.mounted) return;
+    final name = TextEditingController(text: workout.name);
+    final notes = TextEditingController(text: workout.notes);
+    final drafts = [
+      for (final view in views)
+        _HistoricalExerciseDraft(
+          id: view.item.id,
+          exerciseName: view.exercise.name,
+          notes: view.item.notes,
+          sets: [
+            for (final set in view.sets)
+              _HistoricalSetDraft(
+                id: set.id,
+                position: set.position,
+                weight: formatKg(set.weightGrams),
+                reps: '${set.reps}',
+                type: set.type,
+                rpe: set.rpe,
+              ),
+          ],
+        ),
+    ];
+    try {
+      await showGreekDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) => GreekDialog(
+            title: 'Edit riwayat',
+            actions: [
+              GreekButton(
+                label: 'Batal',
+                expand: false,
+                compact: true,
+                variant: GreekActionVariant.quiet,
+                onPressed: () => Navigator.pop(context),
+              ),
+              GreekButton(
+                label: 'Simpan',
+                expand: false,
+                compact: true,
+                onPressed: () async {
+                  final updates = <HistoricalExerciseUpdate>[];
+                  for (final exercise in drafts) {
+                    final sets = <HistoricalSetUpdate>[];
+                    for (final set in exercise.sets) {
+                      final weightGrams = parseKg(set.weight);
+                      final reps = int.tryParse(set.reps) ?? 0;
+                      if (weightGrams < 0 || reps < 1) {
+                        return showMessage(
+                          context,
+                          'Berat dan reps setiap set harus valid.',
+                        );
+                      }
+                      sets.add(
+                        HistoricalSetUpdate(
+                          id: set.id,
+                          weightGrams: weightGrams,
+                          reps: reps,
+                          type: set.type,
+                          rpe: set.rpe,
+                        ),
+                      );
+                    }
+                    updates.add(
+                      HistoricalExerciseUpdate(
+                        id: exercise.id,
+                        notes: exercise.notes,
+                        sets: sets,
+                      ),
+                    );
+                  }
+                  if (name.text.trim().isEmpty) {
+                    return showMessage(context, 'Nama workout wajib diisi.');
+                  }
+                  await database.updateHistoricalWorkout(
+                    id: workout.id,
+                    name: name.text,
+                    notes: notes.text,
+                    exercises: updates,
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                },
+              ),
+            ],
+            child: SizedBox(
+              width: 440,
+              height: MediaQuery.sizeOf(context).height * .72,
+              child: Column(
+                children: [
+                  GreekTextField(controller: name, label: 'Nama workout'),
+                  const SizedBox(height: 10),
+                  GreekTextField(
+                    controller: notes,
+                    label: 'Catatan workout',
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: drafts.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) =>
+                          _HistoricalExerciseEditor(
+                            draft: drafts[index],
+                            onChanged: () => setState(() {}),
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } finally {
+      name.dispose();
+      notes.dispose();
+    }
+  }
+
   Future<void> _repeat(
     BuildContext context,
     WidgetRef ref,
@@ -1462,12 +1590,14 @@ class HistoryDetailScreen extends ConsumerWidget {
                   title: workout.name,
                   actions: const [
                     GreekAction(value: 'repeat', label: 'Ulangi workout'),
+                    GreekAction(value: 'edit', label: 'Edit workout'),
                     GreekAction(value: 'date', label: 'Ubah tanggal'),
                     GreekAction(value: 'delete', label: 'Hapus', danger: true),
                   ],
                 );
                 if (!context.mounted) return;
                 if (value == 'repeat') return _repeat(context, ref, workout);
+                if (value == 'edit') return _edit(context, ref, workout);
                 if (value == 'date') {
                   final date = await showDatePicker(
                     context: context,
@@ -1629,6 +1759,164 @@ class HistoryDetailScreen extends ConsumerWidget {
         ),
       );
     },
+  );
+}
+
+class _HistoricalExerciseDraft {
+  _HistoricalExerciseDraft({
+    required this.id,
+    required this.exerciseName,
+    required this.notes,
+    required this.sets,
+  });
+
+  final String id;
+  final String exerciseName;
+  String notes;
+  final List<_HistoricalSetDraft> sets;
+}
+
+class _HistoricalSetDraft {
+  _HistoricalSetDraft({
+    required this.id,
+    required this.position,
+    required this.weight,
+    required this.reps,
+    required this.type,
+    required this.rpe,
+  });
+
+  final String id;
+  final int position;
+  String weight;
+  String reps;
+  String type;
+  double? rpe;
+}
+
+class _HistoricalExerciseEditor extends StatelessWidget {
+  const _HistoricalExerciseEditor({
+    required this.draft,
+    required this.onChanged,
+  });
+
+  final _HistoricalExerciseDraft draft;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) => GreekPanel(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          draft.exerciseName,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        GreekTextField(
+          key: ValueKey('history-notes-${draft.id}'),
+          initialValue: draft.notes,
+          label: 'Catatan exercise',
+          onChanged: (value) => draft.notes = value,
+        ),
+        const SizedBox(height: 8),
+        for (final set in draft.sets)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              children: [
+                SizedBox(width: 28, child: Text('${set.position + 1}.')),
+                Expanded(
+                  flex: 3,
+                  child: _GreekCompactNumberField(
+                    key: ValueKey('history-weight-${set.id}'),
+                    initialValue: set.weight,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
+                    ],
+                    enabled: true,
+                    onChanged: (value) => set.weight = value,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  flex: 2,
+                  child: _GreekCompactNumberField(
+                    key: ValueKey('history-reps-${set.id}'),
+                    initialValue: set.reps,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    enabled: true,
+                    onChanged: (value) => set.reps = value,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  flex: 3,
+                  child: _GreekCompactSelect(
+                    value: switch (set.type) {
+                      'warmUp' => 'Warm-up',
+                      'drop' => 'Drop',
+                      'failure' => 'Failure',
+                      _ => 'Working',
+                    },
+                    enabled: true,
+                    onTap: () async {
+                      final type = await showGreekActionSheet<String>(
+                        context: context,
+                        title: 'Jenis set ${set.position + 1}',
+                        actions: const [
+                          GreekAction(value: 'working', label: 'Working'),
+                          GreekAction(value: 'warmUp', label: 'Warm-up'),
+                          GreekAction(value: 'drop', label: 'Drop'),
+                          GreekAction(value: 'failure', label: 'Failure'),
+                        ],
+                      );
+                      if (type != null) {
+                        set.type = type;
+                        onChanged();
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  flex: 2,
+                  child: _GreekCompactSelect(
+                    value: set.rpe == null
+                        ? 'RPE'
+                        : set.rpe!.toStringAsFixed(set.rpe! % 1 == 0 ? 0 : 1),
+                    enabled: true,
+                    onTap: () async {
+                      final rpe = await showGreekActionSheet<double?>(
+                        context: context,
+                        title: 'RPE set ${set.position + 1}',
+                        actions: [
+                          const GreekAction(value: null, label: 'Tanpa RPE'),
+                          ...List.generate(19, (index) {
+                            final value = 1 + index * .5;
+                            return GreekAction(
+                              value: value,
+                              label: value.toStringAsFixed(
+                                value % 1 == 0 ? 0 : 1,
+                              ),
+                            );
+                          }),
+                        ],
+                      );
+                      set.rpe = rpe;
+                      onChanged();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    ),
   );
 }
 

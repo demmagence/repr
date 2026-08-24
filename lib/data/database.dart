@@ -794,6 +794,57 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  Future<void> updateHistoricalWorkout({
+    required String id,
+    required String name,
+    required String notes,
+    required List<HistoricalExerciseUpdate> exercises,
+  }) async {
+    const allowedTypes = {'working', 'warmUp', 'drop', 'failure'};
+    if (name.trim().isEmpty) throw ArgumentError('Nama workout wajib diisi.');
+    for (final exercise in exercises) {
+      for (final set in exercise.sets) {
+        if (set.weightGrams < 0 ||
+            set.reps < 1 ||
+            (set.rpe != null && (set.rpe! < 1 || set.rpe! > 10)) ||
+            !allowedTypes.contains(set.type)) {
+          throw ArgumentError('Nilai set riwayat tidak valid.');
+        }
+      }
+    }
+    final workout = await (select(
+      workouts,
+    )..where((row) => row.id.equals(id))).getSingle();
+    if (workout.status != 'completed') {
+      throw StateError('Hanya workout selesai yang dapat diedit.');
+    }
+    await transaction(() async {
+      await (update(workouts)..where((row) => row.id.equals(id))).write(
+        WorkoutsCompanion(name: Value(name.trim()), notes: Value(notes.trim())),
+      );
+      for (final exercise in exercises) {
+        await (update(
+          workoutExercises,
+        )..where((row) => row.id.equals(exercise.id))).write(
+          WorkoutExercisesCompanion(notes: Value(exercise.notes.trim())),
+        );
+        for (final set in exercise.sets) {
+          await (update(
+            workoutSets,
+          )..where((row) => row.id.equals(set.id))).write(
+            WorkoutSetsCompanion(
+              weightGrams: Value(set.weightGrams),
+              reps: Value(set.reps),
+              rpe: Value(set.rpe),
+              type: Value(set.type),
+              completed: const Value(true),
+            ),
+          );
+        }
+      }
+    });
+  }
+
   Future<void> _deleteWorkout(String id) async {
     await transaction(() async {
       final exerciseRows = await (select(
@@ -1163,6 +1214,34 @@ class WorkoutCompletionSummary {
   final int completedSets;
   final double volumeKg;
   final List<WorkoutPersonalRecord> personalRecords;
+}
+
+class HistoricalExerciseUpdate {
+  const HistoricalExerciseUpdate({
+    required this.id,
+    required this.notes,
+    required this.sets,
+  });
+
+  final String id;
+  final String notes;
+  final List<HistoricalSetUpdate> sets;
+}
+
+class HistoricalSetUpdate {
+  const HistoricalSetUpdate({
+    required this.id,
+    required this.weightGrams,
+    required this.reps,
+    required this.type,
+    this.rpe,
+  });
+
+  final String id;
+  final int weightGrams;
+  final int reps;
+  final String type;
+  final double? rpe;
 }
 
 class _BestPerformance {
