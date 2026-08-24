@@ -26,6 +26,67 @@ void main() {
     expect(exercises.first.sets, hasLength(3));
   });
 
+  test('routine menyimpan dan memperbarui konfigurasi lengkap', () async {
+    final library = await database.watchExercises().first;
+    final id = await database.createRoutineTemplate(
+      name: 'Upper',
+      notes: 'Fokus teknik',
+      exercises: [
+        RoutineExerciseTemplate(
+          exerciseId: library[0].id,
+          notes: 'Tempo pelan',
+          restSeconds: 120,
+          setTypes: const ['warmUp', 'working', 'failure'],
+        ),
+        RoutineExerciseTemplate(
+          exerciseId: library[1].id,
+          restSeconds: 60,
+          setTypes: const ['working', 'drop'],
+        ),
+      ],
+    );
+
+    var template = await database.getRoutineTemplate(id);
+    expect(template.routine.notes, 'Fokus teknik');
+    expect(template.exercises.map((item) => item.exerciseId), [
+      library[0].id,
+      library[1].id,
+    ]);
+    expect(template.exercises.first.restSeconds, 120);
+    expect(template.exercises.first.notes, 'Tempo pelan');
+    expect(template.exercises.first.setTypes, ['warmUp', 'working', 'failure']);
+
+    await database.updateRoutineTemplate(
+      id: id,
+      name: 'Upper baru',
+      notes: 'Urutan dibalik',
+      exercises: [
+        RoutineExerciseTemplate(
+          exerciseId: library[1].id,
+          restSeconds: 180,
+          setTypes: const ['drop', 'working', 'warmUp'],
+        ),
+      ],
+    );
+    template = await database.getRoutineTemplate(id);
+    expect(template.routine.name, 'Upper baru');
+    expect(template.exercises, hasLength(1));
+    expect(template.exercises.single.exerciseId, library[1].id);
+    expect(template.exercises.single.restSeconds, 180);
+    expect(template.exercises.single.setTypes, ['drop', 'working', 'warmUp']);
+
+    final workoutId = await database.startWorkout(routineId: id);
+    final workoutExercise = (await database.getWorkoutExercises(
+      workoutId,
+    )).single;
+    expect(workoutExercise.item.restSeconds, 180);
+    expect(workoutExercise.sets.map((set) => set.type), [
+      'drop',
+      'working',
+      'warmUp',
+    ]);
+  });
+
   test('finish memerlukan set selesai dan membuang set kosong', () async {
     final exercise = (await database.watchExercises().first).first;
     final workoutId = await database.startWorkout();

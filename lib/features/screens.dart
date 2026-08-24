@@ -130,7 +130,7 @@ class TrainingScreen extends ConsumerWidget {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               GreekButton(
-                onPressed: () => showRoutineCreator(context, ref),
+                onPressed: () => showRoutineEditor(context, ref),
                 icon: Icons.add,
                 label: 'Buat',
                 expand: false,
@@ -169,7 +169,7 @@ class TrainingScreen extends ConsumerWidget {
                                 ),
                                 title: routine.name,
                                 subtitle: routine.notes.isEmpty
-                                    ? '3 set per latihan'
+                                    ? 'Template latihan tersimpan'
                                     : routine.notes,
                                 onTap: () =>
                                     _start(context, ref, routineId: routine.id),
@@ -187,6 +187,10 @@ class TrainingScreen extends ConsumerWidget {
                                               label: 'Mulai',
                                             ),
                                             GreekAction(
+                                              value: 'edit',
+                                              label: 'Edit routine',
+                                            ),
+                                            GreekAction(
                                               value: 'delete',
                                               label: 'Hapus',
                                               danger: true,
@@ -199,6 +203,12 @@ class TrainingScreen extends ConsumerWidget {
                                         context,
                                         ref,
                                         routineId: routine.id,
+                                      );
+                                    } else if (value == 'edit') {
+                                      await showRoutineEditor(
+                                        context,
+                                        ref,
+                                        routine: routine,
                                       );
                                     } else if (value == 'delete') {
                                       await ref
@@ -322,74 +332,341 @@ class _ExercisePickerState extends State<_ExercisePicker> {
   }
 }
 
-Future<void> showRoutineCreator(BuildContext context, WidgetRef ref) async {
-  final name = TextEditingController();
-  var selected = <Exercise>[];
-  await showGreekDialog<void>(
-    context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (context, setState) => GreekDialog(
-        title: 'Routine baru',
-        actions: [
-          GreekButton(
-            label: 'Batal',
-            expand: false,
-            compact: true,
-            variant: GreekActionVariant.quiet,
-            onPressed: () => Navigator.pop(context),
-          ),
-          GreekButton(
-            label: 'Simpan',
-            expand: false,
-            compact: true,
-            onPressed: () async {
-              if (name.text.trim().isEmpty || selected.isEmpty) return;
-              await ref
-                  .read(databaseProvider)
-                  .createRoutine(name.text, selected.map((e) => e.id).toList());
-              if (context.mounted) Navigator.pop(context);
-            },
-          ),
-        ],
-        child: SizedBox(
-          width: 420,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GreekTextField(
-                controller: name,
-                label: 'Nama routine',
-                hint: 'Contoh: Push Day',
-              ),
-              const SizedBox(height: 12),
-              GreekButton(
-                onPressed: () async {
-                  final result = await showExercisePicker(
-                    dialogContext,
-                    ref,
-                    multiple: true,
+Future<void> showRoutineEditor(
+  BuildContext context,
+  WidgetRef ref, {
+  Routine? routine,
+}) async {
+  final database = ref.read(databaseProvider);
+  final allExercises = await database.getAllExercises();
+  if (!context.mounted) return;
+  final byId = {for (final exercise in allExercises) exercise.id: exercise};
+  RoutineTemplate? template;
+  if (routine != null) template = await database.getRoutineTemplate(routine.id);
+  if (!context.mounted) return;
+
+  final name = TextEditingController(text: template?.routine.name ?? '');
+  final notes = TextEditingController(text: template?.routine.notes ?? '');
+  final items = <_RoutineExerciseDraft>[
+    for (final item in template?.exercises ?? const <RoutineExerciseTemplate>[])
+      if (byId[item.exerciseId] != null)
+        _RoutineExerciseDraft(
+          exercise: byId[item.exerciseId]!,
+          notes: item.notes,
+          restSeconds: item.restSeconds,
+          setTypes: [...item.setTypes],
+        ),
+  ];
+
+  try {
+    await showGreekDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => GreekDialog(
+          title: routine == null ? 'Routine baru' : 'Edit routine',
+          actions: [
+            GreekButton(
+              label: 'Batal',
+              expand: false,
+              compact: true,
+              variant: GreekActionVariant.quiet,
+              onPressed: () => Navigator.pop(context),
+            ),
+            GreekButton(
+              label: 'Simpan',
+              expand: false,
+              compact: true,
+              onPressed: () async {
+                if (name.text.trim().isEmpty || items.isEmpty) {
+                  return showMessage(
+                    context,
+                    'Isi nama dan tambahkan minimal satu exercise.',
                   );
-                  if (result != null) setState(() => selected = result);
-                },
-                icon: Icons.add,
-                variant: GreekActionVariant.secondary,
-                label: selected.isEmpty
-                    ? 'Pilih exercise'
-                    : '${selected.length} exercise dipilih',
-              ),
-              if (selected.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    selected.map((e) => e.name).join(', '),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                }
+                final exerciseTemplates = [
+                  for (final item in items)
+                    RoutineExerciseTemplate(
+                      exerciseId: item.exercise.id,
+                      notes: item.notes,
+                      restSeconds: item.restSeconds,
+                      setTypes: [...item.setTypes],
+                    ),
+                ];
+                if (routine == null) {
+                  await database.createRoutineTemplate(
+                    name: name.text,
+                    notes: notes.text,
+                    exercises: exerciseTemplates,
+                  );
+                } else {
+                  await database.updateRoutineTemplate(
+                    id: routine.id,
+                    name: name.text,
+                    notes: notes.text,
+                    exercises: exerciseTemplates,
+                  );
+                }
+                if (context.mounted) Navigator.pop(context);
+              },
+            ),
+          ],
+          child: SizedBox(
+            width: 440,
+            height: MediaQuery.sizeOf(context).height * .68,
+            child: Column(
+              children: [
+                GreekTextField(
+                  controller: name,
+                  label: 'Nama routine',
+                  hint: 'Contoh: Push Day',
                 ),
-            ],
+                const SizedBox(height: 10),
+                GreekTextField(
+                  controller: notes,
+                  label: 'Catatan routine',
+                  hint: 'Opsional',
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 10),
+                GreekButton(
+                  onPressed: () async {
+                    final selected = await showExercisePicker(
+                      dialogContext,
+                      ref,
+                      multiple: true,
+                    );
+                    if (selected == null || !context.mounted) return;
+                    setState(() {
+                      final existing = items
+                          .map((item) => item.exercise.id)
+                          .toSet();
+                      for (final exercise in selected) {
+                        if (existing.add(exercise.id)) {
+                          items.add(_RoutineExerciseDraft(exercise: exercise));
+                        }
+                      }
+                    });
+                  },
+                  icon: Icons.add,
+                  variant: GreekActionVariant.secondary,
+                  label: 'Tambah exercise',
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: items.isEmpty
+                      ? const GreekEmptyState(
+                          icon: Icons.fitness_center,
+                          title: 'Belum ada exercise',
+                          body: 'Tambahkan gerakan untuk menyusun routine.',
+                        )
+                      : ReorderableListView.builder(
+                          buildDefaultDragHandles: false,
+                          itemCount: items.length,
+                          onReorderItem: (oldIndex, newIndex) {
+                            setState(() {
+                              final item = items.removeAt(oldIndex);
+                              items.insert(newIndex, item);
+                            });
+                          },
+                          itemBuilder: (context, index) => Padding(
+                            key: ValueKey(items[index].exercise.id),
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _RoutineExerciseEditor(
+                              index: index,
+                              item: items[index],
+                              onChanged: () => setState(() {}),
+                              onDelete: () =>
+                                  setState(() => items.removeAt(index)),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  } finally {
+    name.dispose();
+    notes.dispose();
+  }
+}
+
+class _RoutineExerciseDraft {
+  _RoutineExerciseDraft({
+    required this.exercise,
+    this.notes = '',
+    this.restSeconds = 90,
+    List<String>? setTypes,
+  }) : setTypes = setTypes ?? ['working', 'working', 'working'];
+
+  final Exercise exercise;
+  String notes;
+  int restSeconds;
+  final List<String> setTypes;
+}
+
+class _RoutineExerciseEditor extends StatelessWidget {
+  const _RoutineExerciseEditor({
+    required this.index,
+    required this.item,
+    required this.onChanged,
+    required this.onDelete,
+  });
+
+  final int index;
+  final _RoutineExerciseDraft item;
+  final VoidCallback onChanged;
+  final VoidCallback onDelete;
+
+  static const setLabels = {
+    'working': 'Working',
+    'warmUp': 'Warm-up',
+    'drop': 'Drop',
+    'failure': 'Failure',
+  };
+
+  @override
+  Widget build(BuildContext context) => GreekPanel(
+    padding: const EdgeInsets.all(10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            ReorderableDragStartListener(
+              index: index,
+              child: const SizedBox.square(
+                dimension: 48,
+                child: Icon(Icons.drag_handle),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                item.exercise.name,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            GreekButton(
+              label: '${item.restSeconds} dtk',
+              expand: false,
+              compact: true,
+              variant: GreekActionVariant.quiet,
+              onPressed: () async {
+                final value = await showGreekActionSheet<int>(
+                  context: context,
+                  title: 'Rest timer ${item.exercise.name}',
+                  actions: const [30, 60, 90, 120, 180, 300]
+                      .map(
+                        (seconds) => GreekAction(
+                          value: seconds,
+                          label: '$seconds detik',
+                        ),
+                      )
+                      .toList(),
+                );
+                if (value != null) {
+                  item.restSeconds = value;
+                  onChanged();
+                }
+              },
+            ),
+            GreekIconButton(
+              icon: Icons.delete_outline,
+              semanticLabel: 'Hapus ${item.exercise.name}',
+              danger: true,
+              onPressed: onDelete,
+            ),
+          ],
+        ),
+        GreekTextField(
+          key: ValueKey('notes-${item.exercise.id}'),
+          initialValue: item.notes,
+          label: 'Catatan exercise',
+          hint: 'Opsional',
+          onChanged: (value) => item.notes = value,
+        ),
+        const SizedBox(height: 8),
+        ...List.generate(item.setTypes.length, (setIndex) {
+          final type = item.setTypes[setIndex];
+          return Row(
+            children: [
+              SizedBox(width: 34, child: Text('${setIndex + 1}.')),
+              Expanded(
+                child: GreekButton(
+                  label: setLabels[type]!,
+                  compact: true,
+                  variant: GreekActionVariant.secondary,
+                  onPressed: () async {
+                    final selected = await showGreekActionSheet<String>(
+                      context: context,
+                      title: 'Jenis set ${setIndex + 1}',
+                      actions: setLabels.entries
+                          .map(
+                            (entry) => GreekAction(
+                              value: entry.key,
+                              label: entry.value,
+                            ),
+                          )
+                          .toList(),
+                    );
+                    if (selected != null) {
+                      item.setTypes[setIndex] = selected;
+                      onChanged();
+                    }
+                  },
+                ),
+              ),
+              GreekIconButton(
+                icon: Icons.arrow_upward,
+                semanticLabel: 'Naikkan set ${setIndex + 1}',
+                onPressed: setIndex == 0
+                    ? null
+                    : () {
+                        final value = item.setTypes.removeAt(setIndex);
+                        item.setTypes.insert(setIndex - 1, value);
+                        onChanged();
+                      },
+              ),
+              GreekIconButton(
+                icon: Icons.arrow_downward,
+                semanticLabel: 'Turunkan set ${setIndex + 1}',
+                onPressed: setIndex == item.setTypes.length - 1
+                    ? null
+                    : () {
+                        final value = item.setTypes.removeAt(setIndex);
+                        item.setTypes.insert(setIndex + 1, value);
+                        onChanged();
+                      },
+              ),
+              GreekIconButton(
+                icon: Icons.remove_circle_outline,
+                semanticLabel: 'Hapus set ${setIndex + 1}',
+                danger: true,
+                onPressed: item.setTypes.length == 1
+                    ? null
+                    : () {
+                        item.setTypes.removeAt(setIndex);
+                        onChanged();
+                      },
+              ),
+            ],
+          );
+        }),
+        GreekButton(
+          label: 'Tambah set',
+          icon: Icons.add,
+          expand: false,
+          compact: true,
+          variant: GreekActionVariant.quiet,
+          onPressed: () {
+            item.setTypes.add('working');
+            onChanged();
+          },
+        ),
+      ],
     ),
   );
 }

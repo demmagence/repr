@@ -172,6 +172,9 @@ class AppDatabase extends _$AppDatabase {
     return query.watch();
   }
 
+  Future<List<Exercise>> getAllExercises() =>
+      (select(exercises)..orderBy([(e) => OrderingTerm.asc(e.name)])).get();
+
   Stream<List<Routine>> watchRoutines() => (select(
     routines,
   )..orderBy([(r) => OrderingTerm.asc(r.position)])).watch();
@@ -234,6 +237,24 @@ class AppDatabase extends _$AppDatabase {
       );
 
   Future<String> createRoutine(String name, List<String> exerciseIds) async {
+    return createRoutineTemplate(
+      name: name,
+      exercises: [
+        for (final id in exerciseIds)
+          RoutineExerciseTemplate(
+            exerciseId: id,
+            setTypes: const ['working', 'working', 'working'],
+          ),
+      ],
+    );
+  }
+
+  Future<String> createRoutineTemplate({
+    required String name,
+    String notes = '',
+    required List<RoutineExerciseTemplate> exercises,
+  }) async {
+    _validateRoutineTemplate(name, exercises);
     final routineId = uuid.v4();
     final now = DateTime.now();
     final count = await routines.count().getSingle();
@@ -242,48 +263,131 @@ class AppDatabase extends _$AppDatabase {
         RoutinesCompanion.insert(
           id: routineId,
           name: name.trim(),
+          notes: Value(notes.trim()),
           position: Value(count),
           createdAt: now,
           updatedAt: now,
         ),
       );
-      for (var index = 0; index < exerciseIds.length; index++) {
-        final reId = uuid.v4();
-        await into(routineExercises).insert(
-          RoutineExercisesCompanion.insert(
-            id: reId,
-            routineId: routineId,
-            exerciseId: exerciseIds[index],
-            position: index,
-          ),
-        );
-        for (var setIndex = 0; setIndex < 3; setIndex++) {
-          await into(routineSets).insert(
-            RoutineSetsCompanion.insert(
-              id: uuid.v4(),
-              routineExerciseId: reId,
-              position: setIndex,
-            ),
-          );
-        }
-      }
+      await _insertRoutineTemplate(routineId, exercises);
     });
     return routineId;
   }
 
+  Future<RoutineTemplate> getRoutineTemplate(String routineId) async {
+    final routine = await (select(
+      routines,
+    )..where((row) => row.id.equals(routineId))).getSingle();
+    final rows =
+        await (select(routineExercises)
+              ..where((row) => row.routineId.equals(routineId))
+              ..orderBy([(row) => OrderingTerm.asc(row.position)]))
+            .get();
+    final items = <RoutineExerciseTemplate>[];
+    for (final row in rows) {
+      final sets =
+          await (select(routineSets)
+                ..where((set) => set.routineExerciseId.equals(row.id))
+                ..orderBy([(set) => OrderingTerm.asc(set.position)]))
+              .get();
+      items.add(
+        RoutineExerciseTemplate(
+          exerciseId: row.exerciseId,
+          notes: row.notes,
+          restSeconds: row.restSeconds,
+          setTypes: sets.map((set) => set.type).toList(),
+        ),
+      );
+    }
+    return RoutineTemplate(routine: routine, exercises: items);
+  }
+
+  Future<void> updateRoutineTemplate({
+    required String id,
+    required String name,
+    required String notes,
+    required List<RoutineExerciseTemplate> exercises,
+  }) async {
+    _validateRoutineTemplate(name, exercises);
+    await transaction(() async {
+      await (update(routines)..where((row) => row.id.equals(id))).write(
+        RoutinesCompanion(
+          name: Value(name.trim()),
+          notes: Value(notes.trim()),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+      await _deleteRoutineChildren(id);
+      await _insertRoutineTemplate(id, exercises);
+    });
+  }
+
+  void _validateRoutineTemplate(
+    String name,
+    List<RoutineExerciseTemplate> exercises,
+  ) {
+    const allowedTypes = {'working', 'warmUp', 'drop', 'failure'};
+    if (name.trim().isEmpty) throw ArgumentError('Nama routine wajib diisi.');
+    if (exercises.isEmpty) {
+      throw ArgumentError('Routine wajib memiliki minimal satu exercise.');
+    }
+    for (final exercise in exercises) {
+      if (exercise.restSeconds < 0 || exercise.setTypes.isEmpty) {
+        throw ArgumentError('Konfigurasi exercise routine tidak valid.');
+      }
+      if (exercise.setTypes.any((type) => !allowedTypes.contains(type))) {
+        throw ArgumentError('Jenis set routine tidak valid.');
+      }
+    }
+  }
+
+  Future<void> _insertRoutineTemplate(
+    String routineId,
+    List<RoutineExerciseTemplate> items,
+  ) async {
+    for (var index = 0; index < items.length; index++) {
+      final item = items[index];
+      final routineExerciseId = uuid.v4();
+      await into(routineExercises).insert(
+        RoutineExercisesCompanion.insert(
+          id: routineExerciseId,
+          routineId: routineId,
+          exerciseId: item.exerciseId,
+          position: index,
+          notes: Value(item.notes.trim()),
+          restSeconds: Value(item.restSeconds),
+        ),
+      );
+      for (var setIndex = 0; setIndex < item.setTypes.length; setIndex++) {
+        await into(routineSets).insert(
+          RoutineSetsCompanion.insert(
+            id: uuid.v4(),
+            routineExerciseId: routineExerciseId,
+            position: setIndex,
+            type: Value(item.setTypes[setIndex]),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteRoutineChildren(String routineId) async {
+    final exerciseRows = await (select(
+      routineExercises,
+    )..where((row) => row.routineId.equals(routineId))).get();
+    for (final row in exerciseRows) {
+      await (delete(
+        routineSets,
+      )..where((set) => set.routineExerciseId.equals(row.id))).go();
+    }
+    await (delete(
+      routineExercises,
+    )..where((row) => row.routineId.equals(routineId))).go();
+  }
+
   Future<void> deleteRoutine(String id) async {
     await transaction(() async {
-      final exerciseRows = await (select(
-        routineExercises,
-      )..where((row) => row.routineId.equals(id))).get();
-      for (final row in exerciseRows) {
-        await (delete(
-          routineSets,
-        )..where((set) => set.routineExerciseId.equals(row.id))).go();
-      }
-      await (delete(
-        routineExercises,
-      )..where((row) => row.routineId.equals(id))).go();
+      await _deleteRoutineChildren(id);
       await (delete(routines)..where((row) => row.id.equals(id))).go();
     });
   }
@@ -747,4 +851,25 @@ class ProgressPoint {
   final double maxWeight;
   final double e1rm;
   final double volume;
+}
+
+class RoutineTemplate {
+  const RoutineTemplate({required this.routine, required this.exercises});
+
+  final Routine routine;
+  final List<RoutineExerciseTemplate> exercises;
+}
+
+class RoutineExerciseTemplate {
+  const RoutineExerciseTemplate({
+    required this.exerciseId,
+    required this.setTypes,
+    this.notes = '',
+    this.restSeconds = 90,
+  });
+
+  final String exerciseId;
+  final String notes;
+  final int restSeconds;
+  final List<String> setTypes;
 }
