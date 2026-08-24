@@ -214,6 +214,26 @@ Future<List<Exercise>?> showExercisePicker(
   );
 }
 
+List<Exercise> filterExerciseLibrary(
+  Iterable<Exercise> exercises, {
+  String query = '',
+  String? muscle,
+  String? equipment,
+}) {
+  final normalizedQuery = query.trim().toLowerCase();
+  return exercises.where((exercise) {
+    final matchesQuery =
+        normalizedQuery.isEmpty ||
+        '${exercise.name} ${exercise.muscle} ${exercise.equipment}'
+            .toLowerCase()
+            .contains(normalizedQuery);
+    final matchesMuscle = muscle == null || exercise.muscle == muscle;
+    final matchesEquipment =
+        equipment == null || exercise.equipment == equipment;
+    return matchesQuery && matchesMuscle && matchesEquipment;
+  }).toList();
+}
+
 class _ExercisePicker extends StatefulWidget {
   const _ExercisePicker({required this.exercises, required this.multiple});
   final List<Exercise> exercises;
@@ -224,16 +244,21 @@ class _ExercisePicker extends StatefulWidget {
 
 class _ExercisePickerState extends State<_ExercisePicker> {
   var query = '';
+  String? muscle;
+  String? equipment;
   final selected = <String>{};
   @override
   Widget build(BuildContext context) {
-    final items = widget.exercises
-        .where(
-          (e) => '${e.name} ${e.muscle} ${e.equipment}'.toLowerCase().contains(
-            query.toLowerCase(),
-          ),
-        )
-        .toList();
+    final muscles = widget.exercises.map((item) => item.muscle).toSet().toList()
+      ..sort();
+    final equipmentOptions =
+        widget.exercises.map((item) => item.equipment).toSet().toList()..sort();
+    final items = filterExerciseLibrary(
+      widget.exercises,
+      query: query,
+      muscle: muscle,
+      equipment: equipment,
+    );
     return GreekPageShell(
       topBar: GreekTopBar(
         title: 'Pilih exercise',
@@ -261,36 +286,77 @@ class _ExercisePickerState extends State<_ExercisePicker> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: GreekTextField(
-              leading: Icons.search,
-              hint: 'Cari nama, otot, atau alat',
-              onChanged: (value) => setState(() => query = value),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Column(
+              children: [
+                GreekTextField(
+                  leading: Icons.search,
+                  hint: 'Cari nama, otot, atau alat',
+                  onChanged: (value) => setState(() => query = value),
+                ),
+                const SizedBox(height: 8),
+                GreekSelect<String>(
+                  key: const Key('exercise-muscle-filter'),
+                  label: 'Filter otot',
+                  value: muscle ?? '',
+                  options: {
+                    '': 'Semua otot',
+                    for (final value in muscles) value: value,
+                  },
+                  onChanged: (value) => setState(
+                    () =>
+                        muscle = value == null || value.isEmpty ? null : value,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GreekSelect<String>(
+                  key: const Key('exercise-equipment-filter'),
+                  label: 'Filter peralatan',
+                  value: equipment ?? '',
+                  options: {
+                    '': 'Semua peralatan',
+                    for (final value in equipmentOptions) value: value,
+                  },
+                  onChanged: (value) => setState(
+                    () => equipment = value == null || value.isEmpty
+                        ? null
+                        : value,
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return GreekCheckTile(
-                  value: selected.contains(item.id),
-                  leading: GreekMedallion(
-                    child: Text(item.name.substring(0, 1)),
+            child: items.isEmpty
+                ? const GreekEmptyState(
+                    icon: Icons.search_off,
+                    title: 'Exercise tidak ditemukan',
+                    body: 'Ubah pencarian atau filter yang dipilih.',
+                  )
+                : ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return GreekCheckTile(
+                        value: selected.contains(item.id),
+                        leading: GreekMedallion(
+                          child: Text(item.name.substring(0, 1)),
+                        ),
+                        title: item.name,
+                        subtitle: '${item.muscle} • ${item.equipment}',
+                        onChanged: (_) {
+                          if (!widget.multiple) {
+                            return Navigator.pop(context, [item]);
+                          }
+                          setState(
+                            () => selected.contains(item.id)
+                                ? selected.remove(item.id)
+                                : selected.add(item.id),
+                          );
+                        },
+                      );
+                    },
                   ),
-                  title: item.name,
-                  subtitle: '${item.muscle} • ${item.equipment}',
-                  onChanged: (_) {
-                    if (!widget.multiple) return Navigator.pop(context, [item]);
-                    setState(
-                      () => selected.contains(item.id)
-                          ? selected.remove(item.id)
-                          : selected.add(item.id),
-                    );
-                  },
-                );
-              },
-            ),
           ),
         ],
       ),
