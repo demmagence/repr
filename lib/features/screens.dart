@@ -9,14 +9,14 @@ import 'package:intl/intl.dart';
 
 import '../app.dart';
 import '../core/backup_service.dart';
-import '../core/greek_theme.dart';
 import '../core/metrics.dart';
 import '../data/database.dart';
+import '../ui/greek/greek.dart';
 
 const pagePadding = EdgeInsets.fromLTRB(16, 12, 16, 24);
 
 void showMessage(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  GreekToast.show(context, message);
 }
 
 class EmptyState extends StatelessWidget {
@@ -30,21 +30,8 @@ class EmptyState extends StatelessWidget {
   final String title;
   final String body;
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 56, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          Text(body, textAlign: TextAlign.center),
-        ],
-      ),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      GreekEmptyState(icon: icon, title: title, body: body);
 }
 
 class TrainingScreen extends ConsumerWidget {
@@ -60,24 +47,30 @@ class TrainingScreen extends ConsumerWidget {
     final active = await database.getActiveWorkout();
     if (!context.mounted) return;
     if (active != null) {
-      final discard = await showDialog<bool>(
+      final discard = await showGreekDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Workout masih aktif'),
-          content: const Text(
+        builder: (context) => GreekDialog(
+          title: 'Workout masih aktif',
+          child: const Text(
             'Lanjutkan workout yang sedang berjalan atau buang draftnya.',
           ),
           actions: [
-            TextButton(
+            GreekButton(
+              label: 'Lanjutkan',
+              expand: false,
+              compact: true,
+              variant: GreekActionVariant.secondary,
               onPressed: () {
                 Navigator.pop(context, false);
                 context.push('/workout/${active.id}');
               },
-              child: const Text('Lanjutkan'),
             ),
-            FilledButton(
+            GreekButton(
+              label: 'Buang draft',
+              expand: false,
+              compact: true,
+              variant: GreekActionVariant.destructive,
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Buang draft'),
             ),
           ],
         ),
@@ -96,41 +89,35 @@ class TrainingScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final active = ref.watch(activeWorkoutProvider).valueOrNull;
     final routines = ref.watch(routinesProvider);
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 66,
-        title: const GreekBrandMark(),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(11),
-          child: GreekKeyBorder(height: 11),
-        ),
-      ),
+    return GreekPageShell(
+      topBar: const GreekTopBar(brand: true),
       body: ListView(
         padding: pagePadding,
         children: [
           const GreekMottoBanner(),
           const SizedBox(height: 16),
           if (active != null) ...[
-            Card(
-              color: const Color(0xFFE7DFCA),
-              child: ListTile(
-                minTileHeight: 72,
-                leading: const Icon(Icons.timer_outlined),
-                title: Text(
-                  active.name,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+            GreekPanel(
+              variant: GreekPanelVariant.active,
+              padding: EdgeInsets.zero,
+              child: GreekListRow(
+                minHeight: 72,
+                leading: const GreekMedallion(
+                  active: true,
+                  child: Icon(Icons.timer_outlined, size: 20),
                 ),
-                subtitle: const Text('Workout sedang berjalan'),
+                title: active.name,
+                subtitle: 'Workout sedang berjalan',
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/workout/${active.id}'),
               ),
             ),
             const SizedBox(height: 16),
           ],
-          FilledButton.icon(
+          GreekButton(
             onPressed: () => _start(context, ref),
-            icon: const Icon(Icons.add),
-            label: const Text('Mulai latihan kosong'),
+            icon: Icons.add,
+            label: 'Mulai latihan kosong',
           ),
           const SizedBox(height: 24),
           Row(
@@ -142,10 +129,13 @@ class TrainingScreen extends ConsumerWidget {
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              TextButton.icon(
+              GreekButton(
                 onPressed: () => showRoutineCreator(context, ref),
-                icon: const Icon(Icons.add),
-                label: const Text('Buat'),
+                icon: Icons.add,
+                label: 'Buat',
+                expand: false,
+                compact: true,
+                variant: GreekActionVariant.quiet,
               ),
             ],
           ),
@@ -168,51 +158,53 @@ class TrainingScreen extends ConsumerWidget {
                         .map(
                           (routine) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: Card(
-                              child: ListTile(
-                                minTileHeight: 72,
-                                leading: CircleAvatar(
-                                  backgroundColor: GreekPalette.aegean,
-                                  foregroundColor: GreekPalette.ivory,
+                            child: GreekPanel(
+                              padding: EdgeInsets.zero,
+                              child: GreekListRow(
+                                minHeight: 72,
+                                leading: GreekMedallion(
                                   child: Text(
                                     routine.name.substring(0, 1).toUpperCase(),
                                   ),
                                 ),
-                                title: Text(
-                                  routine.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                                title: routine.name,
                                 subtitle: routine.notes.isEmpty
-                                    ? const Text('3 set per latihan')
-                                    : Text(routine.notes),
+                                    ? '3 set per latihan'
+                                    : routine.notes,
                                 onTap: () =>
                                     _start(context, ref, routineId: routine.id),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (value) async {
+                                trailing: GreekIconButton(
+                                  icon: Icons.more_vert,
+                                  semanticLabel: 'Menu ${routine.name}',
+                                  onPressed: () async {
+                                    final value =
+                                        await showGreekActionSheet<String>(
+                                          context: context,
+                                          title: routine.name,
+                                          actions: const [
+                                            GreekAction(
+                                              value: 'start',
+                                              label: 'Mulai',
+                                            ),
+                                            GreekAction(
+                                              value: 'delete',
+                                              label: 'Hapus',
+                                              danger: true,
+                                            ),
+                                          ],
+                                        );
                                     if (value == 'start') {
                                       await _start(
                                         context,
                                         ref,
                                         routineId: routine.id,
                                       );
-                                    } else {
+                                    } else if (value == 'delete') {
                                       await ref
                                           .read(databaseProvider)
                                           .deleteRoutine(routine.id);
                                     }
                                   },
-                                  itemBuilder: (_) => const [
-                                    PopupMenuItem(
-                                      value: 'start',
-                                      child: Text('Mulai'),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text('Hapus'),
-                                    ),
-                                  ],
                                 ),
                               ),
                             ),
@@ -238,6 +230,8 @@ Future<List<Exercise>?> showExercisePicker(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: GreekColors.aegeanDeep.withValues(alpha: .55),
     builder: (context) =>
         _ExercisePicker(exercises: exercises, multiple: multiple),
   );
@@ -263,16 +257,18 @@ class _ExercisePickerState extends State<_ExercisePicker> {
           ),
         )
         .toList();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pilih exercise'),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(9),
-          child: GreekKeyBorder(height: 9),
-        ),
+    return GreekPageShell(
+      topBar: GreekTopBar(
+        title: 'Pilih exercise',
+        showBack: true,
+        compact: true,
         actions: widget.multiple
             ? [
-                TextButton(
+                GreekButton(
+                  label: 'Pilih (${selected.length})',
+                  expand: false,
+                  compact: true,
+                  variant: GreekActionVariant.quiet,
                   onPressed: selected.isEmpty
                       ? null
                       : () => Navigator.pop(
@@ -281,20 +277,17 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                               .where((e) => selected.contains(e.id))
                               .toList(),
                         ),
-                  child: Text('Pilih (${selected.length})'),
                 ),
               ]
-            : null,
+            : const [],
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Cari nama, otot, atau alat',
-              ),
+            child: GreekTextField(
+              leading: Icons.search,
+              hint: 'Cari nama, otot, atau alat',
               onChanged: (value) => setState(() => query = value),
             ),
           ),
@@ -303,13 +296,13 @@ class _ExercisePickerState extends State<_ExercisePicker> {
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
-                return CheckboxListTile(
+                return GreekCheckTile(
                   value: selected.contains(item.id),
-                  secondary: CircleAvatar(
+                  leading: GreekMedallion(
                     child: Text(item.name.substring(0, 1)),
                   ),
-                  title: Text(item.name),
-                  subtitle: Text('${item.muscle} • ${item.equipment}'),
+                  title: item.name,
+                  subtitle: '${item.muscle} • ${item.equipment}',
                   onChanged: (_) {
                     if (!widget.multiple) return Navigator.pop(context, [item]);
                     setState(
@@ -331,22 +324,23 @@ class _ExercisePickerState extends State<_ExercisePicker> {
 Future<void> showRoutineCreator(BuildContext context, WidgetRef ref) async {
   final name = TextEditingController();
   var selected = <Exercise>[];
-  await showDialog<void>(
+  await showGreekDialog<void>(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
-        title: const Text('Routine baru'),
-        content: SizedBox(
+      builder: (context, setState) => GreekDialog(
+        title: 'Routine baru',
+        child: SizedBox(
           width: 420,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              GreekTextField(
                 controller: name,
-                decoration: const InputDecoration(labelText: 'Nama routine'),
+                label: 'Nama routine',
+                hint: 'Contoh: Push Day',
               ),
               const SizedBox(height: 12),
-              OutlinedButton.icon(
+              GreekButton(
                 onPressed: () async {
                   final result = await showExercisePicker(
                     dialogContext,
@@ -355,12 +349,11 @@ Future<void> showRoutineCreator(BuildContext context, WidgetRef ref) async {
                   );
                   if (result != null) setState(() => selected = result);
                 },
-                icon: const Icon(Icons.add),
-                label: Text(
-                  selected.isEmpty
-                      ? 'Pilih exercise'
-                      : '${selected.length} exercise dipilih',
-                ),
+                icon: Icons.add,
+                variant: GreekActionVariant.secondary,
+                label: selected.isEmpty
+                    ? 'Pilih exercise'
+                    : '${selected.length} exercise dipilih',
               ),
               if (selected.isNotEmpty)
                 Padding(
@@ -375,11 +368,17 @@ Future<void> showRoutineCreator(BuildContext context, WidgetRef ref) async {
           ),
         ),
         actions: [
-          TextButton(
+          GreekButton(
+            label: 'Batal',
+            expand: false,
+            compact: true,
+            variant: GreekActionVariant.quiet,
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
           ),
-          FilledButton(
+          GreekButton(
+            label: 'Simpan',
+            expand: false,
+            compact: true,
             onPressed: () async {
               if (name.text.trim().isEmpty || selected.isEmpty) return;
               await ref
@@ -387,7 +386,6 @@ Future<void> showRoutineCreator(BuildContext context, WidgetRef ref) async {
                   .createRoutine(name.text, selected.map((e) => e.id).toList());
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Simpan'),
           ),
         ],
       ),
@@ -423,21 +421,26 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     final count = await database.completedSetCount(widget.id);
     if (!mounted) return;
     if (count == 0) return showMessage(context, 'Selesaikan minimal satu set.');
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGreekDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Selesaikan workout?'),
-        content: Text(
+      builder: (context) => GreekDialog(
+        title: 'Selesaikan workout?',
+        child: Text(
           '$count set selesai akan disimpan. Set yang belum selesai akan dibuang.',
         ),
         actions: [
-          TextButton(
+          GreekButton(
+            label: 'Kembali',
+            expand: false,
+            compact: true,
+            variant: GreekActionVariant.quiet,
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Kembali'),
           ),
-          FilledButton(
+          GreekButton(
+            label: 'Selesaikan',
+            expand: false,
+            compact: true,
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Selesaikan'),
           ),
         ],
       ),
@@ -452,19 +455,25 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   }
 
   Future<void> _discard() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGreekDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Buang workout?'),
-        content: const Text('Seluruh draft workout ini akan dihapus permanen.'),
+      builder: (context) => GreekDialog(
+        title: 'Buang workout?',
+        child: const Text('Seluruh draft workout ini akan dihapus permanen.'),
         actions: [
-          TextButton(
+          GreekButton(
+            label: 'Batal',
+            expand: false,
+            compact: true,
+            variant: GreekActionVariant.quiet,
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
           ),
-          FilledButton(
+          GreekButton(
+            label: 'Buang',
+            expand: false,
+            compact: true,
+            variant: GreekActionVariant.destructive,
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Buang'),
           ),
         ],
       ),
@@ -492,12 +501,13 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       ),
     );
     return workout.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, _) => Scaffold(body: Center(child: Text('$error'))),
+      loading: () => const GreekPageShell(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => GreekPageShell(body: Center(child: Text('$error'))),
       data: (item) {
         if (item == null)
-          return const Scaffold(
+          return const GreekPageShell(
             body: EmptyState(
               icon: Icons.error_outline,
               title: 'Workout tidak ditemukan',
@@ -510,46 +520,48 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         final rest = item.restEndsAt?.difference(DateTime.now());
         return PopScope(
           canPop: true,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(elapsedLabel, style: const TextStyle(fontSize: 13)),
-                ],
-              ),
+          child: GreekPageShell(
+            topBar: GreekTopBar(
+              title: item.name,
+              subtitle: elapsedLabel,
+              showBack: true,
+              compact: true,
               actions: [
-                TextButton(onPressed: _finish, child: const Text('Selesai')),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'discard') _discard();
+                GreekButton(
+                  label: 'Selesai',
+                  onPressed: _finish,
+                  expand: false,
+                  compact: true,
+                  variant: GreekActionVariant.quiet,
+                ),
+                GreekIconButton(
+                  icon: Icons.more_vert,
+                  semanticLabel: 'Menu workout',
+                  onPressed: () async {
+                    final value = await showGreekActionSheet<String>(
+                      context: context,
+                      title: 'Menu workout',
+                      actions: const [
+                        GreekAction(
+                          value: 'discard',
+                          label: 'Buang workout',
+                          danger: true,
+                        ),
+                      ],
+                    );
+                    if (value == 'discard') await _discard();
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: 'discard',
-                      child: Text('Buang workout'),
-                    ),
-                  ],
                 ),
               ],
-              bottom: const PreferredSize(
-                preferredSize: Size.fromHeight(9),
-                child: GreekKeyBorder(height: 9),
-              ),
             ),
             body: Column(
               children: [
                 if (rest != null && !rest.isNegative)
-                  Container(
-                    width: double.infinity,
-                    color: const Color(0xFFE7DFCA),
+                  GreekPanel(
+                    variant: GreekPanelVariant.warning,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
+                      horizontal: 14,
+                      vertical: 8,
                     ),
                     child: Row(
                       children: [
@@ -560,7 +572,11 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const Spacer(),
-                        TextButton(
+                        GreekButton(
+                          label: 'Lewati',
+                          expand: false,
+                          compact: true,
+                          variant: GreekActionVariant.quiet,
                           onPressed: () async {
                             await ref
                                 .read(databaseProvider)
@@ -569,7 +585,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                 .read(notificationProvider)
                                 .cancelRestTimer();
                           },
-                          child: const Text('Lewati'),
                         ),
                       ],
                     ),
@@ -604,12 +619,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                 ),
               ],
             ),
-            bottomNavigationBar: SafeArea(
-              minimum: const EdgeInsets.all(16),
-              child: FilledButton.icon(
+            bottomBar: SafeArea(
+              minimum: const EdgeInsets.all(12),
+              child: GreekButton(
                 onPressed: _addExercise,
-                icon: const Icon(Icons.add),
-                label: const Text('Tambah exercise'),
+                icon: Icons.add,
+                label: 'Tambah exercise',
               ),
             ),
           ),
@@ -667,9 +682,10 @@ class WorkoutExerciseCard extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Card(
+  Widget build(BuildContext context, WidgetRef ref) => GreekPanel(
+    padding: const EdgeInsets.all(11),
     child: Padding(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -692,11 +708,11 @@ class WorkoutExerciseCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              IconButton(
+              GreekIconButton(
                 onPressed: () =>
                     ref.read(databaseProvider).addSet(view.item.id),
-                icon: const Icon(Icons.add_circle_outline),
-                tooltip: 'Tambah set',
+                icon: Icons.add_circle_outline,
+                semanticLabel: 'Tambah set',
               ),
             ],
           ),
@@ -709,13 +725,16 @@ class WorkoutExerciseCard extends ConsumerWidget {
               if (sets.isEmpty)
                 return const Text(
                   'Previous: belum ada data',
-                  style: TextStyle(color: Colors.black54, fontSize: 12),
+                  style: TextStyle(color: GreekColors.inkMuted, fontSize: 12),
                 );
               return Text(
                 'Previous: ${sets.map((s) => '${formatKg(s.weightGrams)} kg × ${s.reps}').join('  •  ')}',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.black54, fontSize: 12),
+                style: const TextStyle(
+                  color: GreekColors.inkMuted,
+                  fontSize: 12,
+                ),
               );
             },
           ),
@@ -727,15 +746,15 @@ class WorkoutExerciseCard extends ConsumerWidget {
                 child: Text('Set', textAlign: TextAlign.center),
               ),
               SizedBox(
-                width: 72,
+                width: 64,
                 child: Text('kg', textAlign: TextAlign.center),
               ),
               SizedBox(
-                width: 64,
+                width: 48,
                 child: Text('Reps', textAlign: TextAlign.center),
               ),
               SizedBox(
-                width: 66,
+                width: 48,
                 child: Text('RPE', textAlign: TextAlign.center),
               ),
               Spacer(),
@@ -747,10 +766,13 @@ class WorkoutExerciseCard extends ConsumerWidget {
               onComplete: (value) => _complete(context, ref, set, value),
             ),
           ),
-          TextButton.icon(
+          GreekButton(
             onPressed: () => ref.read(databaseProvider).addSet(view.item.id),
-            icon: const Icon(Icons.add),
-            label: const Text('Tambah set'),
+            icon: Icons.add,
+            label: 'Tambah set',
+            expand: false,
+            compact: true,
+            variant: GreekActionVariant.quiet,
           ),
         ],
       ),
@@ -765,45 +787,62 @@ class SetInputRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final database = ref.read(databaseProvider);
-    InputDecoration decoration() => const InputDecoration(
-      isDense: true,
-      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-    );
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           SizedBox(
             width: 38,
-            child: PopupMenuButton<String>(
-              tooltip: 'Jenis set',
-              onSelected: (value) =>
-                  database.updateWorkoutSet(id: set.id, type: value),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'working', child: Text('Working')),
-                PopupMenuItem(value: 'warmUp', child: Text('Warm-up')),
-                PopupMenuItem(value: 'drop', child: Text('Drop')),
-                PopupMenuItem(value: 'failure', child: Text('Failure')),
-              ],
-              child: CircleAvatar(
-                radius: 15,
-                backgroundColor: set.completed
-                    ? GreekPalette.olive
-                    : Theme.of(context).colorScheme.secondaryContainer,
-                foregroundColor: set.completed ? Colors.white : null,
-                child: Text(switch (set.type) {
-                  'warmUp' => 'W',
-                  'drop' => 'D',
-                  'failure' => 'F',
-                  _ => '${set.position + 1}',
-                }, style: const TextStyle(fontSize: 12)),
+            height: 48,
+            child: Semantics(
+              button: true,
+              label: 'Jenis set',
+              child: InkWell(
+                onTap: set.completed
+                    ? null
+                    : () async {
+                        final value = await showGreekActionSheet<String>(
+                          context: context,
+                          title: 'Set ${set.position + 1}',
+                          actions: const [
+                            GreekAction(value: 'working', label: 'Working'),
+                            GreekAction(value: 'warmUp', label: 'Warm-up'),
+                            GreekAction(value: 'drop', label: 'Drop'),
+                            GreekAction(value: 'failure', label: 'Failure'),
+                            GreekAction(
+                              value: 'delete',
+                              label: 'Hapus set',
+                              danger: true,
+                            ),
+                          ],
+                        );
+                        if (value == 'delete') {
+                          await database.removeSet(set.id);
+                        } else if (value != null) {
+                          await database.updateWorkoutSet(
+                            id: set.id,
+                            type: value,
+                          );
+                        }
+                      },
+                child: Center(
+                  child: GreekMedallion(
+                    active: set.completed,
+                    child: Text(switch (set.type) {
+                      'warmUp' => 'W',
+                      'drop' => 'D',
+                      'failure' => 'F',
+                      _ => '${set.position + 1}',
+                    }),
+                  ),
+                ),
               ),
             ),
           ),
           const SizedBox(width: 4),
           SizedBox(
-            width: 72,
-            child: TextFormField(
+            width: 64,
+            child: _GreekCompactNumberField(
               key: ValueKey('weight-${set.id}-${set.weightGrams}'),
               initialValue: set.weightGrams == 0
                   ? ''
@@ -814,7 +853,6 @@ class SetInputRow extends ConsumerWidget {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
               ],
-              decoration: decoration(),
               enabled: !set.completed,
               onChanged: (value) {
                 final grams = parseKg(value);
@@ -825,13 +863,12 @@ class SetInputRow extends ConsumerWidget {
           ),
           const SizedBox(width: 4),
           SizedBox(
-            width: 64,
-            child: TextFormField(
+            width: 48,
+            child: _GreekCompactNumberField(
               key: ValueKey('reps-${set.id}-${set.reps}'),
               initialValue: set.reps == 0 ? '' : '${set.reps}',
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: decoration(),
               enabled: !set.completed,
               onChanged: (value) => database.updateWorkoutSet(
                 id: set.id,
@@ -841,36 +878,61 @@ class SetInputRow extends ConsumerWidget {
           ),
           const SizedBox(width: 4),
           SizedBox(
-            width: 66,
-            child: DropdownButtonFormField<double?>(
-              initialValue: set.rpe,
-              decoration: decoration(),
-              isExpanded: true,
-              items: [
-                const DropdownMenuItem<double?>(value: null, child: Text('—')),
-                ...List.generate(19, (i) {
-                  final value = 1 + i * .5;
-                  return DropdownMenuItem<double?>(
-                    value: value,
-                    child: Text(value.toStringAsFixed(value % 1 == 0 ? 0 : 1)),
-                  );
-                }),
-              ],
-              onChanged: set.completed
-                  ? null
-                  : (value) =>
-                        database.updateWorkoutSet(id: set.id, rpe: value ?? 0),
+            width: 48,
+            child: _GreekCompactSelect(
+              value: set.rpe == null
+                  ? '—'
+                  : set.rpe!.toStringAsFixed(set.rpe! % 1 == 0 ? 0 : 1),
+              enabled: !set.completed,
+              onTap: () async {
+                final value = await showGreekActionSheet<double>(
+                  context: context,
+                  title: 'Pilih RPE',
+                  actions: List.generate(19, (i) {
+                    final value = 1 + i * .5;
+                    return GreekAction(
+                      value: value,
+                      label: value.toStringAsFixed(value % 1 == 0 ? 0 : 1),
+                    );
+                  }),
+                );
+                if (value != null) {
+                  await database.updateWorkoutSet(id: set.id, rpe: value);
+                }
+              },
             ),
           ),
           const Spacer(),
-          Checkbox(
-            value: set.completed,
-            onChanged: (value) => onComplete(value ?? false),
-          ),
-          IconButton(
-            onPressed: set.completed ? null : () => database.removeSet(set.id),
-            icon: const Icon(Icons.close, size: 18),
-            tooltip: 'Hapus set',
+          SizedBox.square(
+            dimension: 48,
+            child: Semantics(
+              checked: set.completed,
+              button: true,
+              label: 'Selesaikan set ${set.position + 1}',
+              child: InkWell(
+                onTap: () => onComplete(!set.completed),
+                child: Container(
+                  margin: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: set.completed
+                        ? GreekColors.olive
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: set.completed
+                          ? GreekColors.olive
+                          : GreekColors.bronze,
+                    ),
+                  ),
+                  child: set.completed
+                      ? const Icon(
+                          Icons.check,
+                          size: 17,
+                          color: GreekColors.white,
+                        )
+                      : null,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -878,22 +940,83 @@ class SetInputRow extends ConsumerWidget {
   }
 }
 
+class _GreekCompactNumberField extends StatelessWidget {
+  const _GreekCompactNumberField({
+    this.initialValue,
+    required this.keyboardType,
+    required this.inputFormatters,
+    required this.enabled,
+    required this.onChanged,
+    super.key,
+  });
+  final String? initialValue;
+  final TextInputType keyboardType;
+  final List<TextInputFormatter> inputFormatters;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 42,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: enabled ? GreekColors.marbleLight : GreekColors.limestone,
+      border: Border.all(color: GreekColors.limestoneDark),
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: 4),
+    child: TextFormField(
+      initialValue: initialValue,
+      enabled: enabled,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      onChanged: onChanged,
+      textAlign: TextAlign.center,
+      decoration: const InputDecoration.collapsed(hintText: '—'),
+      style: const TextStyle(fontSize: 14, fontFeatures: tabularFigures),
+    ),
+  );
+}
+
+class _GreekCompactSelect extends StatelessWidget {
+  const _GreekCompactSelect({
+    required this.value,
+    required this.enabled,
+    required this.onTap,
+  });
+  final String value;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    enabled: enabled,
+    label: 'RPE $value',
+    child: InkWell(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        height: 42,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: enabled ? GreekColors.marbleLight : GreekColors.limestone,
+          border: Border.all(color: GreekColors.limestoneDark),
+        ),
+        child: Text(
+          value,
+          style: const TextStyle(fontFeatures: tabularFigures),
+        ),
+      ),
+    ),
+  );
+}
+
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(historyProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Riwayat',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(9),
-          child: GreekKeyBorder(height: 9),
-        ),
-      ),
+    return GreekPageShell(
+      topBar: const GreekTopBar(title: 'Riwayat'),
       body: history.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('$error')),
@@ -912,19 +1035,16 @@ class HistoryScreen extends ConsumerWidget {
                   final duration = workout.endedAt?.difference(
                     workout.startedAt,
                   );
-                  return Card(
-                    child: ListTile(
-                      minTileHeight: 82,
-                      leading: CircleAvatar(
+                  return GreekPanel(
+                    padding: EdgeInsets.zero,
+                    child: GreekListRow(
+                      minHeight: 82,
+                      leading: GreekMedallion(
                         child: Text(DateFormat('dd').format(workout.startedAt)),
                       ),
-                      title: Text(
-                        workout.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        '${DateFormat('EEEE, d MMM yyyy', 'id_ID').format(workout.startedAt)}${duration == null ? '' : ' • ${duration.inMinutes} menit'}',
-                      ),
+                      title: workout.name,
+                      subtitle:
+                          '${DateFormat('EEEE, d MMM yyyy', 'id_ID').format(workout.startedAt)}${duration == null ? '' : ' • ${duration.inMinutes} menit'}',
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => context.push('/history/${workout.id}'),
                     ),
@@ -963,13 +1083,27 @@ class HistoryDetailScreen extends ConsumerWidget {
     builder: (context, workoutSnapshot) {
       final workout = workoutSnapshot.data;
       if (workout == null)
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(workout.name),
+        return const GreekPageShell(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      return GreekPageShell(
+        topBar: GreekTopBar(
+          title: workout.name,
+          showBack: true,
           actions: [
-            PopupMenuButton<String>(
-              onSelected: (value) async {
+            GreekIconButton(
+              icon: Icons.more_vert,
+              semanticLabel: 'Menu riwayat',
+              onPressed: () async {
+                final value = await showGreekActionSheet<String>(
+                  context: context,
+                  title: workout.name,
+                  actions: const [
+                    GreekAction(value: 'repeat', label: 'Ulangi workout'),
+                    GreekAction(value: 'date', label: 'Ubah tanggal'),
+                    GreekAction(value: 'delete', label: 'Hapus', danger: true),
+                  ],
+                );
                 if (value == 'repeat') return _repeat(context, ref, workout);
                 if (value == 'date') {
                   final date = await showDatePicker(
@@ -994,21 +1128,27 @@ class HistoryDetailScreen extends ConsumerWidget {
                   }
                 }
                 if (value == 'delete' && context.mounted) {
-                  final yes = await showDialog<bool>(
+                  final yes = await showGreekDialog<bool>(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Hapus workout?'),
-                      content: const Text(
+                    builder: (context) => GreekDialog(
+                      title: 'Hapus workout?',
+                      child: const Text(
                         'Riwayat dan statistik dari workout ini akan dihapus.',
                       ),
                       actions: [
-                        TextButton(
+                        GreekButton(
+                          label: 'Batal',
+                          expand: false,
+                          compact: true,
+                          variant: GreekActionVariant.quiet,
                           onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Batal'),
                         ),
-                        FilledButton(
+                        GreekButton(
+                          label: 'Hapus',
+                          expand: false,
+                          compact: true,
+                          variant: GreekActionVariant.destructive,
                           onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Hapus'),
                         ),
                       ],
                     ),
@@ -1019,17 +1159,8 @@ class HistoryDetailScreen extends ConsumerWidget {
                   }
                 }
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'repeat', child: Text('Ulangi workout')),
-                PopupMenuItem(value: 'date', child: Text('Ubah tanggal')),
-                PopupMenuItem(value: 'delete', child: Text('Hapus')),
-              ],
             ),
           ],
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(9),
-            child: GreekKeyBorder(height: 9),
-          ),
         ),
         body: FutureBuilder<List<WorkoutExerciseView>>(
           future: ref.read(databaseProvider).getWorkoutExercises(id),
@@ -1063,21 +1194,21 @@ class HistoryDetailScreen extends ConsumerWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: _StatCard(
+                      child: GreekStatPlaque(
                         label: 'Durasi',
                         value: '${duration?.inMinutes ?? 0} mnt',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _StatCard(
+                      child: GreekStatPlaque(
                         label: 'Set',
                         value: '${allSets.length}',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _StatCard(
+                      child: GreekStatPlaque(
                         label: 'Volume',
                         value: '${volume.toStringAsFixed(0)} kg',
                       ),
@@ -1088,9 +1219,9 @@ class HistoryDetailScreen extends ConsumerWidget {
                 ...items.map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Card(
+                    child: GreekPanel(
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.zero,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1138,29 +1269,6 @@ class HistoryDetailScreen extends ConsumerWidget {
   );
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.label, required this.value});
-  final String label;
-  final String value;
-  @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
-    ),
-  );
-}
-
 class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
   @override
@@ -1182,49 +1290,39 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     final after = rangeMonths == 0
         ? null
         : DateTime.now().subtract(Duration(days: rangeMonths * 31));
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Progres',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(9),
-          child: GreekKeyBorder(height: 9),
-        ),
-      ),
+    return GreekPageShell(
+      topBar: const GreekTopBar(title: 'Progres'),
       body: ListView(
         padding: pagePadding,
         children: [
-          DropdownButtonFormField<String>(
-            initialValue: selectedId,
-            decoration: const InputDecoration(labelText: 'Exercise'),
-            items: exercises
-                .map((e) => DropdownMenuItem(value: e.id, child: Text(e.name)))
-                .toList(),
+          GreekSelect<String>(
+            label: 'Exercise',
+            value: selectedId,
+            options: {
+              for (final exercise in exercises) exercise.id: exercise.name,
+            },
             onChanged: (value) => setState(() => exerciseId = value),
           ),
           const SizedBox(height: 12),
-          SegmentedButton<int>(
+          GreekSegmentedControl<int>(
             segments: const [
-              ButtonSegment(value: 1, label: Text('1 bln')),
-              ButtonSegment(value: 3, label: Text('3 bln')),
-              ButtonSegment(value: 6, label: Text('6 bln')),
-              ButtonSegment(value: 0, label: Text('Semua')),
+              GreekSegment(value: 1, label: '1 bln'),
+              GreekSegment(value: 3, label: '3 bln'),
+              GreekSegment(value: 6, label: '6 bln'),
+              GreekSegment(value: 0, label: 'Semua'),
             ],
-            selected: {rangeMonths},
-            onSelectionChanged: (value) =>
-                setState(() => rangeMonths = value.first),
+            value: rangeMonths,
+            onChanged: (value) => setState(() => rangeMonths = value),
           ),
           const SizedBox(height: 12),
-          SegmentedButton<String>(
+          GreekSegmentedControl<String>(
             segments: const [
-              ButtonSegment(value: 'weight', label: Text('Beban')),
-              ButtonSegment(value: 'e1rm', label: Text('e1RM')),
-              ButtonSegment(value: 'volume', label: Text('Volume')),
+              GreekSegment(value: 'weight', label: 'Beban'),
+              GreekSegment(value: 'e1rm', label: 'e1RM'),
+              GreekSegment(value: 'volume', label: 'Volume'),
             ],
-            selected: {metric},
-            onSelectionChanged: (value) => setState(() => metric = value.first),
+            value: metric,
+            onChanged: (value) => setState(() => metric = value),
           ),
           const SizedBox(height: 20),
           if (selected == null)
@@ -1274,14 +1372,14 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: _StatCard(
+                          child: GreekStatPlaque(
                             label: 'Max weight',
                             value: '${bestWeight.toStringAsFixed(1)} kg',
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _StatCard(
+                          child: GreekStatPlaque(
                             label: 'Best e1RM',
                             value: '${bestE1rm.toStringAsFixed(1)} kg',
                           ),
@@ -1289,62 +1387,75 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      height: 280,
-                      child: LineChart(
-                        LineChartData(
-                          minY: 0,
-                          maxY: maxValue <= 0 ? 1 : maxValue * 1.15,
-                          gridData: const FlGridData(show: true),
-                          borderData: FlBorderData(show: false),
-                          titlesData: FlTitlesData(
-                            topTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            rightTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                interval: points.length > 4
-                                    ? (points.length / 4).ceilToDouble()
-                                    : 1,
-                                getTitlesWidget: (x, meta) {
-                                  final index = x.round();
-                                  if (index < 0 || index >= points.length)
-                                    return const SizedBox.shrink();
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 6),
-                                    child: Text(
-                                      DateFormat(
-                                        'd/M',
-                                      ).format(points[index].date),
-                                      style: const TextStyle(fontSize: 10),
-                                    ),
-                                  );
-                                },
+                    GreekPanel(
+                      padding: const EdgeInsets.fromLTRB(10, 18, 12, 8),
+                      child: SizedBox(
+                        height: 280,
+                        child: LineChart(
+                          LineChartData(
+                            minY: 0,
+                            maxY: maxValue <= 0 ? 1 : maxValue * 1.15,
+                            gridData: FlGridData(
+                              show: true,
+                              getDrawingHorizontalLine: (_) => const FlLine(
+                                color: GreekColors.limestone,
+                                strokeWidth: 1,
+                              ),
+                              getDrawingVerticalLine: (_) => const FlLine(
+                                color: GreekColors.limestone,
+                                strokeWidth: 1,
                               ),
                             ),
+                            borderData: FlBorderData(show: false),
+                            titlesData: FlTitlesData(
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  interval: points.length > 4
+                                      ? (points.length / 4).ceilToDouble()
+                                      : 1,
+                                  getTitlesWidget: (x, meta) {
+                                    final index = x.round();
+                                    if (index < 0 || index >= points.length)
+                                      return const SizedBox.shrink();
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: Text(
+                                        DateFormat(
+                                          'd/M',
+                                        ).format(points[index].date),
+                                        style: const TextStyle(fontSize: 10),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            lineBarsData: [
+                              LineChartBarData(
+                                isCurved: true,
+                                barWidth: 3,
+                                color: GreekColors.bronze,
+                                dotData: const FlDotData(show: true),
+                                belowBarData: BarAreaData(
+                                  show: true,
+                                  color: GreekColors.aegean.withValues(
+                                    alpha: .12,
+                                  ),
+                                ),
+                                spots: [
+                                  for (var i = 0; i < points.length; i++)
+                                    FlSpot(i.toDouble(), value(points[i])),
+                                ],
+                              ),
+                            ],
                           ),
-                          lineBarsData: [
-                            LineChartBarData(
-                              isCurved: true,
-                              barWidth: 3,
-                              color: Theme.of(context).colorScheme.primary,
-                              dotData: const FlDotData(show: true),
-                              belowBarData: BarAreaData(
-                                show: true,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: .12),
-                              ),
-                              spots: [
-                                for (var i = 0; i < points.length; i++)
-                                  FlSpot(i.toDouble(), value(points[i])),
-                              ],
-                            ),
-                          ],
                         ),
                       ),
                     ),
@@ -1412,21 +1523,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ref.read(databaseProvider),
       ).pickBackup();
       if (preview == null || !mounted) return;
-      final confirmed = await showDialog<bool>(
+      final confirmed = await showGreekDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Pulihkan backup?'),
-          content: Text(
+        builder: (context) => GreekDialog(
+          title: 'Pulihkan backup?',
+          child: Text(
             'Backup berisi ${preview.routines} routine, ${preview.workouts} workout, dan ${preview.sets} set. Semua data saat ini akan diganti.',
           ),
           actions: [
-            TextButton(
+            GreekButton(
+              label: 'Batal',
+              expand: false,
+              compact: true,
+              variant: GreekActionVariant.quiet,
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Batal'),
             ),
-            FilledButton(
+            GreekButton(
+              label: 'Pulihkan',
+              expand: false,
+              compact: true,
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Pulihkan'),
             ),
           ],
         ),
@@ -1443,78 +1559,68 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final name = TextEditingController();
     var muscle = 'Dada';
     var equipment = 'Dumbbell';
-    final saved = await showDialog<bool>(
+    final saved = await showGreekDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Exercise custom'),
-          content: Column(
+        builder: (context, setState) => GreekDialog(
+          title: 'Exercise custom',
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              GreekTextField(
                 controller: name,
-                decoration: const InputDecoration(labelText: 'Nama exercise'),
+                label: 'Nama exercise',
+                hint: 'Contoh: Landmine Press',
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: muscle,
-                decoration: const InputDecoration(labelText: 'Kelompok otot'),
-                items:
-                    const [
-                          'Dada',
-                          'Punggung',
-                          'Bahu',
-                          'Biceps',
-                          'Triceps',
-                          'Paha depan',
-                          'Hamstring',
-                          'Glutes',
-                          'Betis',
-                          'Core',
-                          'Seluruh tubuh',
-                        ]
-                        .map(
-                          (value) => DropdownMenuItem(
-                            value: value,
-                            child: Text(value),
-                          ),
-                        )
-                        .toList(),
+              GreekSelect<String>(
+                label: 'Kelompok otot',
+                value: muscle,
+                options: const {
+                  'Dada': 'Dada',
+                  'Punggung': 'Punggung',
+                  'Bahu': 'Bahu',
+                  'Biceps': 'Biceps',
+                  'Triceps': 'Triceps',
+                  'Paha depan': 'Paha depan',
+                  'Hamstring': 'Hamstring',
+                  'Glutes': 'Glutes',
+                  'Betis': 'Betis',
+                  'Core': 'Core',
+                  'Seluruh tubuh': 'Seluruh tubuh',
+                },
                 onChanged: (value) => setState(() => muscle = value!),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: equipment,
-                decoration: const InputDecoration(labelText: 'Peralatan'),
-                items:
-                    const [
-                          'Barbell',
-                          'Dumbbell',
-                          'Machine',
-                          'Cable',
-                          'Bodyweight',
-                          'Lainnya',
-                        ]
-                        .map(
-                          (value) => DropdownMenuItem(
-                            value: value,
-                            child: Text(value),
-                          ),
-                        )
-                        .toList(),
+              GreekSelect<String>(
+                label: 'Peralatan',
+                value: equipment,
+                options: const {
+                  'Barbell': 'Barbell',
+                  'Dumbbell': 'Dumbbell',
+                  'Machine': 'Machine',
+                  'Cable': 'Cable',
+                  'Bodyweight': 'Bodyweight',
+                  'Lainnya': 'Lainnya',
+                },
                 onChanged: (value) => setState(() => equipment = value!),
               ),
             ],
           ),
           actions: [
-            TextButton(
+            GreekButton(
+              label: 'Batal',
+              expand: false,
+              compact: true,
+              variant: GreekActionVariant.quiet,
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Batal'),
             ),
-            FilledButton(
+            GreekButton(
+              label: 'Simpan',
+              expand: false,
+              compact: true,
               onPressed: () =>
                   Navigator.pop(context, name.text.trim().isNotEmpty),
-              child: const Text('Simpan'),
             ),
           ],
         ),
@@ -1537,17 +1643,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         (ref.watch(exercisesProvider).valueOrNull ?? const <Exercise>[])
             .where((e) => e.isCustom)
             .toList();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Pengaturan',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(9),
-          child: GreekKeyBorder(height: 9),
-        ),
-      ),
+    return GreekPageShell(
+      topBar: const GreekTopBar(title: 'Pengaturan'),
       body: !loaded
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -1560,43 +1657,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Card(
+                GreekPanel(
+                  padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      ListTile(
-                        title: const Text('Rest timer default'),
-                        subtitle: Text('$restSeconds detik'),
-                        trailing: DropdownButton<int>(
-                          value: restSeconds,
-                          items: const [30, 60, 90, 120, 180, 300]
-                              .map(
-                                (value) => DropdownMenuItem(
-                                  value: value,
-                                  child: Text('$value dtk'),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) async {
-                            if (value == null) return;
-                            setState(() => restSeconds = value);
-                            await ref
-                                .read(databaseProvider)
-                                .setSetting('defaultRestSeconds', '$value');
-                          },
-                        ),
-                      ),
-                      SwitchListTile(
-                        title: const Text('Suara timer'),
-                        subtitle: const Text(
-                          'Gunakan suara notifikasi Android',
-                        ),
-                        value: timerSound,
-                        onChanged: (value) async {
-                          setState(() => timerSound = value);
+                      GreekListRow(
+                        title: 'Rest timer default',
+                        subtitle: '$restSeconds detik',
+                        trailing: const Icon(Icons.expand_more),
+                        onTap: () async {
+                          final value = await showGreekActionSheet<int>(
+                            context: context,
+                            title: 'Rest timer default',
+                            actions: const [30, 60, 90, 120, 180, 300]
+                                .map(
+                                  (value) => GreekAction(
+                                    value: value,
+                                    label: '$value detik',
+                                  ),
+                                )
+                                .toList(),
+                          );
+                          if (value == null) return;
+                          setState(() => restSeconds = value);
                           await ref
                               .read(databaseProvider)
-                              .setSetting('timerSound', '$value');
+                              .setSetting('defaultRestSeconds', '$value');
                         },
+                      ),
+                      const Divider(),
+                      GreekListRow(
+                        title: 'Suara timer',
+                        subtitle: 'Gunakan suara notifikasi Android',
+                        trailing: GreekToggle(
+                          value: timerSound,
+                          onChanged: (value) async {
+                            setState(() => timerSound = value);
+                            await ref
+                                .read(databaseProvider)
+                                .setSetting('timerSound', '$value');
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -1611,32 +1712,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    TextButton.icon(
+                    GreekButton(
                       onPressed: _createExercise,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Tambah'),
+                      icon: Icons.add,
+                      label: 'Tambah',
+                      expand: false,
+                      compact: true,
+                      variant: GreekActionVariant.quiet,
                     ),
                   ],
                 ),
-                Card(
+                GreekPanel(
+                  padding: EdgeInsets.zero,
                   child: custom.isEmpty
-                      ? const ListTile(
-                          title: Text('Belum ada exercise custom'),
-                          subtitle: Text(
-                            'Library bawaan berisi 80 exercise umum.',
-                          ),
+                      ? const GreekListRow(
+                          title: 'Belum ada exercise custom',
+                          subtitle: 'Library bawaan berisi 80 exercise umum.',
                         )
                       : Column(
                           children: custom
                               .map(
-                                (exercise) => ListTile(
-                                  title: Text(exercise.name),
-                                  subtitle: Text(
-                                    '${exercise.muscle} • ${exercise.equipment}',
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.archive_outlined),
-                                    tooltip: 'Archive',
+                                (exercise) => GreekListRow(
+                                  title: exercise.name,
+                                  subtitle:
+                                      '${exercise.muscle} • ${exercise.equipment}',
+                                  trailing: GreekIconButton(
+                                    icon: Icons.archive_outlined,
+                                    semanticLabel: 'Archive ${exercise.name}',
                                     onPressed: () => ref
                                         .read(databaseProvider)
                                         .archiveExercise(exercise.id),
@@ -1654,35 +1756,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Card(
+                GreekPanel(
+                  padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      ListTile(
+                      GreekListRow(
                         leading: const Icon(Icons.upload_file),
-                        title: const Text('Ekspor backup'),
-                        subtitle: const Text(
-                          'Simpan seluruh data sebagai JSON',
-                        ),
+                        title: 'Ekspor backup',
+                        subtitle: 'Simpan seluruh data sebagai JSON',
                         onTap: _export,
                       ),
                       const Divider(height: 1),
-                      ListTile(
+                      GreekListRow(
                         leading: const Icon(Icons.restore),
-                        title: const Text('Impor backup'),
-                        subtitle: const Text(
-                          'Ganti data dari file backup Repr',
-                        ),
+                        title: 'Impor backup',
+                        subtitle: 'Ganti data dari file backup Repr',
                         onTap: _import,
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.info_outline),
-                    title: Text('Repr 1.0.0'),
-                    subtitle: Text('Gym log pribadi • Offline • Tanpa akun'),
+                GreekPanel(
+                  padding: EdgeInsets.zero,
+                  child: GreekListRow(
+                    leading: ClipPath(
+                      clipper: const GreekCutCornerClipper(cut: 5),
+                      child: Image.asset(
+                        'assets/icon/repr_icon.png',
+                        width: 48,
+                        height: 48,
+                      ),
+                    ),
+                    title: 'Repr 1.0.0',
+                    subtitle: 'Gym log pribadi • Offline • Tanpa akun',
                   ),
                 ),
               ],
