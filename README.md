@@ -7,7 +7,7 @@ koneksi jaringan.
 ## Fitur
 
 - Library 80 exercise dan exercise custom
-- Routine dengan tiga set awal per exercise
+- Routine dengan catatan, urutan exercise, jenis/jumlah set, dan rest timer
 - Workout kosong, dari routine, atau mengulangi riwayat
 - Weight, reps, RPE, working/warm-up/drop/failure set
 - Previous performance dan draft workout yang tersimpan otomatis
@@ -29,10 +29,16 @@ flutter run
 Quality gate:
 
 ```sh
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed .
 flutter analyze
 flutter test
 flutter build apk --debug
+```
+
+Dengan emulator atau perangkat Android terhubung, jalankan integration test:
+
+```sh
+flutter test integration_test/backup_restore_test.dart
 ```
 
 APK debug berada di `build/app/outputs/flutter-apk/app-debug.apk`.
