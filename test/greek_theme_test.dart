@@ -36,4 +36,43 @@ void main() {
     expect(find.text('ΑΡΕΤΗ'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('action sheet panjang dapat di-scroll pada layar sempit', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildGreekTheme(),
+        home: Builder(
+          builder: (context) => GreekButton(
+            label: 'Buka pilihan',
+            onPressed: () => showGreekActionSheet<int>(
+              context: context,
+              title: 'Pilih RPE',
+              actions: List.generate(
+                19,
+                (index) =>
+                    GreekAction(value: index, label: 'Pilihan ${index + 1}'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('BUKA PILIHAN'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pilih RPE'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.drag(find.byType(ListView).last, const Offset(0, -900));
+    await tester.pumpAndSettle();
+    expect(find.text('Pilihan 19'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -1023,27 +1023,41 @@ Future<T?> showGreekActionSheet<T>({
   isScrollControlled: true,
   builder: (context) => SafeArea(
     minimum: const EdgeInsets.all(12),
-    child: GreekPanel(
-      padding: EdgeInsets.zero,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-          ),
-          const GreekKeyBorder(height: 8),
-          ...actions.map(
-            (action) => GreekListRow(
-              title: action.label,
-              trailing: Icon(
-                Icons.chevron_right,
-                color: action.danger ? GreekColors.danger : GreekColors.bronze,
-              ),
-              onTap: () => Navigator.pop(context, action.value),
+    child: ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * .82,
+      ),
+      child: GreekPanel(
+        padding: EdgeInsets.zero,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
             ),
-          ),
-        ],
+            const GreekKeyBorder(height: 8),
+            Flexible(
+              fit: FlexFit.loose,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final action in actions)
+                    GreekListRow(
+                      title: action.label,
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: action.danger
+                            ? GreekColors.danger
+                            : GreekColors.bronze,
+                      ),
+                      onTap: () => Navigator.pop(context, action.value),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   ),
