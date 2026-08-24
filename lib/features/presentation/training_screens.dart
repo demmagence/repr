@@ -89,12 +89,15 @@ class TrainingScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Routine',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  'Routine',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
               ),
+              const SizedBox(width: 8),
               GreekButton(
                 onPressed: () => showRoutineEditor(context, ref),
                 icon: Icons.add,

@@ -111,38 +111,51 @@ class GreekBrandMark extends StatelessWidget {
   const GreekBrandMark({super.key});
 
   @override
-  Widget build(BuildContext context) => const Row(
-    children: [
-      GreekTempleMark(size: 36),
-      SizedBox(width: 10),
-      Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) => Semantics(
+    label: 'Repr. ΑΡΕΤΗ. Track every rep.',
+    child: ExcludeSemantics(
+      child: Row(
         children: [
-          Text(
-            'REPR',
-            style: TextStyle(
-              color: GreekColors.aegeanDeep,
-              fontFamily: 'NotoSerif',
-              fontSize: 21,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 3,
-              height: 1,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'ΑΡΕΤΗ  •  TRACK EVERY REP',
-            style: TextStyle(
-              color: GreekColors.terracotta,
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
-              letterSpacing: .65,
+          const GreekTempleMark(size: 36),
+          const SizedBox(width: 10),
+          Expanded(
+            child: MediaQuery.withNoTextScaling(
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'REPR',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: GreekColors.aegeanDeep,
+                      fontFamily: 'NotoSerif',
+                      fontSize: 21,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 3,
+                      height: 1,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'ΑΡΕΤΗ  •  TRACK EVERY REP',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: GreekColors.terracotta,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: .65,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
-    ],
+    ),
   );
 }
 
@@ -869,7 +882,7 @@ class GreekEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-    child: Padding(
+    child: SingleChildScrollView(
       padding: const EdgeInsets.all(28),
       child: Column(
         mainAxisSize: MainAxisSize.min,
