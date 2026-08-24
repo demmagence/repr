@@ -17,7 +17,8 @@ koneksi jaringan.
 
 ## Menjalankan project
 
-Persyaratan: Flutter 3.44+, Dart 3.12+, Android SDK 36, dan Java 17+.
+Persyaratan: Flutter 3.44+, Dart 3.12+, Android SDK 36, Java 17+, serta
+perangkat Android 7.0/API 24 atau lebih baru.
 
 ```sh
 flutter pub get
