@@ -1226,7 +1226,7 @@ Future<DateTime?> showGreekDatePicker({
   required DateTime firstDate,
   required DateTime lastDate,
 }) async {
-  return showDialog<DateTime>(
+  return showGreekDialog<DateTime>(
     context: context,
     builder: (context) => _GreekDatePickerDialog(
       initialDate: initialDate,
@@ -1484,8 +1484,8 @@ class _GreekDateCell extends StatelessWidget {
     }
 
     return Expanded(
-      child: AspectRatio(
-        aspectRatio: 1,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
         child: Padding(
           padding: const EdgeInsets.all(2),
           child: Semantics(
