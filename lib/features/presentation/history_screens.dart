@@ -227,7 +227,7 @@ class HistoryDetailScreen extends ConsumerWidget {
                 if (value == 'repeat') return _repeat(context, ref, workout);
                 if (value == 'edit') return _edit(context, ref, workout);
                 if (value == 'date') {
-                  final date = await showDatePicker(
+                  final date = await showGreekDatePicker(
                     context: context,
                     firstDate: DateTime(2000),
                     lastDate: DateTime.now(),
