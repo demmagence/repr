@@ -1483,7 +1483,8 @@ class _GreekDateCell extends StatelessWidget {
       textColor = GreekColors.limestone;
     }
 
-    return Expanded(
+    return Flexible(
+      fit: FlexFit.loose,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
         child: Padding(
