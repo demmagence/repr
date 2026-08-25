@@ -43,6 +43,29 @@ flutter test integration_test/backup_restore_test.dart
 
 APK debug berada di `build/app/outputs/flutter-apk/app-debug.apk`.
 
+## Signing APK release
+
+Build release tidak pernah memakai debug key. Buat keystore pribadi, misalnya:
+
+```sh
+keytool -genkeypair -v -keystore repr-release.jks -alias repr -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Salin `android/key.properties.example` menjadi `android/key.properties`, lalu isi
+lokasi keystore dan kredensialnya. File tersebut serta `*.jks`/`*.keystore`
+dikecualikan dari Git. Alternatifnya, sediakan empat environment variable:
+`REPR_STORE_FILE`, `REPR_STORE_PASSWORD`, `REPR_KEY_ALIAS`, dan
+`REPR_KEY_PASSWORD`.
+
+Setelah signing tersedia, jalankan:
+
+```sh
+flutter build apk --release
+```
+
+Tanpa kredensial tersebut, build release sengaja dihentikan dengan pesan yang
+jelas; `flutter build apk --debug` tetap dapat digunakan tanpa secret.
+
 ## Backup
 
 1. Pastikan tidak ada workout aktif.

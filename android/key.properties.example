@@ -1,0 +1,6 @@
+# Salin file ini menjadi android/key.properties dan isi nilai lokal Anda.
+# Jangan commit android/key.properties atau file keystore.
+storeFile=C:\\path\\to\\repr-release.jks
+storePassword=change-me
+keyAlias=repr
+keyPassword=change-me
