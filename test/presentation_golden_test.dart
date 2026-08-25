@@ -12,7 +12,18 @@ import 'package:repr/ui/greek/greek.dart';
 
 class _DeniedNotificationService extends NotificationService {
   @override
-  Future<bool> requestPermission() async => false;
+  Future<RestTimerPermissionStatus> requestRestTimerPermission() async =>
+      const RestTimerPermissionStatus(
+        notificationsGranted: false,
+        exactAlarmsGranted: false,
+      );
+
+  @override
+  Future<RestTimerPermissionStatus> permissionStatus() async =>
+      const RestTimerPermissionStatus(
+        notificationsGranted: false,
+        exactAlarmsGranted: false,
+      );
 
   @override
   Future<void> scheduleRestEnd(DateTime when, {required bool sound}) async {}
