@@ -132,7 +132,10 @@ class AppDatabase extends _$AppDatabase {
       await _seed();
     },
     onUpgrade: (m, from, to) async {
-      if (from < 2) await _createSingleActiveWorkoutIndex();
+      if (from < 2) {
+        await _normalizeActiveWorkoutDrafts();
+        await _createSingleActiveWorkoutIndex();
+      }
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -142,6 +145,25 @@ class AppDatabase extends _$AppDatabase {
   Future<void> _createSingleActiveWorkoutIndex() => customStatement(
     "CREATE UNIQUE INDEX one_active_workout_idx ON workouts(status) WHERE status = 'active'",
   );
+
+  Future<void> _normalizeActiveWorkoutDrafts() async {
+    final activeDrafts = await customSelect(
+      "SELECT id FROM workouts WHERE status = 'active' ORDER BY started_at DESC, id DESC",
+    ).get();
+    for (final draft in activeDrafts.skip(1)) {
+      final id = draft.read<String>('id');
+      await customStatement(
+        'DELETE FROM workout_sets WHERE workout_exercise_id IN '
+        '(SELECT id FROM workout_exercises WHERE workout_id = ?)',
+        [id],
+      );
+      await customStatement(
+        'DELETE FROM workout_exercises WHERE workout_id = ?',
+        [id],
+      );
+      await customStatement('DELETE FROM workouts WHERE id = ?', [id]);
+    }
+  }
 
   Future<void> _seed() async {
     final now = DateTime.now();
