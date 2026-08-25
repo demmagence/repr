@@ -75,6 +75,79 @@ void main() {
     expect(index?.read<String>('name'), 'one_active_workout_idx');
   });
 
+  test('migrasi schema 1 menyimpan draft aktif terbaru dan history', () async {
+    await database.close();
+    final legacy = AppDatabase(
+      NativeDatabase.memory(
+        setup: (raw) {
+          raw.execute('''
+            CREATE TABLE workouts (
+              id TEXT NOT NULL PRIMARY KEY,
+              routine_id TEXT NULL,
+              name TEXT NOT NULL,
+              notes TEXT NOT NULL DEFAULT '',
+              status TEXT NOT NULL,
+              started_at INTEGER NOT NULL,
+              ended_at INTEGER NULL,
+              rest_ends_at INTEGER NULL
+            )
+          ''');
+          raw.execute('''
+            CREATE TABLE workout_exercises (
+              id TEXT NOT NULL PRIMARY KEY,
+              workout_id TEXT NOT NULL,
+              exercise_id TEXT NOT NULL,
+              position INTEGER NOT NULL,
+              notes TEXT NOT NULL DEFAULT '',
+              rest_seconds INTEGER NOT NULL DEFAULT 90
+            )
+          ''');
+          raw.execute('''
+            CREATE TABLE workout_sets (
+              id TEXT NOT NULL PRIMARY KEY,
+              workout_exercise_id TEXT NOT NULL,
+              position INTEGER NOT NULL,
+              type TEXT NOT NULL DEFAULT 'working',
+              weight_grams INTEGER NOT NULL DEFAULT 0,
+              reps INTEGER NOT NULL DEFAULT 0,
+              rpe REAL NULL,
+              completed INTEGER NOT NULL DEFAULT 0
+            )
+          ''');
+          raw.execute(
+            "INSERT INTO workouts VALUES ('older', NULL, 'Draft lama', '', 'active', 10, NULL, NULL)",
+          );
+          raw.execute(
+            "INSERT INTO workouts VALUES ('newer', NULL, 'Draft terbaru', '', 'active', 20, NULL, NULL)",
+          );
+          raw.execute(
+            "INSERT INTO workouts VALUES ('history', NULL, 'Selesai', '', 'completed', 5, 6, NULL)",
+          );
+          raw.execute(
+            "INSERT INTO workout_exercises VALUES ('old-exercise', 'older', 'exercise', 0, '', 90)",
+          );
+          raw.execute(
+            "INSERT INTO workout_sets VALUES ('old-set', 'old-exercise', 0, 'working', 60000, 8, NULL, 1)",
+          );
+          raw.userVersion = 1;
+        },
+      ),
+    );
+    addTearDown(legacy.close);
+
+    expect((await legacy.getActiveWorkout())?.id, 'newer');
+    final all = await legacy.customSelect('SELECT id FROM workouts').get();
+    expect(
+      all.map((row) => row.read<String>('id')),
+      containsAll(['newer', 'history']),
+    );
+    expect(all.map((row) => row.read<String>('id')), isNot(contains('older')));
+    final remainingSets = await legacy
+        .customSelect('SELECT COUNT(*) AS amount FROM workout_sets')
+        .getSingle();
+    expect(remainingSets.read<int>('amount'), 0);
+  });
+
   test('routine dapat dimulai dan draft bertahan di database', () async {
     final exercise = (await database.watchExercises().first).first;
     final routine = await database.createRoutine('Push day', [exercise.id]);
