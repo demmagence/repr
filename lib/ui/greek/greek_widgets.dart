@@ -381,7 +381,7 @@ class GreekButton extends StatelessWidget {
             child: InkWell(
               onTap: onPressed,
               child: Container(
-                constraints: const BoxConstraints(minHeight: 48),
+                constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
                 decoration: BoxDecoration(border: Border.all(color: border)),
                 padding: EdgeInsets.symmetric(
                   horizontal: compact ? 12 : 18,
@@ -504,7 +504,7 @@ class GreekTextField extends StatelessWidget {
         ClipPath(
           clipper: const GreekCutCornerClipper(cut: 5),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 48),
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
             decoration: BoxDecoration(
               color: GreekColors.marbleLight,
               border: Border.all(
@@ -591,7 +591,7 @@ class GreekSegmentedControl<T> extends StatelessWidget {
                   onTap: () => onChanged(segments[i].value),
                   child: AnimatedContainer(
                     duration: GreekMotion.resolve(context, GreekMotion.quick),
-                    constraints: const BoxConstraints(minHeight: 48),
+                    constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 11,
@@ -1485,7 +1485,7 @@ class _GreekDateCell extends StatelessWidget {
 
     return Expanded(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
+        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
         child: Padding(
           padding: const EdgeInsets.all(2),
           child: Semantics(
