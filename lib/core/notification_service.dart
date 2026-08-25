@@ -3,6 +3,18 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+class RestTimerPermissionStatus {
+  const RestTimerPermissionStatus({
+    required this.notificationsGranted,
+    required this.exactAlarmsGranted,
+  });
+
+  final bool notificationsGranted;
+  final bool exactAlarmsGranted;
+
+  bool get canSchedule => notificationsGranted && exactAlarmsGranted;
+}
+
 class NotificationService {
   NotificationService();
 
@@ -24,15 +36,45 @@ class NotificationService {
     );
   }
 
-  Future<bool> requestPermission() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return false;
+  Future<RestTimerPermissionStatus> permissionStatus() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return const RestTimerPermissionStatus(
+        notificationsGranted: false,
+        exactAlarmsGranted: false,
+      );
+    }
     final android = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-    final notification = await android?.requestNotificationsPermission();
-    final exact = await android?.requestExactAlarmsPermission();
-    return (notification ?? true) && (exact ?? true);
+    return RestTimerPermissionStatus(
+      notificationsGranted: await android?.areNotificationsEnabled() ?? true,
+      exactAlarmsGranted:
+          await android?.canScheduleExactNotifications() ?? true,
+    );
+  }
+
+  Future<RestTimerPermissionStatus> requestRestTimerPermission() async {
+    final current = await permissionStatus();
+    if (current.canSchedule ||
+        kIsWeb ||
+        defaultTargetPlatform != TargetPlatform.android) {
+      return current;
+    }
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    final notificationsGranted =
+        current.notificationsGranted ||
+        (await android?.requestNotificationsPermission() ?? false);
+    final exactAlarmsGranted =
+        current.exactAlarmsGranted ||
+        (await android?.requestExactAlarmsPermission() ?? false);
+    return RestTimerPermissionStatus(
+      notificationsGranted: notificationsGranted,
+      exactAlarmsGranted: exactAlarmsGranted,
+    );
   }
 
   Future<void> scheduleRestEnd(DateTime when, {required bool sound}) async {

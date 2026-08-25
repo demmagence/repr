@@ -10,12 +10,25 @@ import 'package:repr/ui/greek/greek.dart';
 
 class _DeniedNotificationService extends NotificationService {
   var permissionRequests = 0;
+  var statusChecks = 0;
   var scheduleCalls = 0;
 
   @override
-  Future<bool> requestPermission() async {
+  Future<RestTimerPermissionStatus> requestRestTimerPermission() async {
     permissionRequests++;
-    return false;
+    return const RestTimerPermissionStatus(
+      notificationsGranted: false,
+      exactAlarmsGranted: false,
+    );
+  }
+
+  @override
+  Future<RestTimerPermissionStatus> permissionStatus() async {
+    statusChecks++;
+    return const RestTimerPermissionStatus(
+      notificationsGranted: false,
+      exactAlarmsGranted: false,
+    );
   }
 
   @override
@@ -40,6 +53,11 @@ void main() {
         final view = (await database.getWorkoutExercises(id)).single;
         await database.updateWorkoutSet(
           id: view.sets.first.id,
+          weightGrams: 60000,
+          reps: 8,
+        );
+        await database.updateWorkoutSet(
+          id: view.sets[1].id,
           weightGrams: 60000,
           reps: 8,
         );
@@ -89,6 +107,23 @@ void main() {
       );
       final active = await tester.runAsync(database.getActiveWorkout);
       expect(active?.restEndsAt, isNotNull);
+
+      final secondCompletion = find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label == 'Selesaikan set 2',
+      );
+      await tester.tap(secondCompletion);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(service.permissionRequests, 1);
+      expect(service.statusChecks, 1);
+      expect(
+        find.text('Timer aktif di aplikasi. Izin notifikasi belum diberikan.'),
+        findsOneWidget,
+      );
 
       await tester.pump(const Duration(seconds: 4));
       await tester.pump(const Duration(milliseconds: 300));

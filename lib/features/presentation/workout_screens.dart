@@ -338,8 +338,15 @@ class WorkoutExerciseCard extends ConsumerWidget {
     await database.setRestEnd(workoutId, end);
     final sound = (await database.getSetting('timerSound')) != 'false';
     final service = ref.read(notificationProvider);
-    final permitted = await service.requestPermission();
-    if (permitted) {
+    final alreadyPrompted =
+        (await database.getSetting('restTimerPermissionPrompted')) == 'true';
+    final permission = alreadyPrompted
+        ? await service.permissionStatus()
+        : await service.requestRestTimerPermission();
+    if (!alreadyPrompted) {
+      await database.setSetting('restTimerPermissionPrompted', 'true');
+    }
+    if (permission.canSchedule) {
       try {
         await service.scheduleRestEnd(end, sound: sound);
       } catch (_) {
@@ -349,10 +356,15 @@ class WorkoutExerciseCard extends ConsumerWidget {
             'Timer aktif di aplikasi; notifikasi latar tidak tersedia.',
           );
       }
-    } else if (context.mounted) {
+    } else if ((await database.getSetting('restTimerPermissionNoticeShown')) !=
+        'true') {
+      await database.setSetting('restTimerPermissionNoticeShown', 'true');
+      if (!context.mounted) return;
       showMessage(
         context,
-        'Timer aktif di aplikasi. Izin notifikasi belum diberikan.',
+        permission.notificationsGranted
+            ? 'Timer aktif di aplikasi. Izin exact alarm belum diberikan.'
+            : 'Timer aktif di aplikasi. Izin notifikasi belum diberikan.',
       );
     }
   }
