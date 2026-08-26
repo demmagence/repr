@@ -26,22 +26,50 @@ dart run build_runner build
 flutter run
 ```
 
-Quality gate:
+## Quality Gate & Continuous Integration
 
-```sh
-dart format --output=none --set-exit-if-changed .
-flutter analyze
-flutter test
-flutter build apk --debug
-```
+Repositori menggunakan GitHub Actions workflow (`.github/workflows/quality_gate.yml`) yang berjalan otomatis pada setiap **Pull Request** dan **Push** ke branch `main`.
+
+Workflow CI menjalankan tahap-tahap berikut pada runner Windows (`windows-latest`):
+1. **Format check**: `dart format --output=none --set-exit-if-changed .`
+2. **Static analysis**: `flutter analyze`
+3. **Unit, Widget, & Golden tests**: `flutter test`
+4. **Debug APK build**: `flutter build apk --debug` (tidak memerlukan secret release signing)
+
+> [!NOTE]
+> Runner Windows digunakan pada CI agar baseline rasterisasi font dan layout pada **Golden Tests** konsisten dengan lingkungan pengujian.
+
+### Mereproduksi dan Memperbaiki Kegagalan Secara Lokal
+
+Jika quality gate gagal di CI, jalankan perintah berikut secara bertahap di lingkungan lokal:
+
+1. **Format kode:**
+   ```sh
+   dart format .
+   ```
+2. **Analisis lint:**
+   ```sh
+   flutter analyze
+   ```
+3. **Pengujian unit, widget, dan golden:**
+   ```sh
+   flutter test
+   ```
+   Jika perubahan tampilan UI disengaja dan baseline golden perlu diperbarui (di OS Windows):
+   ```sh
+   flutter test --update-goldens
+   ```
+4. **Build APK debug:**
+   ```sh
+   flutter build apk --debug
+   ```
+   APK debug akan dihasilkan di `build/app/outputs/flutter-apk/app-debug.apk`.
 
 Dengan emulator atau perangkat Android terhubung, jalankan integration test:
 
 ```sh
 flutter test integration_test/backup_restore_test.dart
 ```
-
-APK debug berada di `build/app/outputs/flutter-apk/app-debug.apk`.
 
 ## Signing APK release
 
