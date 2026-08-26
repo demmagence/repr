@@ -591,7 +591,10 @@ class GreekSegmentedControl<T> extends StatelessWidget {
                   onTap: () => onChanged(segments[i].value),
                   child: AnimatedContainer(
                     duration: GreekMotion.resolve(context, GreekMotion.quick),
-                    constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+                    constraints: const BoxConstraints(
+                      minHeight: 48,
+                      minWidth: 48,
+                    ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 11,
@@ -1258,48 +1261,104 @@ class _GreekDatePickerDialogState extends State<_GreekDatePickerDialog> {
   @override
   void initState() {
     super.initState();
-    _displayedMonth = DateTime(widget.initialDate.year, widget.initialDate.month);
+    _displayedMonth = DateTime(
+      widget.initialDate.year,
+      widget.initialDate.month,
+    );
     _selectedDate = widget.initialDate;
   }
 
+  bool get _canGoPrevious {
+    final firstMonth = DateTime(widget.firstDate.year, widget.firstDate.month);
+    return _displayedMonth.isAfter(firstMonth);
+  }
+
+  bool get _canGoNext {
+    final lastMonth = DateTime(widget.lastDate.year, widget.lastDate.month);
+    return _displayedMonth.isBefore(lastMonth);
+  }
+
   void _previousMonth() {
+    if (!_canGoPrevious) return;
     setState(() {
-      _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month - 1);
+      _displayedMonth = DateTime(
+        _displayedMonth.year,
+        _displayedMonth.month - 1,
+      );
     });
   }
 
   void _nextMonth() {
+    if (!_canGoNext) return;
     setState(() {
-      _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1);
+      _displayedMonth = DateTime(
+        _displayedMonth.year,
+        _displayedMonth.month + 1,
+      );
     });
   }
 
+  bool _isDateDisabled(DateTime date) {
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    final firstDateOnly = DateTime(
+      widget.firstDate.year,
+      widget.firstDate.month,
+      widget.firstDate.day,
+    );
+    final lastDateOnly = DateTime(
+      widget.lastDate.year,
+      widget.lastDate.month,
+      widget.lastDate.day,
+    );
+    return dateOnly.isBefore(firstDateOnly) || dateOnly.isAfter(lastDateOnly);
+  }
+
   void _selectDate(DateTime date) {
-    if (date.isBefore(widget.firstDate) || date.isAfter(widget.lastDate)) return;
+    if (_isDateDisabled(date)) return;
     setState(() => _selectedDate = date);
   }
 
-  List<DateTime> _getDaysInMonth() {
-    final firstDayOfMonth = DateTime(_displayedMonth.year, _displayedMonth.month);
-    
-    // Get weekday of first day (1 = Monday, 7 = Sunday)
-    final firstWeekday = firstDayOfMonth.weekday;
-    
-    // Calculate days to show from previous month
-    final daysFromPrevMonth = firstWeekday - 1; // Monday = 0 offset
-    final startDate = firstDayOfMonth.subtract(Duration(days: daysFromPrevMonth));
-    
-    // Generate 42 days (6 weeks) for consistent grid
-    return List.generate(
-      42,
-      (index) => startDate.add(Duration(days: index)),
+  static bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  List<List<DateTime>> _getWeeks() {
+    final firstDayOfMonth = DateTime(
+      _displayedMonth.year,
+      _displayedMonth.month,
     );
+    final firstWeekday = firstDayOfMonth.weekday;
+    final daysFromPrevMonth = firstWeekday - 1;
+
+    final allDays = List.generate(
+      42,
+      (index) => DateTime(
+        _displayedMonth.year,
+        _displayedMonth.month,
+        1 - daysFromPrevMonth + index,
+      ),
+    );
+
+    final weeks = <List<DateTime>>[];
+    for (var i = 0; i < 42; i += 7) {
+      weeks.add(allDays.sublist(i, i + 7));
+    }
+    return weeks;
   }
 
   String _getMonthYearText() {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${months[_displayedMonth.month - 1]} ${_displayedMonth.year}';
   }
@@ -1307,13 +1366,14 @@ class _GreekDatePickerDialogState extends State<_GreekDatePickerDialog> {
   @override
   Widget build(BuildContext context) => Dialog(
     backgroundColor: Colors.transparent,
-    insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+    insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
     child: GreekPanel(
       padding: EdgeInsets.zero,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header with month/year and navigation
             Padding(
@@ -1335,87 +1395,111 @@ class _GreekDatePickerDialogState extends State<_GreekDatePickerDialog> {
                   GreekIconButton(
                     icon: Icons.chevron_left,
                     semanticLabel: 'Bulan sebelumnya',
-                    onPressed: _previousMonth,
+                    onPressed: _canGoPrevious ? _previousMonth : null,
                   ),
                   GreekIconButton(
                     icon: Icons.chevron_right,
                     semanticLabel: 'Bulan berikutnya',
-                    onPressed: _nextMonth,
+                    onPressed: _canGoNext ? _nextMonth : null,
                   ),
                 ],
               ),
             ),
             const Divider(height: 1, color: GreekColors.limestoneDark),
-            
+
             // Calendar grid
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  // Weekday headers
-                  Row(
-                    children: ['S', 'S', 'R', 'K', 'J', 'S', 'M']
-                        .map((day) => Expanded(
-                              child: Center(
-                                child: Text(
-                                  day,
-                                  style: const TextStyle(
-                                    color: GreekColors.terracotta,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: .5,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  const minCellWidth = 48.0;
+                  final availableWidth = constraints.maxWidth;
+                  final cellWidth = (availableWidth / 7).clamp(
+                    minCellWidth,
+                    double.infinity,
+                  );
+                  final gridWidth = cellWidth * 7;
+                  final weeks = _getWeeks();
+
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: gridWidth,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Weekday headers
+                          Row(
+                            children: ['S', 'S', 'R', 'K', 'J', 'S', 'M']
+                                .map(
+                                  (day) => SizedBox(
+                                    width: cellWidth,
+                                    height: 28,
+                                    child: Center(
+                                      child: Text(
+                                        day,
+                                        style: const TextStyle(
+                                          color: GreekColors.terracotta,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: .5,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                )
+                                .toList(),
+                          ),
+                          const SizedBox(height: 6),
+
+                          // Date grid (6 weeks)
+                          ...weeks.map(
+                            (week) => Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: Row(
+                                children: week
+                                    .map(
+                                      (date) => SizedBox(
+                                        width: cellWidth,
+                                        height: 48,
+                                        child: _GreekDateCell(
+                                          date: date,
+                                          isCurrentMonth:
+                                              date.month ==
+                                              _displayedMonth.month,
+                                          isSelected:
+                                              _selectedDate != null &&
+                                              _isSameDay(date, _selectedDate!),
+                                          isToday: _isSameDay(
+                                            date,
+                                            DateTime.now(),
+                                          ),
+                                          isEnabled: !_isDateDisabled(date),
+                                          onTap: () => _selectDate(date),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                               ),
-                            ))
-                        .toList(),
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  // Date grid (6 weeks)
-                  ..._getDaysInMonth()
-                      .asMap()
-                      .entries
-                      .fold<List<List<DateTime>>>(
-                        [],
-                        (weeks, entry) {
-                          if (entry.key % 7 == 0) weeks.add([]);
-                          weeks.last.add(entry.value);
-                          return weeks;
-                        },
-                      )
-                      .map((week) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Row(
-                              children: week
-                                  .map((date) => _GreekDateCell(
-                                        date: date,
-                                        isCurrentMonth: date.month == _displayedMonth.month,
-                                        isSelected: _selectedDate != null &&
-                                            date.year == _selectedDate!.year &&
-                                            date.month == _selectedDate!.month &&
-                                            date.day == _selectedDate!.day,
-                                        isToday: DateTime.now().year == date.year &&
-                                            DateTime.now().month == date.month &&
-                                            DateTime.now().day == date.day,
-                                        isEnabled: !date.isBefore(widget.firstDate) &&
-                                            !date.isAfter(widget.lastDate),
-                                        onTap: () => _selectDate(date),
-                                      ))
-                                  .toList(),
                             ),
-                          )),
-                ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            
+
             const Divider(height: 1, color: GreekColors.limestoneDark),
-            
+
             // Action buttons
             Padding(
               padding: const EdgeInsets.all(14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   GreekButton(
                     label: 'Batal',
@@ -1424,7 +1508,6 @@ class _GreekDatePickerDialogState extends State<_GreekDatePickerDialog> {
                     compact: true,
                     onPressed: () => Navigator.pop(context),
                   ),
-                  const SizedBox(width: 8),
                   GreekButton(
                     label: 'Pilih',
                     variant: GreekActionVariant.primary,
@@ -1475,43 +1558,36 @@ class _GreekDateCell extends StatelessWidget {
       textColor = GreekColors.aegeanDeep;
     }
 
-    if (!isCurrentMonth) {
+    if (!isCurrentMonth || !isEnabled) {
       textColor = GreekColors.limestone;
     }
 
-    if (!isEnabled) {
-      textColor = GreekColors.limestone;
-    }
-
-    return Flexible(
-      fit: FlexFit.loose,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-        child: Padding(
-          padding: const EdgeInsets.all(2),
-          child: Semantics(
-            button: isEnabled,
-            selected: isSelected,
-            label: '${date.day} ${_getMonthYearText()}',
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: isEnabled ? onTap : null,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: backgroundColor,
-                    border: border,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '${date.day}',
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 13,
-                      fontWeight: isSelected || isToday ? FontWeight.w700 : FontWeight.w600,
-                      fontFeatures: tabularFigures,
-                    ),
-                  ),
+    return Semantics(
+      button: isEnabled,
+      selected: isSelected,
+      label: '${date.day} ${_getMonthYearText(date)}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isEnabled ? onTap : null,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+            padding: const EdgeInsets.all(2),
+            alignment: Alignment.center,
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(color: backgroundColor, border: border),
+              alignment: Alignment.center,
+              child: Text(
+                '${date.day}',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 13,
+                  fontWeight: isSelected || isToday
+                      ? FontWeight.w700
+                      : FontWeight.w600,
+                  fontFeatures: tabularFigures,
                 ),
               ),
             ),
@@ -1521,10 +1597,20 @@ class _GreekDateCell extends StatelessWidget {
     );
   }
 
-  String _getMonthYearText() {
+  static String _getMonthYearText(DateTime date) {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${months[date.month - 1]} ${date.year}';
   }
