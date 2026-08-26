@@ -68,6 +68,30 @@ void main() {
     expect(find.text('Impor backup'), findsOneWidget);
     expect(find.text('Ganti data dari file backup Repr'), findsOneWidget);
 
+    final exportRow = tester.widget<GreekListRow>(
+      find.widgetWithText(GreekListRow, 'Ekspor backup'),
+    );
+    final importRow = tester.widget<GreekListRow>(
+      find.widgetWithText(GreekListRow, 'Impor backup'),
+    );
+    expect(exportRow.onTap, isNotNull);
+    expect(importRow.onTap, isNotNull);
+
+    final exportInkWell = tester.widget<InkWell>(
+      find.ancestor(
+        of: find.text('Ekspor backup'),
+        matching: find.byType(InkWell),
+      ),
+    );
+    final importInkWell = tester.widget<InkWell>(
+      find.ancestor(
+        of: find.text('Impor backup'),
+        matching: find.byType(InkWell),
+      ),
+    );
+    expect(exportInkWell.onTap, isNotNull);
+    expect(importInkWell.onTap, isNotNull);
+
     final opacities = tester
         .widgetList<Opacity>(find.byType(Opacity))
         .map((w) => w.opacity)
@@ -81,7 +105,7 @@ void main() {
   });
 
   testWidgets(
-    'ekspor dan impor dinonaktifkan secara reaktif dengan subtitle dan opacity saat ada workout aktif',
+    'ekspor dan impor dinonaktifkan secara reaktif dengan subtitle, opacity, dan onTap null saat workout aktif',
     (tester) async {
       final database = AppDatabase(NativeDatabase.memory());
       await tester.runAsync(database.startWorkout);
@@ -94,67 +118,35 @@ void main() {
         findsNWidgets(2),
       );
 
+      final exportRow = tester.widget<GreekListRow>(
+        find.widgetWithText(GreekListRow, 'Ekspor backup'),
+      );
+      final importRow = tester.widget<GreekListRow>(
+        find.widgetWithText(GreekListRow, 'Impor backup'),
+      );
+      expect(exportRow.onTap, isNull);
+      expect(importRow.onTap, isNull);
+
+      final exportInkWell = tester.widget<InkWell>(
+        find.ancestor(
+          of: find.text('Ekspor backup'),
+          matching: find.byType(InkWell),
+        ),
+      );
+      final importInkWell = tester.widget<InkWell>(
+        find.ancestor(
+          of: find.text('Impor backup'),
+          matching: find.byType(InkWell),
+        ),
+      );
+      expect(exportInkWell.onTap, isNull);
+      expect(importInkWell.onTap, isNull);
+
       final opacities = tester
           .widgetList<Opacity>(find.byType(Opacity))
           .where((w) => w.opacity == 0.5)
           .toList();
       expect(opacities.length, greaterThanOrEqualTo(2));
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 1));
-      await tester.runAsync(database.close);
-    },
-  );
-
-  testWidgets(
-    'mengetuk ekspor backup saat workout aktif menampilkan pesan larangan',
-    (tester) async {
-      final database = AppDatabase(NativeDatabase.memory());
-      await tester.runAsync(database.startWorkout);
-      await pumpSettings(tester, database: database);
-
-      await tester.tap(find.text('Ekspor backup'));
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(
-        find.text('Selesaikan atau buang workout aktif terlebih dahulu.'),
-        findsOneWidget,
-      );
-
-      // Wait for toast auto-dismiss timer
-      await tester.pump(const Duration(milliseconds: 3500));
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 1));
-      await tester.runAsync(database.close);
-    },
-  );
-
-  testWidgets(
-    'mengetuk impor backup saat workout aktif menampilkan pesan larangan',
-    (tester) async {
-      final database = AppDatabase(NativeDatabase.memory());
-      await tester.runAsync(database.startWorkout);
-      await pumpSettings(tester, database: database);
-
-      await tester.tap(find.text('Impor backup'));
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(
-        find.text('Selesaikan atau buang workout aktif terlebih dahulu.'),
-        findsOneWidget,
-      );
-
-      // Wait for toast auto-dismiss timer
-      await tester.pump(const Duration(milliseconds: 3500));
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
@@ -183,6 +175,14 @@ void main() {
         find.text('Selesaikan atau buang workout aktif terlebih dahulu'),
         findsNWidgets(2),
       );
+      final exportRowActive = tester.widget<GreekListRow>(
+        find.widgetWithText(GreekListRow, 'Ekspor backup'),
+      );
+      final importRowActive = tester.widget<GreekListRow>(
+        find.widgetWithText(GreekListRow, 'Impor backup'),
+      );
+      expect(exportRowActive.onTap, isNull);
+      expect(importRowActive.onTap, isNull);
 
       await tester.runAsync(() => database.discardWorkout(workoutId));
       await tester.runAsync(
@@ -197,6 +197,14 @@ void main() {
         find.text('Selesaikan atau buang workout aktif terlebih dahulu'),
         findsNothing,
       );
+      final exportRowInactive = tester.widget<GreekListRow>(
+        find.widgetWithText(GreekListRow, 'Ekspor backup'),
+      );
+      final importRowInactive = tester.widget<GreekListRow>(
+        find.widgetWithText(GreekListRow, 'Impor backup'),
+      );
+      expect(exportRowInactive.onTap, isNotNull);
+      expect(importRowInactive.onTap, isNotNull);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();

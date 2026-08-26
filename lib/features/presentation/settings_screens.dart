@@ -303,7 +303,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           subtitle: hasActiveWorkout
                               ? 'Selesaikan atau buang workout aktif terlebih dahulu'
                               : 'Simpan seluruh data sebagai JSON',
-                          onTap: _export,
+                          onTap: hasActiveWorkout ? null : _export,
                         ),
                       ),
                       const Divider(height: 1),
@@ -315,7 +315,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           subtitle: hasActiveWorkout
                               ? 'Selesaikan atau buang workout aktif terlebih dahulu'
                               : 'Ganti data dari file backup Repr',
-                          onTap: _import,
+                          onTap: hasActiveWorkout ? null : _import,
                         ),
                       ),
                     ],
