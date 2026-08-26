@@ -5,6 +5,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import 'seed_exercises.dart';
+import '../core/app_metadata.dart';
 
 part 'database.g.dart';
 
@@ -110,8 +111,11 @@ class AppSettings extends Table {
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: 'repr'));
+  AppDatabase([QueryExecutor? executor, AppMetadataService? metadataService])
+    : metadataService = metadataService ?? DefaultAppMetadataService(),
+      super(executor ?? driftDatabase(name: 'repr'));
+
+  final AppMetadataService metadataService;
 
   static const uuid = Uuid();
 
@@ -947,38 +951,41 @@ class AppDatabase extends _$AppDatabase {
     return result;
   }
 
-  Future<Map<String, Object?>> exportDocument() async => {
-    'format': 'repr-backup',
-    'schemaVersion': 1,
-    'exportedAt': DateTime.now().toUtc().toIso8601String(),
-    'appVersion': '1.0.0',
-    'data': {
-      'exercises': (await select(
-        exercises,
-      ).get()).map((e) => e.toJson()).toList(),
-      'routines': (await select(
-        routines,
-      ).get()).map((e) => e.toJson()).toList(),
-      'routineExercises': (await select(
-        routineExercises,
-      ).get()).map((e) => e.toJson()).toList(),
-      'routineSets': (await select(
-        routineSets,
-      ).get()).map((e) => e.toJson()).toList(),
-      'workouts': (await select(
-        workouts,
-      ).get()).map((e) => e.toJson()).toList(),
-      'workoutExercises': (await select(
-        workoutExercises,
-      ).get()).map((e) => e.toJson()).toList(),
-      'workoutSets': (await select(
-        workoutSets,
-      ).get()).map((e) => e.toJson()).toList(),
-      'settings': (await select(
-        appSettings,
-      ).get()).map((e) => e.toJson()).toList(),
-    },
-  };
+  Future<Map<String, Object?>> exportDocument({AppMetadata? metadata}) async {
+    final meta = metadata ?? metadataService.currentMetadata;
+    return {
+      'format': 'repr-backup',
+      'schemaVersion': 1,
+      'exportedAt': DateTime.now().toUtc().toIso8601String(),
+      'appVersion': meta.fullVersion,
+      'data': {
+        'exercises': (await select(
+          exercises,
+        ).get()).map((e) => e.toJson()).toList(),
+        'routines': (await select(
+          routines,
+        ).get()).map((e) => e.toJson()).toList(),
+        'routineExercises': (await select(
+          routineExercises,
+        ).get()).map((e) => e.toJson()).toList(),
+        'routineSets': (await select(
+          routineSets,
+        ).get()).map((e) => e.toJson()).toList(),
+        'workouts': (await select(
+          workouts,
+        ).get()).map((e) => e.toJson()).toList(),
+        'workoutExercises': (await select(
+          workoutExercises,
+        ).get()).map((e) => e.toJson()).toList(),
+        'workoutSets': (await select(
+          workoutSets,
+        ).get()).map((e) => e.toJson()).toList(),
+        'settings': (await select(
+          appSettings,
+        ).get()).map((e) => e.toJson()).toList(),
+      },
+    };
+  }
 
   BackupRecordCounts validateBackup(String source) {
     final backup = _decodeBackup(source);

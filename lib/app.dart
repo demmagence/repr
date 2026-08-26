@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/app_metadata.dart';
 import 'core/notification_service.dart';
 import 'data/database.dart';
 import 'features/screens.dart';
 import 'ui/greek/greek.dart';
 
+final appMetadataProvider = Provider<AppMetadataService>(
+  (ref) => DefaultAppMetadataService(),
+);
 final databaseProvider = Provider<AppDatabase>(
   (ref) => throw UnimplementedError(),
 );
