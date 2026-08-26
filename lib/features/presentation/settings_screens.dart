@@ -174,6 +174,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         (ref.watch(exercisesProvider).valueOrNull ?? const <Exercise>[])
             .where((e) => e.isCustom)
             .toList();
+    final activeWorkout = ref.watch(activeWorkoutProvider).valueOrNull;
+    final hasActiveWorkout = activeWorkout != null;
     return GreekPageShell(
       topBar: const GreekTopBar(title: 'Pengaturan'),
       body: !loaded
@@ -293,18 +295,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      GreekListRow(
-                        leading: const Icon(Icons.upload_file),
-                        title: 'Ekspor backup',
-                        subtitle: 'Simpan seluruh data sebagai JSON',
-                        onTap: _export,
+                      Opacity(
+                        opacity: hasActiveWorkout ? 0.5 : 1.0,
+                        child: GreekListRow(
+                          leading: const Icon(Icons.upload_file),
+                          title: 'Ekspor backup',
+                          subtitle: hasActiveWorkout
+                              ? 'Selesaikan atau buang workout aktif terlebih dahulu'
+                              : 'Simpan seluruh data sebagai JSON',
+                          onTap: hasActiveWorkout ? null : _export,
+                        ),
                       ),
                       const Divider(height: 1),
-                      GreekListRow(
-                        leading: const Icon(Icons.restore),
-                        title: 'Impor backup',
-                        subtitle: 'Ganti data dari file backup Repr',
-                        onTap: _import,
+                      Opacity(
+                        opacity: hasActiveWorkout ? 0.5 : 1.0,
+                        child: GreekListRow(
+                          leading: const Icon(Icons.restore),
+                          title: 'Impor backup',
+                          subtitle: hasActiveWorkout
+                              ? 'Selesaikan atau buang workout aktif terlebih dahulu'
+                              : 'Ganti data dari file backup Repr',
+                          onTap: hasActiveWorkout ? null : _import,
+                        ),
                       ),
                     ],
                   ),
