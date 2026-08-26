@@ -57,29 +57,28 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
   }
 
-  testWidgets(
-    'ekspor dan impor aktif saat tidak ada workout aktif',
-    (tester) async {
-      final database = AppDatabase(NativeDatabase.memory());
-      await pumpSettings(tester, database: database);
+  testWidgets('ekspor dan impor aktif saat tidak ada workout aktif', (
+    tester,
+  ) async {
+    final database = AppDatabase(NativeDatabase.memory());
+    await pumpSettings(tester, database: database);
 
-      expect(find.text('Ekspor backup'), findsOneWidget);
-      expect(find.text('Simpan seluruh data sebagai JSON'), findsOneWidget);
-      expect(find.text('Impor backup'), findsOneWidget);
-      expect(find.text('Ganti data dari file backup Repr'), findsOneWidget);
+    expect(find.text('Ekspor backup'), findsOneWidget);
+    expect(find.text('Simpan seluruh data sebagai JSON'), findsOneWidget);
+    expect(find.text('Impor backup'), findsOneWidget);
+    expect(find.text('Ganti data dari file backup Repr'), findsOneWidget);
 
-      final opacities = tester
-          .widgetList<Opacity>(find.byType(Opacity))
-          .map((w) => w.opacity)
-          .toList();
-      expect(opacities.contains(0.5), isFalse);
+    final opacities = tester
+        .widgetList<Opacity>(find.byType(Opacity))
+        .map((w) => w.opacity)
+        .toList();
+    expect(opacities.contains(0.5), isFalse);
 
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 1));
-      await tester.runAsync(database.close);
-    },
-  );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.runAsync(database.close);
+  });
 
   testWidgets(
     'ekspor dan impor dinonaktifkan secara reaktif dengan subtitle dan opacity saat ada workout aktif',
