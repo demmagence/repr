@@ -170,6 +170,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final metadata = ref.watch(appMetadataProvider).currentMetadata;
     final custom =
         (ref.watch(exercisesProvider).valueOrNull ?? const <Exercise>[])
             .where((e) => e.isCustom)
@@ -333,7 +334,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         height: 48,
                       ),
                     ),
-                    title: 'Repr 1.0.0',
+                    title: 'Repr ${metadata.displayVersion}',
                     subtitle: 'Gym log pribadi • Offline • Tanpa akun',
                   ),
                 ),
