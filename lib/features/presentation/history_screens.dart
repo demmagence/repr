@@ -5,8 +5,8 @@ class HistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(historyProvider);
-    return GreekPageShell(
-      topBar: const GreekTopBar(title: 'Riwayat'),
+    return AppPageShell(
+      topBar: const AppTopBar(title: 'Riwayat'),
       body: history.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('$error')),
@@ -25,11 +25,10 @@ class HistoryScreen extends ConsumerWidget {
                   final duration = workout.endedAt?.difference(
                     workout.startedAt,
                   );
-                  return GreekPanel(
+                  return AppCard(
                     padding: EdgeInsets.zero,
-                    child: GreekListRow(
-                      minHeight: 82,
-                      leading: GreekMedallion(
+                    child: AppListRow(
+                      leading: AppAvatar(
                         child: Text(DateFormat('dd').format(workout.startedAt)),
                       ),
                       title: workout.name,
@@ -80,24 +79,22 @@ class HistoryDetailScreen extends ConsumerWidget {
         ),
     ];
     try {
-      await showGreekDialog<void>(
+      await showAppDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (context) => StatefulBuilder(
-          builder: (context, setState) => GreekDialog(
+          builder: (context, setState) => AppDialog(
             title: 'Edit riwayat',
             actions: [
-              GreekButton(
+              AppButton(
                 label: 'Batal',
                 expand: false,
-                compact: true,
-                variant: GreekActionVariant.quiet,
+                variant: AppActionVariant.quiet,
                 onPressed: () => Navigator.pop(context),
               ),
-              GreekButton(
+              AppButton(
                 label: 'Simpan',
                 expand: false,
-                compact: true,
                 onPressed: () async {
                   final updates = <HistoricalExerciseUpdate>[];
                   for (final exercise in drafts) {
@@ -147,9 +144,9 @@ class HistoryDetailScreen extends ConsumerWidget {
               height: MediaQuery.sizeOf(context).height * .72,
               child: Column(
                 children: [
-                  GreekTextField(controller: name, label: 'Nama workout'),
+                  AppTextField(controller: name, label: 'Nama workout'),
                   const SizedBox(height: 10),
-                  GreekTextField(
+                  AppTextField(
                     controller: notes,
                     label: 'Catatan workout',
                     maxLines: 2,
@@ -201,33 +198,33 @@ class HistoryDetailScreen extends ConsumerWidget {
     builder: (context, workoutSnapshot) {
       final workout = workoutSnapshot.data;
       if (workout == null)
-        return const GreekPageShell(
+        return const AppPageShell(
           body: Center(child: CircularProgressIndicator()),
         );
-      return GreekPageShell(
-        topBar: GreekTopBar(
+      return AppPageShell(
+        topBar: AppTopBar(
           title: workout.name,
           showBack: true,
           actions: [
-            GreekIconButton(
+            AppIconButton(
               icon: Icons.more_vert,
               semanticLabel: 'Menu riwayat',
               onPressed: () async {
-                final value = await showGreekActionSheet<String>(
+                final value = await showAppActionSheet<String>(
                   context: context,
                   title: workout.name,
                   actions: const [
-                    GreekAction(value: 'repeat', label: 'Ulangi workout'),
-                    GreekAction(value: 'edit', label: 'Edit workout'),
-                    GreekAction(value: 'date', label: 'Ubah tanggal'),
-                    GreekAction(value: 'delete', label: 'Hapus', danger: true),
+                    AppAction(value: 'repeat', label: 'Ulangi workout'),
+                    AppAction(value: 'edit', label: 'Edit workout'),
+                    AppAction(value: 'date', label: 'Ubah tanggal'),
+                    AppAction(value: 'delete', label: 'Hapus'),
                   ],
                 );
                 if (!context.mounted) return;
                 if (value == 'repeat') return _repeat(context, ref, workout);
                 if (value == 'edit') return _edit(context, ref, workout);
                 if (value == 'date') {
-                  final date = await showGreekDatePicker(
+                  final date = await showAppDatePicker(
                     context: context,
                     firstDate: DateTime(2000),
                     lastDate: DateTime.now(),
@@ -249,23 +246,21 @@ class HistoryDetailScreen extends ConsumerWidget {
                   }
                 }
                 if (value == 'delete' && context.mounted) {
-                  final yes = await showGreekDialog<bool>(
+                  final yes = await showAppDialog<bool>(
                     context: context,
-                    builder: (context) => GreekDialog(
+                    builder: (context) => AppDialog(
                       title: 'Hapus workout?',
                       actions: [
-                        GreekButton(
+                        AppButton(
                           label: 'Batal',
                           expand: false,
-                          compact: true,
-                          variant: GreekActionVariant.quiet,
+                          variant: AppActionVariant.quiet,
                           onPressed: () => Navigator.pop(context, false),
                         ),
-                        GreekButton(
+                        AppButton(
                           label: 'Hapus',
                           expand: false,
-                          compact: true,
-                          variant: GreekActionVariant.destructive,
+                          variant: AppActionVariant.destructive,
                           onPressed: () => Navigator.pop(context, true),
                         ),
                       ],
@@ -315,21 +310,21 @@ class HistoryDetailScreen extends ConsumerWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: GreekStatPlaque(
+                      child: AppStatCard(
                         label: 'Durasi',
                         value: '${duration?.inMinutes ?? 0} mnt',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: GreekStatPlaque(
+                      child: AppStatCard(
                         label: 'Set',
                         value: '${allSets.length}',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: GreekStatPlaque(
+                      child: AppStatCard(
                         label: 'Volume',
                         value: '${volume.toStringAsFixed(0)} kg',
                       ),
@@ -340,7 +335,7 @@ class HistoryDetailScreen extends ConsumerWidget {
                 ...items.map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: GreekPanel(
+                    child: AppCard(
                       child: Padding(
                         padding: EdgeInsets.zero,
                         child: Column(
@@ -348,8 +343,7 @@ class HistoryDetailScreen extends ConsumerWidget {
                           children: [
                             Text(
                               item.exercise.name,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: 8),
                             ...item.sets.map(
@@ -432,7 +426,7 @@ class _HistoricalExerciseEditor extends StatelessWidget {
   final VoidCallback onChanged;
 
   @override
-  Widget build(BuildContext context) => GreekPanel(
+  Widget build(BuildContext context) => AppCard(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -441,7 +435,7 @@ class _HistoricalExerciseEditor extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
-        GreekTextField(
+        AppTextField(
           key: ValueKey('history-notes-${draft.id}'),
           initialValue: draft.notes,
           label: 'Catatan exercise',
@@ -456,7 +450,7 @@ class _HistoricalExerciseEditor extends StatelessWidget {
                 SizedBox(width: 28, child: Text('${set.position + 1}.')),
                 Expanded(
                   flex: 3,
-                  child: _GreekCompactNumberField(
+                  child: _AppCompactNumberField(
                     key: ValueKey('history-weight-${set.id}'),
                     initialValue: set.weight,
                     keyboardType: const TextInputType.numberWithOptions(
@@ -472,7 +466,7 @@ class _HistoricalExerciseEditor extends StatelessWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   flex: 2,
-                  child: _GreekCompactNumberField(
+                  child: _AppCompactNumberField(
                     key: ValueKey('history-reps-${set.id}'),
                     initialValue: set.reps,
                     keyboardType: TextInputType.number,
@@ -484,7 +478,7 @@ class _HistoricalExerciseEditor extends StatelessWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   flex: 3,
-                  child: _GreekCompactSelect(
+                  child: _AppCompactSelect(
                     value: switch (set.type) {
                       'warmUp' => 'Warm-up',
                       'drop' => 'Drop',
@@ -493,14 +487,14 @@ class _HistoricalExerciseEditor extends StatelessWidget {
                     },
                     enabled: true,
                     onTap: () async {
-                      final type = await showGreekActionSheet<String>(
+                      final type = await showAppActionSheet<String>(
                         context: context,
                         title: 'Jenis set ${set.position + 1}',
                         actions: const [
-                          GreekAction(value: 'working', label: 'Working'),
-                          GreekAction(value: 'warmUp', label: 'Warm-up'),
-                          GreekAction(value: 'drop', label: 'Drop'),
-                          GreekAction(value: 'failure', label: 'Failure'),
+                          AppAction(value: 'working', label: 'Working'),
+                          AppAction(value: 'warmUp', label: 'Warm-up'),
+                          AppAction(value: 'drop', label: 'Drop'),
+                          AppAction(value: 'failure', label: 'Failure'),
                         ],
                       );
                       if (type != null) {
@@ -513,20 +507,20 @@ class _HistoricalExerciseEditor extends StatelessWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   flex: 2,
-                  child: _GreekCompactSelect(
+                  child: _AppCompactSelect(
                     value: set.rpe == null
                         ? 'RPE'
                         : set.rpe!.toStringAsFixed(set.rpe! % 1 == 0 ? 0 : 1),
                     enabled: true,
                     onTap: () async {
-                      final rpe = await showGreekActionSheet<double?>(
+                      final rpe = await showAppActionSheet<double?>(
                         context: context,
                         title: 'RPE set ${set.position + 1}',
                         actions: [
-                          const GreekAction(value: null, label: 'Tanpa RPE'),
+                          const AppAction(value: null, label: 'Tanpa RPE'),
                           ...List.generate(19, (index) {
                             final value = 1 + index * .5;
-                            return GreekAction(
+                            return AppAction(
                               value: value,
                               label: value.toStringAsFixed(
                                 value % 1 == 0 ? 0 : 1,

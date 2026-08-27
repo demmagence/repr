@@ -7,7 +7,7 @@ import 'package:repr/app.dart';
 import 'package:repr/core/notification_service.dart';
 import 'package:repr/data/database.dart';
 import 'package:repr/features/screens.dart';
-import 'package:repr/ui/greek/greek.dart';
+import 'package:repr/ui/material/app_ui.dart';
 
 class _NoopNotificationService extends NotificationService {
   @override
@@ -64,7 +64,7 @@ void main() {
                   ),
                 ],
                 child: MaterialApp(
-                  theme: buildGreekTheme(),
+                  theme: buildAppTheme(),
                   home: MediaQuery(
                     data: MediaQueryData(
                       size: size,

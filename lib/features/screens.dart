@@ -11,7 +11,7 @@ import '../app.dart';
 import '../core/backup_service.dart';
 import '../core/metrics.dart';
 import '../data/database.dart';
-import '../ui/greek/greek.dart';
+import '../ui/material/app_ui.dart';
 
 part 'presentation/training_screens.dart';
 part 'presentation/workout_screens.dart';
@@ -22,7 +22,7 @@ part 'presentation/settings_screens.dart';
 const pagePadding = EdgeInsets.fromLTRB(16, 12, 16, 24);
 
 void showMessage(BuildContext context, String message) {
-  GreekToast.show(context, message);
+  AppToast.show(context, message);
 }
 
 class EmptyState extends StatelessWidget {
@@ -37,5 +37,5 @@ class EmptyState extends StatelessWidget {
   final String body;
   @override
   Widget build(BuildContext context) =>
-      GreekEmptyState(icon: icon, title: title, body: body);
+      AppEmptyState(icon: icon, title: title, body: body);
 }

@@ -13,26 +13,24 @@ class TrainingScreen extends ConsumerWidget {
     final active = await database.getActiveWorkout();
     if (!context.mounted) return;
     if (active != null) {
-      final discard = await showGreekDialog<bool>(
+      final discard = await showAppDialog<bool>(
         context: context,
-        builder: (context) => GreekDialog(
+        builder: (context) => AppDialog(
           title: 'Workout masih aktif',
           actions: [
-            GreekButton(
+            AppButton(
               label: 'Lanjutkan',
               expand: false,
-              compact: true,
-              variant: GreekActionVariant.secondary,
+              variant: AppActionVariant.secondary,
               onPressed: () {
                 Navigator.pop(context, false);
                 context.push('/workout/${active.id}');
               },
             ),
-            GreekButton(
+            AppButton(
               label: 'Buang draft',
               expand: false,
-              compact: true,
-              variant: GreekActionVariant.destructive,
+              variant: AppActionVariant.destructive,
               onPressed: () => Navigator.pop(context, true),
             ),
           ],
@@ -55,21 +53,16 @@ class TrainingScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final active = ref.watch(activeWorkoutProvider).valueOrNull;
     final routines = ref.watch(routinesProvider);
-    return GreekPageShell(
-      topBar: const GreekTopBar(brand: true),
+    return AppPageShell(
+      topBar: const AppTopBar(title: 'Repr'),
       body: ListView(
         padding: pagePadding,
         children: [
-          const GreekMottoBanner(),
-          const SizedBox(height: 16),
           if (active != null) ...[
-            GreekPanel(
-              variant: GreekPanelVariant.active,
+            AppCard(
               padding: EdgeInsets.zero,
-              child: GreekListRow(
-                minHeight: 72,
-                leading: const GreekMedallion(
-                  active: true,
+              child: AppListRow(
+                leading: const AppAvatar(
                   child: Icon(Icons.timer_outlined, size: 20),
                 ),
                 title: active.name,
@@ -80,7 +73,7 @@ class TrainingScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
           ],
-          GreekButton(
+          AppButton(
             onPressed: () => _start(context, ref),
             icon: Icons.add,
             label: 'Mulai latihan kosong',
@@ -92,19 +85,16 @@ class TrainingScreen extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'Routine',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
               const SizedBox(width: 8),
-              GreekButton(
+              AppButton(
                 onPressed: () => showRoutineEditor(context, ref),
                 icon: Icons.add,
                 label: 'Buat',
                 expand: false,
-                compact: true,
-                variant: GreekActionVariant.quiet,
+                variant: AppActionVariant.quiet,
               ),
             ],
           ),
@@ -127,11 +117,10 @@ class TrainingScreen extends ConsumerWidget {
                         .map(
                           (routine) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: GreekPanel(
+                            child: AppCard(
                               padding: EdgeInsets.zero,
-                              child: GreekListRow(
-                                minHeight: 72,
-                                leading: GreekMedallion(
+                              child: AppListRow(
+                                leading: AppAvatar(
                                   child: Text(
                                     routine.name.substring(0, 1).toUpperCase(),
                                   ),
@@ -142,27 +131,26 @@ class TrainingScreen extends ConsumerWidget {
                                     : routine.notes,
                                 onTap: () =>
                                     _start(context, ref, routineId: routine.id),
-                                trailing: GreekIconButton(
+                                trailing: AppIconButton(
                                   icon: Icons.more_vert,
                                   semanticLabel: 'Menu ${routine.name}',
                                   onPressed: () async {
                                     final value =
-                                        await showGreekActionSheet<String>(
+                                        await showAppActionSheet<String>(
                                           context: context,
                                           title: routine.name,
                                           actions: const [
-                                            GreekAction(
+                                            AppAction(
                                               value: 'start',
                                               label: 'Mulai',
                                             ),
-                                            GreekAction(
+                                            AppAction(
                                               value: 'edit',
                                               label: 'Edit routine',
                                             ),
-                                            GreekAction(
+                                            AppAction(
                                               value: 'delete',
                                               label: 'Hapus',
-                                              danger: true,
                                             ),
                                           ],
                                         );
@@ -210,8 +198,6 @@ Future<List<Exercise>?> showExercisePicker(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: GreekColors.aegeanDeep.withValues(alpha: .55),
     builder: (context) =>
         _ExercisePicker(exercises: exercises, multiple: multiple),
   );
@@ -262,18 +248,16 @@ class _ExercisePickerState extends State<_ExercisePicker> {
       muscle: muscle,
       equipment: equipment,
     );
-    return GreekPageShell(
-      topBar: GreekTopBar(
+    return AppPageShell(
+      topBar: AppTopBar(
         title: 'Pilih exercise',
         showBack: true,
-        compact: true,
         actions: widget.multiple
             ? [
-                GreekButton(
+                AppButton(
                   label: 'Pilih (${selected.length})',
                   expand: false,
-                  compact: true,
-                  variant: GreekActionVariant.quiet,
+                  variant: AppActionVariant.quiet,
                   onPressed: selected.isEmpty
                       ? null
                       : () => Navigator.pop(
@@ -292,13 +276,13 @@ class _ExercisePickerState extends State<_ExercisePicker> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Column(
               children: [
-                GreekTextField(
+                AppTextField(
                   leading: Icons.search,
                   hint: 'Cari nama, otot, atau alat',
                   onChanged: (value) => setState(() => query = value),
                 ),
                 const SizedBox(height: 8),
-                GreekSelect<String>(
+                AppSelect<String>(
                   key: const Key('exercise-muscle-filter'),
                   label: 'Filter otot',
                   value: muscle ?? '',
@@ -312,7 +296,7 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                GreekSelect<String>(
+                AppSelect<String>(
                   key: const Key('exercise-equipment-filter'),
                   label: 'Filter peralatan',
                   value: equipment ?? '',
@@ -331,7 +315,7 @@ class _ExercisePickerState extends State<_ExercisePicker> {
           ),
           Expanded(
             child: items.isEmpty
-                ? const GreekEmptyState(
+                ? const AppEmptyState(
                     icon: Icons.search_off,
                     title: 'Exercise tidak ditemukan',
                     body: 'Ubah pencarian atau filter yang dipilih.',
@@ -340,9 +324,9 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
-                      return GreekCheckTile(
+                      return AppCheckTile(
                         value: selected.contains(item.id),
-                        leading: GreekMedallion(
+                        leading: AppAvatar(
                           child: Text(item.name.substring(0, 1)),
                         ),
                         title: item.name,
@@ -394,24 +378,22 @@ Future<void> showRoutineEditor(
   ];
 
   try {
-    await showGreekDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => GreekDialog(
+        builder: (context, setState) => AppDialog(
           title: routine == null ? 'Routine baru' : 'Edit routine',
           actions: [
-            GreekButton(
+            AppButton(
               label: 'Batal',
               expand: false,
-              compact: true,
-              variant: GreekActionVariant.quiet,
+              variant: AppActionVariant.quiet,
               onPressed: () => Navigator.pop(context),
             ),
-            GreekButton(
+            AppButton(
               label: 'Simpan',
               expand: false,
-              compact: true,
               onPressed: () async {
                 if (name.text.trim().isEmpty || items.isEmpty) {
                   return showMessage(
@@ -451,20 +433,20 @@ Future<void> showRoutineEditor(
             height: MediaQuery.sizeOf(context).height * .68,
             child: Column(
               children: [
-                GreekTextField(
+                AppTextField(
                   controller: name,
                   label: 'Nama routine',
                   hint: 'Contoh: Push Day',
                 ),
                 const SizedBox(height: 10),
-                GreekTextField(
+                AppTextField(
                   controller: notes,
                   label: 'Catatan routine',
                   hint: 'Opsional',
                   maxLines: 2,
                 ),
                 const SizedBox(height: 10),
-                GreekButton(
+                AppButton(
                   onPressed: () async {
                     final selected = await showExercisePicker(
                       dialogContext,
@@ -484,13 +466,13 @@ Future<void> showRoutineEditor(
                     });
                   },
                   icon: Icons.add,
-                  variant: GreekActionVariant.secondary,
+                  variant: AppActionVariant.secondary,
                   label: 'Tambah exercise',
                 ),
                 const SizedBox(height: 10),
                 Expanded(
                   child: items.isEmpty
-                      ? const GreekEmptyState(
+                      ? const AppEmptyState(
                           icon: Icons.fitness_center,
                           title: 'Belum ada exercise',
                           body: 'Tambahkan gerakan untuk menyusun routine.',
@@ -564,7 +546,7 @@ class _RoutineExerciseEditor extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) => GreekPanel(
+  Widget build(BuildContext context) => AppCard(
     padding: const EdgeInsets.all(10),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -584,21 +566,18 @@ class _RoutineExerciseEditor extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
-            GreekButton(
+            AppButton(
               label: '${item.restSeconds} dtk',
               expand: false,
-              compact: true,
-              variant: GreekActionVariant.quiet,
+              variant: AppActionVariant.quiet,
               onPressed: () async {
-                final value = await showGreekActionSheet<int>(
+                final value = await showAppActionSheet<int>(
                   context: context,
                   title: 'Rest timer ${item.exercise.name}',
                   actions: const [30, 60, 90, 120, 180, 300]
                       .map(
-                        (seconds) => GreekAction(
-                          value: seconds,
-                          label: '$seconds detik',
-                        ),
+                        (seconds) =>
+                            AppAction(value: seconds, label: '$seconds detik'),
                       )
                       .toList(),
                 );
@@ -608,15 +587,14 @@ class _RoutineExerciseEditor extends StatelessWidget {
                 }
               },
             ),
-            GreekIconButton(
+            AppIconButton(
               icon: Icons.delete_outline,
               semanticLabel: 'Hapus ${item.exercise.name}',
-              danger: true,
               onPressed: onDelete,
             ),
           ],
         ),
-        GreekTextField(
+        AppTextField(
           key: ValueKey('notes-${item.exercise.id}'),
           initialValue: item.notes,
           label: 'Catatan exercise',
@@ -630,20 +608,17 @@ class _RoutineExerciseEditor extends StatelessWidget {
             children: [
               SizedBox(width: 34, child: Text('${setIndex + 1}.')),
               Expanded(
-                child: GreekButton(
+                child: AppButton(
                   label: setLabels[type]!,
-                  compact: true,
-                  variant: GreekActionVariant.secondary,
+                  variant: AppActionVariant.secondary,
                   onPressed: () async {
-                    final selected = await showGreekActionSheet<String>(
+                    final selected = await showAppActionSheet<String>(
                       context: context,
                       title: 'Jenis set ${setIndex + 1}',
                       actions: setLabels.entries
                           .map(
-                            (entry) => GreekAction(
-                              value: entry.key,
-                              label: entry.value,
-                            ),
+                            (entry) =>
+                                AppAction(value: entry.key, label: entry.value),
                           )
                           .toList(),
                     );
@@ -654,7 +629,7 @@ class _RoutineExerciseEditor extends StatelessWidget {
                   },
                 ),
               ),
-              GreekIconButton(
+              AppIconButton(
                 icon: Icons.arrow_upward,
                 semanticLabel: 'Naikkan set ${setIndex + 1}',
                 onPressed: setIndex == 0
@@ -665,7 +640,7 @@ class _RoutineExerciseEditor extends StatelessWidget {
                         onChanged();
                       },
               ),
-              GreekIconButton(
+              AppIconButton(
                 icon: Icons.arrow_downward,
                 semanticLabel: 'Turunkan set ${setIndex + 1}',
                 onPressed: setIndex == item.setTypes.length - 1
@@ -676,10 +651,9 @@ class _RoutineExerciseEditor extends StatelessWidget {
                         onChanged();
                       },
               ),
-              GreekIconButton(
+              AppIconButton(
                 icon: Icons.remove_circle_outline,
                 semanticLabel: 'Hapus set ${setIndex + 1}',
-                danger: true,
                 onPressed: item.setTypes.length == 1
                     ? null
                     : () {
@@ -690,12 +664,11 @@ class _RoutineExerciseEditor extends StatelessWidget {
             ],
           );
         }),
-        GreekButton(
+        AppButton(
           label: 'Tambah set',
           icon: Icons.add,
           expand: false,
-          compact: true,
-          variant: GreekActionVariant.quiet,
+          variant: AppActionVariant.quiet,
           onPressed: () {
             item.setTypes.add('working');
             onChanged();

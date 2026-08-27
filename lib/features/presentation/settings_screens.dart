@@ -54,22 +54,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ref.read(databaseProvider),
       ).pickBackup();
       if (preview == null || !mounted) return;
-      final confirmed = await showGreekDialog<bool>(
+      final confirmed = await showAppDialog<bool>(
         context: context,
-        builder: (context) => GreekDialog(
+        builder: (context) => AppDialog(
           title: 'Pulihkan backup?',
           actions: [
-            GreekButton(
+            AppButton(
               label: 'Batal',
               expand: false,
-              compact: true,
-              variant: GreekActionVariant.quiet,
+              variant: AppActionVariant.quiet,
               onPressed: () => Navigator.pop(context, false),
             ),
-            GreekButton(
+            AppButton(
               label: 'Pulihkan',
               expand: false,
-              compact: true,
               onPressed: () => Navigator.pop(context, true),
             ),
           ],
@@ -90,23 +88,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final name = TextEditingController();
     var muscle = 'Dada';
     var equipment = 'Dumbbell';
-    final saved = await showGreekDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => GreekDialog(
+        builder: (context, setState) => AppDialog(
           title: 'Exercise custom',
           actions: [
-            GreekButton(
+            AppButton(
               label: 'Batal',
               expand: false,
-              compact: true,
-              variant: GreekActionVariant.quiet,
+              variant: AppActionVariant.quiet,
               onPressed: () => Navigator.pop(context, false),
             ),
-            GreekButton(
+            AppButton(
               label: 'Simpan',
               expand: false,
-              compact: true,
               onPressed: () =>
                   Navigator.pop(context, name.text.trim().isNotEmpty),
             ),
@@ -114,13 +110,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              GreekTextField(
+              AppTextField(
                 controller: name,
                 label: 'Nama exercise',
                 hint: 'Contoh: Landmine Press',
               ),
               const SizedBox(height: 12),
-              GreekSelect<String>(
+              AppSelect<String>(
                 label: 'Kelompok otot',
                 value: muscle,
                 options: const {
@@ -139,7 +135,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onChanged: (value) => setState(() => muscle = value!),
               ),
               const SizedBox(height: 12),
-              GreekSelect<String>(
+              AppSelect<String>(
                 label: 'Peralatan',
                 value: equipment,
                 options: const {
@@ -177,35 +173,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             .toList();
     final activeWorkout = ref.watch(activeWorkoutProvider).valueOrNull;
     final hasActiveWorkout = activeWorkout != null;
-    return GreekPageShell(
-      topBar: const GreekTopBar(title: 'Pengaturan'),
+    return AppPageShell(
+      topBar: const AppTopBar(title: 'Pengaturan'),
       body: !loaded
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: pagePadding,
               children: [
-                Text(
-                  'Workout',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text('Workout', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
-                GreekPanel(
+                AppCard(
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      GreekListRow(
+                      AppListRow(
                         title: 'Rest timer default',
                         subtitle: '$restSeconds detik',
                         trailing: const Icon(Icons.expand_more),
                         onTap: () async {
-                          final value = await showGreekActionSheet<int>(
+                          final value = await showAppActionSheet<int>(
                             context: context,
                             title: 'Rest timer default',
                             actions: const [30, 60, 90, 120, 180, 300]
                                 .map(
-                                  (value) => GreekAction(
+                                  (value) => AppAction(
                                     value: value,
                                     label: '$value detik',
                                   ),
@@ -220,10 +211,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         },
                       ),
                       const Divider(),
-                      GreekListRow(
+                      AppListRow(
                         title: 'Suara timer',
                         subtitle: 'Gunakan suara notifikasi Android',
-                        trailing: GreekToggle(
+                        trailing: AppToggle(
                           value: timerSound,
                           onChanged: (value) async {
                             setState(() => timerSound = value);
@@ -243,36 +234,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Expanded(
                       child: Text(
                         'Exercise custom',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    GreekButton(
+                    AppButton(
                       onPressed: _createExercise,
                       icon: Icons.add,
                       label: 'Tambah',
                       expand: false,
-                      compact: true,
-                      variant: GreekActionVariant.quiet,
+                      variant: AppActionVariant.quiet,
                     ),
                   ],
                 ),
-                GreekPanel(
+                AppCard(
                   padding: EdgeInsets.zero,
                   child: custom.isEmpty
-                      ? const GreekListRow(
+                      ? const AppListRow(
                           title: 'Belum ada exercise custom',
                           subtitle: 'Library bawaan berisi 80 exercise umum.',
                         )
                       : Column(
                           children: custom
                               .map(
-                                (exercise) => GreekListRow(
+                                (exercise) => AppListRow(
                                   title: exercise.name,
                                   subtitle:
                                       '${exercise.muscle} • ${exercise.equipment}',
-                                  trailing: GreekIconButton(
+                                  trailing: AppIconButton(
                                     icon: Icons.archive_outlined,
                                     semanticLabel: 'Archive ${exercise.name}',
                                     onPressed: () => ref
@@ -285,54 +274,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                 ),
                 const SizedBox(height: 24),
-                Text(
-                  'Data',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text('Data', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
-                GreekPanel(
+                AppCard(
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      Opacity(
-                        opacity: hasActiveWorkout ? 0.5 : 1.0,
-                        child: GreekListRow(
-                          leading: const Icon(Icons.upload_file),
-                          title: 'Ekspor backup',
-                          subtitle: hasActiveWorkout
-                              ? 'Selesaikan atau buang workout aktif terlebih dahulu'
-                              : 'Simpan seluruh data sebagai JSON',
-                          onTap: hasActiveWorkout ? null : _export,
-                        ),
+                      AppListRow(
+                        leading: const Icon(Icons.upload_file),
+                        title: 'Ekspor backup',
+                        subtitle: hasActiveWorkout
+                            ? 'Selesaikan atau buang workout aktif terlebih dahulu'
+                            : 'Simpan seluruh data sebagai JSON',
+                        onTap: hasActiveWorkout ? null : _export,
                       ),
                       const Divider(height: 1),
-                      Opacity(
-                        opacity: hasActiveWorkout ? 0.5 : 1.0,
-                        child: GreekListRow(
-                          leading: const Icon(Icons.restore),
-                          title: 'Impor backup',
-                          subtitle: hasActiveWorkout
-                              ? 'Selesaikan atau buang workout aktif terlebih dahulu'
-                              : 'Ganti data dari file backup Repr',
-                          onTap: hasActiveWorkout ? null : _import,
-                        ),
+                      AppListRow(
+                        leading: const Icon(Icons.restore),
+                        title: 'Impor backup',
+                        subtitle: hasActiveWorkout
+                            ? 'Selesaikan atau buang workout aktif terlebih dahulu'
+                            : 'Ganti data dari file backup Repr',
+                        onTap: hasActiveWorkout ? null : _import,
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
-                GreekPanel(
+                AppCard(
                   padding: EdgeInsets.zero,
-                  child: GreekListRow(
-                    leading: ClipPath(
-                      clipper: const GreekCutCornerClipper(cut: 5),
-                      child: Image.asset(
-                        'assets/icon/repr_icon.png',
-                        width: 48,
-                        height: 48,
-                      ),
+                  child: AppListRow(
+                    leading: Image.asset(
+                      'assets/icon/repr_icon.png',
+                      width: 48,
+                      height: 48,
                     ),
                     title: 'Repr ${metadata.displayVersion}',
                     subtitle: 'Gym log pribadi • Offline • Tanpa akun',

@@ -13,6 +13,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final exercises =
         ref.watch(exercisesProvider).valueOrNull ?? const <Exercise>[];
     final selectedId =
@@ -21,12 +22,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     final after = rangeMonths == 0
         ? null
         : DateTime.now().subtract(Duration(days: rangeMonths * 31));
-    return GreekPageShell(
-      topBar: const GreekTopBar(title: 'Progres'),
+    return AppPageShell(
+      topBar: const AppTopBar(title: 'Progres'),
       body: ListView(
         padding: pagePadding,
         children: [
-          GreekSelect<String>(
+          AppSelect<String>(
             label: 'Exercise',
             value: selectedId,
             options: {
@@ -35,22 +36,22 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
             onChanged: (value) => setState(() => exerciseId = value),
           ),
           const SizedBox(height: 12),
-          GreekSegmentedControl<int>(
+          AppSegmentedControl<int>(
             segments: const [
-              GreekSegment(value: 1, label: '1 bln'),
-              GreekSegment(value: 3, label: '3 bln'),
-              GreekSegment(value: 6, label: '6 bln'),
-              GreekSegment(value: 0, label: 'Semua'),
+              AppSegment(value: 1, label: '1 bln'),
+              AppSegment(value: 3, label: '3 bln'),
+              AppSegment(value: 6, label: '6 bln'),
+              AppSegment(value: 0, label: 'Semua'),
             ],
             value: rangeMonths,
             onChanged: (value) => setState(() => rangeMonths = value),
           ),
           const SizedBox(height: 12),
-          GreekSegmentedControl<String>(
+          AppSegmentedControl<String>(
             segments: const [
-              GreekSegment(value: 'weight', label: 'Beban'),
-              GreekSegment(value: 'e1rm', label: 'e1RM'),
-              GreekSegment(value: 'volume', label: 'Volume'),
+              AppSegment(value: 'weight', label: 'Beban'),
+              AppSegment(value: 'e1rm', label: 'e1RM'),
+              AppSegment(value: 'volume', label: 'Volume'),
             ],
             value: metric,
             onChanged: (value) => setState(() => metric = value),
@@ -103,14 +104,14 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: GreekStatPlaque(
+                          child: AppStatCard(
                             label: 'Max weight',
                             value: '${bestWeight.toStringAsFixed(1)} kg',
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: GreekStatPlaque(
+                          child: AppStatCard(
                             label: 'Best e1RM',
                             value: '${bestE1rm.toStringAsFixed(1)} kg',
                           ),
@@ -118,7 +119,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    GreekPanel(
+                    AppCard(
                       padding: const EdgeInsets.fromLTRB(10, 18, 12, 8),
                       child: SizedBox(
                         height: 280,
@@ -128,12 +129,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                             maxY: maxValue <= 0 ? 1 : maxValue * 1.15,
                             gridData: FlGridData(
                               show: true,
-                              getDrawingHorizontalLine: (_) => const FlLine(
-                                color: GreekColors.limestone,
+                              getDrawingHorizontalLine: (_) => FlLine(
+                                color: colorScheme.outlineVariant,
                                 strokeWidth: 1,
                               ),
-                              getDrawingVerticalLine: (_) => const FlLine(
-                                color: GreekColors.limestone,
+                              getDrawingVerticalLine: (_) => FlLine(
+                                color: colorScheme.outlineVariant,
                                 strokeWidth: 1,
                               ),
                             ),
@@ -161,7 +162,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                                         DateFormat(
                                           'd/M',
                                         ).format(points[index].date),
-                                        style: const TextStyle(fontSize: 10),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelSmall,
                                       ),
                                     );
                                   },
@@ -172,11 +175,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                               LineChartBarData(
                                 isCurved: true,
                                 barWidth: 3,
-                                color: GreekColors.bronze,
+                                color: colorScheme.primary,
                                 dotData: const FlDotData(show: true),
                                 belowBarData: BarAreaData(
                                   show: true,
-                                  color: GreekColors.aegean.withValues(
+                                  color: colorScheme.primary.withValues(
                                     alpha: .12,
                                   ),
                                 ),
