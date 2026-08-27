@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:repr/app.dart';
 import 'package:repr/data/database.dart';
 import 'package:repr/features/screens.dart';
-import 'package:repr/ui/greek/greek.dart';
+import 'package:repr/ui/material/app_ui.dart';
 
 void main() {
   late AppDatabase database;
@@ -56,9 +56,9 @@ void main() {
       ProviderScope(
         overrides: [databaseProvider.overrideWithValue(database)],
         child: MaterialApp(
-          theme: buildGreekTheme(),
+          theme: buildAppTheme(),
           home: Consumer(
-            builder: (context, ref, _) => GreekButton(
+            builder: (context, ref, _) => AppButton(
               label: 'Pilih exercise',
               onPressed: () => showExercisePicker(context, ref),
             ),
@@ -67,7 +67,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('PILIH EXERCISE'));
+    await tester.tap(find.text('Pilih exercise'));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );

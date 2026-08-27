@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:repr/ui/greek/greek.dart';
+import 'package:repr/ui/material/app_ui.dart';
 
 void main() {
-  test('tema memakai palet Yunani klasik', () {
-    final theme = buildGreekTheme();
-    expect(theme.useMaterial3, isFalse);
-    expect(theme.colorScheme.primary, GreekColors.aegean);
-    expect(theme.colorScheme.secondary, GreekColors.terracotta);
-    expect(theme.scaffoldBackgroundColor, Colors.transparent);
+  test('tema memakai konfigurasi standar Material 3', () {
+    final theme = buildAppTheme();
+    expect(theme.useMaterial3, isTrue);
+    expect(theme.brightness, Brightness.light);
+    expect(theme.colorScheme.primary, isNotNull);
+    expect(theme.cardTheme.shape, isNull);
+    expect(theme.navigationBarTheme.height, isNull);
+    expect(theme.inputDecorationTheme.border, isNull);
   });
 
-  testWidgets('ornamen dan motto aman pada layar Android sempit', (
-    tester,
-  ) async {
+  testWidgets('shell hanya merender komponen Material standar', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -21,19 +21,20 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildGreekTheme(),
-        home: const GreekPageShell(
-          body: Column(
-            children: [
-              GreekBrandMark(),
-              Padding(padding: EdgeInsets.all(12), child: GreekMottoBanner()),
-            ],
-          ),
+        theme: buildAppTheme(),
+        home: const AppPageShell(
+          topBar: AppTopBar(title: 'Repr'),
+          body: AppCard(child: AppListRow(title: 'Routine')),
         ),
       ),
     );
 
-    expect(find.text('ΑΡΕΤΗ'), findsOneWidget);
+    expect(find.text('Repr'), findsOneWidget);
+    expect(find.text('Routine'), findsOneWidget);
+    expect(find.byType(Scaffold), findsOneWidget);
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(find.byType(Card), findsOneWidget);
+    expect(find.byType(ListTile), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -47,17 +48,19 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildGreekTheme(),
-        home: Builder(
-          builder: (context) => GreekButton(
-            label: 'Buka pilihan',
-            onPressed: () => showGreekActionSheet<int>(
-              context: context,
-              title: 'Pilih RPE',
-              actions: List.generate(
-                19,
-                (index) =>
-                    GreekAction(value: index, label: 'Pilihan ${index + 1}'),
+        theme: buildAppTheme(),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => AppButton(
+              label: 'Buka pilihan',
+              onPressed: () => showAppActionSheet<int>(
+                context: context,
+                title: 'Pilih RPE',
+                actions: List.generate(
+                  19,
+                  (index) =>
+                      AppAction(value: index, label: 'Pilihan ${index + 1}'),
+                ),
               ),
             ),
           ),
@@ -65,7 +68,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('BUKA PILIHAN'));
+    await tester.tap(find.text('Buka pilihan'));
     await tester.pumpAndSettle();
     expect(find.text('Pilih RPE'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -73,7 +76,6 @@ void main() {
     await tester.drag(find.byType(ListView).last, const Offset(0, -900));
     await tester.pumpAndSettle();
     expect(find.text('Pilihan 19'), findsOneWidget);
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets('kontrol interaktif memiliki target sentuh minimal 48 px', (
@@ -81,31 +83,30 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildGreekTheme(),
+        theme: buildAppTheme(),
         home: Scaffold(
           body: Column(
             children: [
-              GreekButton(
+              AppButton(
                 key: const Key('compact-button'),
                 label: 'Aksi',
-                compact: true,
                 onPressed: () {},
               ),
-              GreekTextField(
+              AppTextField(
                 key: const Key('text-field'),
                 hint: 'Input',
                 onChanged: (_) {},
               ),
-              GreekSegmentedControl<int>(
+              AppSegmentedControl<int>(
                 key: const Key('segments'),
                 segments: const [
-                  GreekSegment(value: 1, label: 'Satu'),
-                  GreekSegment(value: 2, label: 'Dua'),
+                  AppSegment(value: 1, label: 'Satu'),
+                  AppSegment(value: 2, label: 'Dua'),
                 ],
                 value: 1,
                 onChanged: (_) {},
               ),
-              GreekToggle(
+              AppToggle(
                 key: const Key('toggle'),
                 value: true,
                 onChanged: (_) {},

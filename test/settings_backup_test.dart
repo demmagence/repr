@@ -7,7 +7,7 @@ import 'package:repr/app.dart';
 import 'package:repr/core/notification_service.dart';
 import 'package:repr/data/database.dart';
 import 'package:repr/features/screens.dart';
-import 'package:repr/ui/greek/greek.dart';
+import 'package:repr/ui/material/app_ui.dart';
 
 class _NoopNotificationService extends NotificationService {
   @override
@@ -47,7 +47,7 @@ void main() {
           notificationProvider.overrideWithValue(_NoopNotificationService()),
         ],
         child: MaterialApp(
-          theme: buildGreekTheme(),
+          theme: buildAppTheme(),
           home: const Scaffold(body: SettingsScreen()),
         ),
       ),
@@ -68,11 +68,11 @@ void main() {
     expect(find.text('Impor backup'), findsOneWidget);
     expect(find.text('Ganti data dari file backup Repr'), findsOneWidget);
 
-    final exportRow = tester.widget<GreekListRow>(
-      find.widgetWithText(GreekListRow, 'Ekspor backup'),
+    final exportRow = tester.widget<AppListRow>(
+      find.widgetWithText(AppListRow, 'Ekspor backup'),
     );
-    final importRow = tester.widget<GreekListRow>(
-      find.widgetWithText(GreekListRow, 'Impor backup'),
+    final importRow = tester.widget<AppListRow>(
+      find.widgetWithText(AppListRow, 'Impor backup'),
     );
     expect(exportRow.onTap, isNotNull);
     expect(importRow.onTap, isNotNull);
@@ -92,12 +92,6 @@ void main() {
     expect(exportInkWell.onTap, isNotNull);
     expect(importInkWell.onTap, isNotNull);
 
-    final opacities = tester
-        .widgetList<Opacity>(find.byType(Opacity))
-        .map((w) => w.opacity)
-        .toList();
-    expect(opacities.contains(0.5), isFalse);
-
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1));
@@ -105,7 +99,7 @@ void main() {
   });
 
   testWidgets(
-    'ekspor dan impor dinonaktifkan secara reaktif dengan subtitle, opacity, dan onTap null saat workout aktif',
+    'ekspor dan impor memakai status disabled Material saat workout aktif',
     (tester) async {
       final database = AppDatabase(NativeDatabase.memory());
       await tester.runAsync(database.startWorkout);
@@ -118,11 +112,11 @@ void main() {
         findsNWidgets(2),
       );
 
-      final exportRow = tester.widget<GreekListRow>(
-        find.widgetWithText(GreekListRow, 'Ekspor backup'),
+      final exportRow = tester.widget<AppListRow>(
+        find.widgetWithText(AppListRow, 'Ekspor backup'),
       );
-      final importRow = tester.widget<GreekListRow>(
-        find.widgetWithText(GreekListRow, 'Impor backup'),
+      final importRow = tester.widget<AppListRow>(
+        find.widgetWithText(AppListRow, 'Impor backup'),
       );
       expect(exportRow.onTap, isNull);
       expect(importRow.onTap, isNull);
@@ -141,12 +135,6 @@ void main() {
       );
       expect(exportInkWell.onTap, isNull);
       expect(importInkWell.onTap, isNull);
-
-      final opacities = tester
-          .widgetList<Opacity>(find.byType(Opacity))
-          .where((w) => w.opacity == 0.5)
-          .toList();
-      expect(opacities.length, greaterThanOrEqualTo(2));
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
@@ -175,11 +163,11 @@ void main() {
         find.text('Selesaikan atau buang workout aktif terlebih dahulu'),
         findsNWidgets(2),
       );
-      final exportRowActive = tester.widget<GreekListRow>(
-        find.widgetWithText(GreekListRow, 'Ekspor backup'),
+      final exportRowActive = tester.widget<AppListRow>(
+        find.widgetWithText(AppListRow, 'Ekspor backup'),
       );
-      final importRowActive = tester.widget<GreekListRow>(
-        find.widgetWithText(GreekListRow, 'Impor backup'),
+      final importRowActive = tester.widget<AppListRow>(
+        find.widgetWithText(AppListRow, 'Impor backup'),
       );
       expect(exportRowActive.onTap, isNull);
       expect(importRowActive.onTap, isNull);
@@ -197,11 +185,11 @@ void main() {
         find.text('Selesaikan atau buang workout aktif terlebih dahulu'),
         findsNothing,
       );
-      final exportRowInactive = tester.widget<GreekListRow>(
-        find.widgetWithText(GreekListRow, 'Ekspor backup'),
+      final exportRowInactive = tester.widget<AppListRow>(
+        find.widgetWithText(AppListRow, 'Ekspor backup'),
       );
-      final importRowInactive = tester.widget<GreekListRow>(
-        find.widgetWithText(GreekListRow, 'Impor backup'),
+      final importRowInactive = tester.widget<AppListRow>(
+        find.widgetWithText(AppListRow, 'Impor backup'),
       );
       expect(exportRowInactive.onTap, isNotNull);
       expect(importRowInactive.onTap, isNotNull);

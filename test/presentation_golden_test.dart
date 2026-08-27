@@ -8,7 +8,7 @@ import 'package:repr/app.dart';
 import 'package:repr/core/notification_service.dart';
 import 'package:repr/data/database.dart';
 import 'package:repr/features/screens.dart';
-import 'package:repr/ui/greek/greek.dart';
+import 'package:repr/ui/material/app_ui.dart';
 
 class _DeniedNotificationService extends NotificationService {
   @override
@@ -52,7 +52,7 @@ Future<void> _pumpPage(
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: buildGreekTheme(),
+        theme: buildAppTheme(),
         home: Builder(
           builder: (context) => MediaQuery(
             data: MediaQuery.of(
@@ -107,12 +107,14 @@ void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     await initializeDateFormatting('id_ID');
-    await (FontLoader(
-      'NotoSans',
-    )..addFont(rootBundle.load('assets/fonts/NotoSans-Variable.ttf'))).load();
-    await (FontLoader(
-      'NotoSerif',
-    )..addFont(rootBundle.load('assets/fonts/NotoSerif-Variable.ttf'))).load();
+    await (FontLoader('Roboto')
+          ..addFont(rootBundle.load('assets/fonts/Roboto-Regular.ttf'))
+          ..addFont(rootBundle.load('assets/fonts/Roboto-Medium.ttf'))
+          ..addFont(rootBundle.load('assets/fonts/Roboto-Bold.ttf')))
+        .load();
+    await (FontLoader('MaterialIcons')
+          ..addFont(rootBundle.load('assets/fonts/MaterialIcons-Regular.otf')))
+        .load();
   });
 
   Future<void> disposePage(WidgetTester tester, AppDatabase database) async {
@@ -227,31 +229,29 @@ void main() {
         tester,
         database: database,
         size: entry.value,
-        child: GreekPageShell(
+        child: AppPageShell(
           body: Builder(
             builder: (context) => Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GreekButton(
+                  AppButton(
                     key: const Key('show-dialog'),
                     label: 'Buka dialog',
-                    onPressed: () => showGreekDialog<void>(
+                    onPressed: () => showAppDialog<void>(
                       context: context,
-                      builder: (context) => GreekDialog(
+                      builder: (context) => AppDialog(
                         title: 'Selesaikan workout?',
                         actions: [
-                          GreekButton(
+                          AppButton(
                             label: 'Batal',
                             expand: false,
-                            compact: true,
-                            variant: GreekActionVariant.secondary,
+                            variant: AppActionVariant.secondary,
                             onPressed: () => Navigator.pop(context),
                           ),
-                          GreekButton(
+                          AppButton(
                             label: 'Selesaikan',
                             expand: false,
-                            compact: true,
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
@@ -262,17 +262,17 @@ void main() {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  GreekButton(
+                  AppButton(
                     key: const Key('show-sheet'),
                     label: 'Buka pilihan',
-                    onPressed: () => showGreekActionSheet<int>(
+                    onPressed: () => showAppActionSheet<int>(
                       context: context,
                       title: 'Jenis set',
                       actions: const [
-                        GreekAction(value: 1, label: 'Working'),
-                        GreekAction(value: 2, label: 'Warm-up'),
-                        GreekAction(value: 3, label: 'Drop'),
-                        GreekAction(value: 4, label: 'Failure', danger: true),
+                        AppAction(value: 1, label: 'Working'),
+                        AppAction(value: 2, label: 'Warm-up'),
+                        AppAction(value: 3, label: 'Drop'),
+                        AppAction(value: 4, label: 'Failure'),
                       ],
                     ),
                   ),
@@ -289,7 +289,7 @@ void main() {
         find.byType(Overlay),
         matchesGoldenFile('goldens/dialog-${entry.key}.png'),
       );
-      await tester.tap(find.text('BATAL'));
+      await tester.tap(find.text('Batal'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('show-sheet')));

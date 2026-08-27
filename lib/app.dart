@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,7 +7,7 @@ import 'core/app_metadata.dart';
 import 'core/notification_service.dart';
 import 'data/database.dart';
 import 'features/screens.dart';
-import 'ui/greek/greek.dart';
+import 'ui/material/app_ui.dart';
 
 final appMetadataProvider = Provider<AppMetadataService>(
   (ref) => DefaultAppMetadataService(),
@@ -92,7 +93,10 @@ class ReprApp extends ConsumerWidget {
       title: 'Repr',
       debugShowCheckedModeBanner: false,
       routerConfig: ref.watch(routerProvider),
-      theme: buildGreekTheme(),
+      theme: buildAppTheme(),
+      locale: const Locale('id', 'ID'),
+      supportedLocales: const [Locale('id', 'ID')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
     );
   }
 }
@@ -102,17 +106,16 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell shell;
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: Colors.transparent,
     body: shell,
-    bottomNavigationBar: GreekBottomNav(
+    bottomNavigationBar: AppBottomNav(
       currentIndex: shell.currentIndex,
       onSelected: (index) =>
           shell.goBranch(index, initialLocation: index == shell.currentIndex),
       destinations: const [
-        GreekBottomDestination(icon: Icons.fitness_center, label: 'Latihan'),
-        GreekBottomDestination(icon: Icons.history, label: 'Riwayat'),
-        GreekBottomDestination(icon: Icons.show_chart, label: 'Progres'),
-        GreekBottomDestination(icon: Icons.settings, label: 'Pengaturan'),
+        AppBottomDestination(icon: Icons.fitness_center, label: 'Latihan'),
+        AppBottomDestination(icon: Icons.history, label: 'Riwayat'),
+        AppBottomDestination(icon: Icons.show_chart, label: 'Progres'),
+        AppBottomDestination(icon: Icons.settings, label: 'Pengaturan'),
       ],
     ),
   );

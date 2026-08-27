@@ -9,7 +9,7 @@ import 'package:repr/core/app_metadata.dart';
 import 'package:repr/core/notification_service.dart';
 import 'package:repr/data/database.dart';
 import 'package:repr/features/screens.dart';
-import 'package:repr/ui/greek/greek.dart';
+import 'package:repr/ui/material/app_ui.dart';
 
 class _MockAssetBundle extends CachingAssetBundle {
   _MockAssetBundle(this.content);
@@ -144,7 +144,7 @@ name: repr
               ),
             ],
             child: MaterialApp(
-              theme: buildGreekTheme(),
+              theme: buildAppTheme(),
               home: const Scaffold(body: SettingsScreen()),
             ),
           ),

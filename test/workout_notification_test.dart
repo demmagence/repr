@@ -6,7 +6,7 @@ import 'package:repr/app.dart';
 import 'package:repr/core/notification_service.dart';
 import 'package:repr/data/database.dart';
 import 'package:repr/features/screens.dart';
-import 'package:repr/ui/greek/greek.dart';
+import 'package:repr/ui/material/app_ui.dart';
 
 class _DeniedNotificationService extends NotificationService {
   var permissionRequests = 0;
@@ -71,7 +71,7 @@ void main() {
             notificationProvider.overrideWithValue(service),
           ],
           child: MaterialApp(
-            theme: buildGreekTheme(),
+            theme: buildAppTheme(),
             home: Scaffold(
               body: WorkoutExerciseCard(
                 workoutId: seeded.id,
