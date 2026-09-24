@@ -346,6 +346,42 @@ class WorkoutExerciseCard extends ConsumerWidget {
     }
   }
 
+  Future<void> _showExerciseDemo(
+    BuildContext context,
+    Exercise exercise,
+  ) async {
+    ExerciseApiModel? apiModel;
+    try {
+      final client = ExerciseApiClient();
+      final results = await client.fetchExercises(search: exercise.name);
+      if (results.isNotEmpty) {
+        apiModel = results.firstWhere(
+          (e) => e.name.toLowerCase() == exercise.name.toLowerCase(),
+          orElse: () => results.first,
+        );
+      }
+    } catch (_) {}
+
+    if (!context.mounted) return;
+    await showExerciseDemoSheet(
+      context,
+      exercise:
+          apiModel ??
+          ExerciseApiModel(
+            id: exercise.id,
+            name: exercise.name,
+            bodyPart: exercise.muscle,
+            equipment: exercise.equipment,
+            target: exercise.muscle,
+            instructions: const [
+              'Jaga postur tubuh tetap stabil dan terkontrol.',
+              'Tarik napas saat fase eksentrik, buang napas saat fase konsentris.',
+              'Pertahankan rentang gerak penuh (full range of motion).',
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) => AppCard(
     padding: const EdgeInsets.all(11),
@@ -357,18 +393,35 @@ class WorkoutExerciseCard extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      view.exercise.name,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      '${view.exercise.muscle} • istirahat ${view.item.restSeconds} dtk',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _showExerciseDemo(context, view.exercise),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              view.exercise.name,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.play_circle_outline,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '${view.exercise.muscle} • istirahat ${view.item.restSeconds} dtk',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               AppIconButton(

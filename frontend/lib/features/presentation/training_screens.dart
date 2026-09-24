@@ -236,6 +236,46 @@ class _ExercisePickerState extends State<_ExercisePicker> {
   String? muscle;
   String? equipment;
   final selected = <String>{};
+  Future<void> _openExerciseDemo(Exercise item) async {
+    ExerciseApiModel? apiModel;
+    try {
+      final client = ExerciseApiClient();
+      final results = await client.fetchExercises(search: item.name);
+      if (results.isNotEmpty) {
+        apiModel = results.firstWhere(
+          (e) => e.name.toLowerCase() == item.name.toLowerCase(),
+          orElse: () => results.first,
+        );
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    await showExerciseDemoSheet(
+      context,
+      exercise:
+          apiModel ??
+          ExerciseApiModel(
+            id: item.id,
+            name: item.name,
+            bodyPart: item.muscle,
+            equipment: item.equipment,
+            target: item.muscle,
+            instructions: const [
+              'Jaga postur tubuh tetap stabil dan terkontrol.',
+              'Tarik napas saat menurunkan beban, hembuskan saat mendorong/menarik.',
+              'Fokus pada kontraksi otot target di setiap repetisi.',
+            ],
+          ),
+      onSelect: () {
+        if (!widget.multiple) {
+          Navigator.pop(context, [item]);
+        } else {
+          setState(() => selected.add(item.id));
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final muscles = widget.exercises.map((item) => item.muscle).toSet().toList()
@@ -326,8 +366,29 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                       final item = items[index];
                       return AppCheckTile(
                         value: selected.contains(item.id),
-                        leading: AppAvatar(
-                          child: Text(item.name.substring(0, 1)),
+                        leading: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () => _openExerciseDemo(item),
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              AppAvatar(child: Text(item.name.substring(0, 1))),
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.play_arrow,
+                                  size: 10,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         title: item.name,
                         subtitle: '${item.muscle} • ${item.equipment}',
