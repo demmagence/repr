@@ -43,7 +43,7 @@ void main() {
           'target': 'pectorals',
           'secondaryMuscles': ['triceps'],
           'instructions': ['Lie on bench', 'Press bar'],
-        }
+        },
       ];
 
       final mockClient = MockClient((request) async {
@@ -127,10 +127,8 @@ void main() {
             builder: (context) => Scaffold(
               body: Center(
                 child: ElevatedButton(
-                  onPressed: () => showExerciseDemoSheet(
-                    context,
-                    exercise: exercise,
-                  ),
+                  onPressed: () =>
+                      showExerciseDemoSheet(context, exercise: exercise),
                   child: const Text('Open Demo'),
                 ),
               ),
