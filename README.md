@@ -15,15 +15,26 @@ koneksi jaringan.
 - Riwayat, volume, max weight, estimated 1RM, dan grafik progres
 - Backup dan restore JSON transaksional
 
+## Struktur Proyek Monorepo
+
+- `frontend/`: Aplikasi mobile Android menggunakan Flutter & SQLite lokal.
+- `backend/`: Layanan NestJS & PostgreSQL untuk proxy dan sinkronisasi ExerciseDB API.
+
 ## Menjalankan project
 
-Persyaratan: Flutter 3.44+, Dart 3.12+, Android SDK 36, Java 17+, serta
-perangkat Android 7.0/API 24 atau lebih baru.
-
+### Frontend (Flutter)
 ```sh
+cd frontend
 flutter pub get
 dart run build_runner build
 flutter run
+```
+
+### Backend (NestJS)
+```sh
+cd backend
+npm install
+npm run start:dev
 ```
 
 ## Quality Gate & Continuous Integration

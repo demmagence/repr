@@ -34,16 +34,21 @@ jobs:
           cache: true
 
       - name: Install dependencies
+        working-directory: frontend
         run: flutter pub get
 
       - name: Check code formatting
+        working-directory: frontend
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Static code analysis
+        working-directory: frontend
         run: flutter analyze
 
       - name: Run unit, widget, and golden tests
+        working-directory: frontend
         run: flutter test
 
       - name: Build debug APK
+        working-directory: frontend
         run: flutter build apk --debug
