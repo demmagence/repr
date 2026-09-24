@@ -11,7 +11,11 @@ import '../app.dart';
 import '../core/backup_service.dart';
 import '../core/metrics.dart';
 import '../data/database.dart';
+import '../data/exercise_api_client.dart';
 import '../ui/material/app_ui.dart';
+import 'presentation/exercise_demo_sheet.dart';
+
+export 'presentation/exercise_demo_sheet.dart';
 
 part 'presentation/training_screens.dart';
 part 'presentation/workout_screens.dart';

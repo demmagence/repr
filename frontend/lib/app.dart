@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'core/app_metadata.dart';
 import 'core/notification_service.dart';
 import 'data/database.dart';
+import 'data/exercise_api_client.dart';
 import 'features/screens.dart';
 import 'ui/material/app_ui.dart';
 
@@ -17,6 +18,9 @@ final databaseProvider = Provider<AppDatabase>(
 );
 final notificationProvider = Provider<NotificationService>(
   (ref) => throw UnimplementedError(),
+);
+final exerciseApiClientProvider = Provider<ExerciseApiClient>(
+  (ref) => ExerciseApiClient(),
 );
 final exercisesProvider = StreamProvider<List<Exercise>>(
   (ref) => ref.watch(databaseProvider).watchExercises(),
@@ -30,6 +34,14 @@ final historyProvider = StreamProvider<List<Workout>>(
 final activeWorkoutProvider = StreamProvider<Workout?>(
   (ref) => ref.watch(databaseProvider).watchActiveWorkout(),
 );
+final workoutDetailProvider = StreamProvider.autoDispose
+    .family<Workout?, String>(
+      (ref, id) => ref.watch(databaseProvider).watchWorkout(id),
+    );
+final workoutExercisesProvider = StreamProvider.autoDispose
+    .family<List<WorkoutExerciseView>, String>(
+      (ref, id) => ref.watch(databaseProvider).watchWorkoutExercises(id),
+    );
 
 final routerProvider = Provider<GoRouter>(
   (ref) => GoRouter(

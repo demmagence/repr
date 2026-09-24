@@ -159,11 +159,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final workout = ref.watch(
-      StreamProvider.autoDispose<Workout?>(
-        (ref) => ref.watch(databaseProvider).watchWorkout(widget.id),
-      ),
-    );
+    final workout = ref.watch(workoutDetailProvider(widget.id));
     return workout.when(
       loading: () =>
           const AppPageShell(body: Center(child: CircularProgressIndicator())),
@@ -245,32 +241,34 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                     ),
                   ),
                 Expanded(
-                  child: StreamBuilder<List<WorkoutExerciseView>>(
-                    stream: ref
-                        .read(databaseProvider)
-                        .watchWorkoutExercises(widget.id),
-                    builder: (context, snapshot) {
-                      final items =
-                          snapshot.data ?? const <WorkoutExerciseView>[];
-                      if (items.isEmpty) {
-                        return const EmptyState(
-                          icon: Icons.fitness_center,
-                          title: 'Tambahkan exercise',
-                          body:
-                              'Pilih gerakan pertama untuk mulai mencatat set.',
-                        );
-                      }
-                      return ListView.separated(
-                        padding: pagePadding,
-                        itemCount: items.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) => WorkoutExerciseCard(
-                          workoutId: widget.id,
-                          view: items[index],
-                        ),
-                      );
-                    },
-                  ),
+                  child: ref
+                      .watch(workoutExercisesProvider(widget.id))
+                      .when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (error, _) => Center(child: Text('$error')),
+                        data: (items) {
+                          if (items.isEmpty) {
+                            return const EmptyState(
+                              icon: Icons.fitness_center,
+                              title: 'Tambahkan exercise',
+                              body:
+                                  'Pilih gerakan pertama untuk mulai mencatat set.',
+                            );
+                          }
+                          return ListView.separated(
+                            padding: pagePadding,
+                            itemCount: items.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) =>
+                                WorkoutExerciseCard(
+                                  workoutId: widget.id,
+                                  view: items[index],
+                                ),
+                          );
+                        },
+                      ),
                 ),
               ],
             ),
@@ -348,6 +346,42 @@ class WorkoutExerciseCard extends ConsumerWidget {
     }
   }
 
+  Future<void> _showExerciseDemo(
+    BuildContext context,
+    Exercise exercise,
+  ) async {
+    ExerciseApiModel? apiModel;
+    try {
+      final client = ExerciseApiClient();
+      final results = await client.fetchExercises(search: exercise.name);
+      if (results.isNotEmpty) {
+        apiModel = results.firstWhere(
+          (e) => e.name.toLowerCase() == exercise.name.toLowerCase(),
+          orElse: () => results.first,
+        );
+      }
+    } catch (_) {}
+
+    if (!context.mounted) return;
+    await showExerciseDemoSheet(
+      context,
+      exercise:
+          apiModel ??
+          ExerciseApiModel(
+            id: exercise.id,
+            name: exercise.name,
+            bodyPart: exercise.muscle,
+            equipment: exercise.equipment,
+            target: exercise.muscle,
+            instructions: const [
+              'Jaga postur tubuh tetap stabil dan terkontrol.',
+              'Tarik napas saat fase eksentrik, buang napas saat fase konsentris.',
+              'Pertahankan rentang gerak penuh (full range of motion).',
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) => AppCard(
     padding: const EdgeInsets.all(11),
@@ -359,18 +393,35 @@ class WorkoutExerciseCard extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      view.exercise.name,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      '${view.exercise.muscle} • istirahat ${view.item.restSeconds} dtk',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _showExerciseDemo(context, view.exercise),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              view.exercise.name,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.play_circle_outline,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '${view.exercise.muscle} • istirahat ${view.item.restSeconds} dtk',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               AppIconButton(
@@ -396,14 +447,17 @@ class WorkoutExerciseCard extends ConsumerWidget {
                         width: 38,
                         child: Text('Set', textAlign: TextAlign.center),
                       ),
+                      SizedBox(width: 4),
                       SizedBox(
                         width: 64,
                         child: Text('kg', textAlign: TextAlign.center),
                       ),
+                      SizedBox(width: 4),
                       SizedBox(
                         width: 48,
                         child: Text('Reps', textAlign: TextAlign.center),
                       ),
+                      SizedBox(width: 4),
                       SizedBox(
                         width: 48,
                         child: Text('RPE', textAlign: TextAlign.center),
@@ -457,8 +511,13 @@ class SetInputRow extends ConsumerWidget {
           Row(
             children: [
               SizedBox(
-                width: 48,
+                width: 38,
                 child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   onPressed: set.completed
                       ? null
                       : () async {
@@ -557,6 +616,8 @@ class SetInputRow extends ConsumerWidget {
               Semantics(
                 label: 'Selesaikan set ${set.position + 1}',
                 child: Checkbox(
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   value: set.completed,
                   onChanged: (value) {
                     if (value != null) onComplete(value);
