@@ -23,6 +23,7 @@ part 'presentation/workout_screens.dart';
 part 'presentation/history_screens.dart';
 part 'presentation/progress_screens.dart';
 part 'presentation/settings_screens.dart';
+part 'presentation/dashboard_screen.dart';
 
 const pagePadding = EdgeInsets.fromLTRB(16, 12, 16, 24);
 

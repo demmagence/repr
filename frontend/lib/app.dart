@@ -9,6 +9,7 @@ import 'data/database.dart';
 import 'data/exercise_api_client.dart';
 import 'features/screens.dart';
 import 'ui/material/app_ui.dart';
+import 'ui/widgets/kinetic_components.dart';
 
 final appMetadataProvider = Provider<AppMetadataService>(
   (ref) => DefaultAppMetadataService(),
@@ -54,7 +55,7 @@ final routerProvider = Provider<GoRouter>(
             routes: [
               GoRoute(
                 path: '/latihan',
-                builder: (_, __) => const TrainingScreen(),
+                builder: (_, __) => const DashboardScreen(),
               ),
             ],
           ),
@@ -119,16 +120,10 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     body: shell,
-    bottomNavigationBar: AppBottomNav(
+    bottomNavigationBar: KineticBottomNav(
       currentIndex: shell.currentIndex,
-      onSelected: (index) =>
+      onTap: (index) =>
           shell.goBranch(index, initialLocation: index == shell.currentIndex),
-      destinations: const [
-        AppBottomDestination(icon: Icons.fitness_center, label: 'Latihan'),
-        AppBottomDestination(icon: Icons.history, label: 'Riwayat'),
-        AppBottomDestination(icon: Icons.show_chart, label: 'Progres'),
-        AppBottomDestination(icon: Icons.settings, label: 'Pengaturan'),
-      ],
     ),
   );
 }
