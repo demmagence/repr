@@ -350,26 +350,9 @@ class WorkoutExerciseCard extends ConsumerWidget {
     BuildContext context,
     Exercise exercise,
   ) async {
-    ExerciseApiModel? apiModel;
-    if (exercise.gifUrl != null && exercise.gifUrl!.isNotEmpty) {
-      apiModel = ExerciseApiModel.fromLocal(exercise);
-    } else {
-      try {
-        final client = ExerciseApiClient();
-        final results = await client.fetchExercises(search: exercise.name);
-        if (results.isNotEmpty) {
-          apiModel = results.firstWhere(
-            (e) => e.name.toLowerCase() == exercise.name.toLowerCase(),
-            orElse: () => results.first,
-          );
-        }
-      } catch (_) {}
-    }
-
-    if (!context.mounted) return;
     await showExerciseDemoSheet(
       context,
-      exercise: apiModel ?? ExerciseApiModel.fromLocal(exercise),
+      exercise: ExerciseApiModel.fromLocal(exercise),
     );
   }
 

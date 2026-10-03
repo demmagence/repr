@@ -156,6 +156,29 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(exercises, exercises.gifUrl);
           await m.addColumn(exercises, exercises.secondaryMuscles);
           await m.addColumn(exercises, exercises.instructions);
+
+          for (var i = 0; i < seedExercises.length; i++) {
+            final item = seedExercises[i];
+            await (update(
+              exercises,
+            )..where((e) => e.name.equals(item.name))).write(
+              ExercisesCompanion(
+                bodyPart: Value(item.bodyPart),
+                target: Value(item.target),
+                gifUrl: Value(item.gifUrl),
+                secondaryMuscles: Value(
+                  item.secondaryMuscles.isNotEmpty
+                      ? jsonEncode(item.secondaryMuscles)
+                      : null,
+                ),
+                instructions: Value(
+                  item.instructions.isNotEmpty
+                      ? jsonEncode(item.instructions)
+                      : null,
+                ),
+              ),
+            );
+          }
         }
       }
     },
@@ -196,9 +219,22 @@ class AppDatabase extends _$AppDatabase {
           exercises,
           ExercisesCompanion.insert(
             id: 'seed-${i + 1}',
-            name: item.$1,
-            muscle: item.$2,
-            equipment: item.$3,
+            name: item.name,
+            muscle: item.muscle,
+            equipment: item.equipment,
+            bodyPart: Value(item.bodyPart),
+            target: Value(item.target),
+            gifUrl: Value(item.gifUrl),
+            secondaryMuscles: Value(
+              item.secondaryMuscles.isNotEmpty
+                  ? jsonEncode(item.secondaryMuscles)
+                  : null,
+            ),
+            instructions: Value(
+              item.instructions.isNotEmpty
+                  ? jsonEncode(item.instructions)
+                  : null,
+            ),
             createdAt: now,
           ),
         );

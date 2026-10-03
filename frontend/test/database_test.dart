@@ -11,8 +11,14 @@ void main() {
   tearDown(() => database.close());
 
   test('database baru memiliki 80 exercise dan setting default', () async {
-    expect(await database.watchExercises().first, hasLength(80));
+    final exercises = await database.watchExercises().first;
+    expect(exercises, hasLength(80));
     expect(await database.getDefaultRestSeconds(), 90);
+    final bench = exercises.firstWhere((e) => e.name == 'Bench Press');
+    expect(bench.bodyPart, 'Chest');
+    expect(bench.target, 'Pectorals');
+    expect(bench.gifUrl, isNotEmpty);
+    expect(bench.instructions, isNotNull);
   });
 
   test('constraint database hanya mengizinkan satu workout aktif', () async {
@@ -147,6 +153,44 @@ void main() {
         .getSingle();
     expect(remainingSets.read<int>('amount'), 0);
   });
+
+  test(
+    'migrasi schema 2 menambahkan kolom rich exercise dan memperkaya data',
+    () async {
+      await database.close();
+      final legacy = AppDatabase(
+        NativeDatabase.memory(
+          setup: (raw) {
+            raw.execute('''
+            CREATE TABLE exercises (
+              id TEXT NOT NULL PRIMARY KEY,
+              name TEXT NOT NULL,
+              muscle TEXT NOT NULL,
+              equipment TEXT NOT NULL,
+              is_custom INTEGER NOT NULL DEFAULT 0,
+              archived INTEGER NOT NULL DEFAULT 0,
+              created_at INTEGER NOT NULL
+            )
+          ''');
+            raw.execute(
+              "INSERT INTO exercises VALUES ('ex-1', 'Bench Press', 'Dada', 'Barbell', 0, 0, 1)",
+            );
+            raw.userVersion = 2;
+          },
+        ),
+      );
+      addTearDown(legacy.close);
+
+      expect(legacy.schemaVersion, 3);
+      final migrated = await (legacy.select(
+        legacy.exercises,
+      )..where((e) => e.id.equals('ex-1'))).getSingle();
+      expect(migrated.bodyPart, 'Chest');
+      expect(migrated.target, 'Pectorals');
+      expect(migrated.gifUrl, isNotEmpty);
+      expect(migrated.instructions, isNotNull);
+    },
+  );
 
   test('routine dapat dimulai dan draft bertahan di database', () async {
     final exercise = (await database.watchExercises().first).first;

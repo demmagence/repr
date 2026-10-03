@@ -13,7 +13,6 @@ import '../core/metrics.dart';
 import '../data/database.dart';
 import '../data/exercise_api_client.dart';
 import '../ui/material/app_ui.dart';
-import 'presentation/exercise_api_explorer_screen.dart';
 import 'presentation/exercise_demo_sheet.dart';
 
 export 'presentation/exercise_api_explorer_screen.dart';

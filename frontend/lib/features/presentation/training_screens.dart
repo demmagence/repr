@@ -237,26 +237,9 @@ class _ExercisePickerState extends State<_ExercisePicker> {
   String? equipment;
   final selected = <String>{};
   Future<void> _openExerciseDemo(Exercise item) async {
-    ExerciseApiModel? apiModel;
-    if (item.gifUrl != null && item.gifUrl!.isNotEmpty) {
-      apiModel = ExerciseApiModel.fromLocal(item);
-    } else {
-      try {
-        final client = ExerciseApiClient();
-        final results = await client.fetchExercises(search: item.name);
-        if (results.isNotEmpty) {
-          apiModel = results.firstWhere(
-            (e) => e.name.toLowerCase() == item.name.toLowerCase(),
-            orElse: () => results.first,
-          );
-        }
-      } catch (_) {}
-    }
-
-    if (!mounted) return;
     await showExerciseDemoSheet(
       context,
-      exercise: apiModel ?? ExerciseApiModel.fromLocal(item),
+      exercise: ExerciseApiModel.fromLocal(item),
       onSelect: () {
         if (!widget.multiple) {
           Navigator.pop(context, [item]);
@@ -339,53 +322,6 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                     () => equipment = value == null || value.isEmpty
                         ? null
                         : value,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ExerciseApiExplorerScreen(),
-                    ),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.cloud_outlined,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Cek & Eksplorasi ExerciseDB API (Backend)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 12,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
