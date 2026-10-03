@@ -47,6 +47,57 @@ class $ExercisesTable extends Exercises
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _bodyPartMeta = const VerificationMeta(
+    'bodyPart',
+  );
+  @override
+  late final GeneratedColumn<String> bodyPart = GeneratedColumn<String>(
+    'body_part',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetMeta = const VerificationMeta('target');
+  @override
+  late final GeneratedColumn<String> target = GeneratedColumn<String>(
+    'target',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _gifUrlMeta = const VerificationMeta('gifUrl');
+  @override
+  late final GeneratedColumn<String> gifUrl = GeneratedColumn<String>(
+    'gif_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _secondaryMusclesMeta = const VerificationMeta(
+    'secondaryMuscles',
+  );
+  @override
+  late final GeneratedColumn<String> secondaryMuscles = GeneratedColumn<String>(
+    'secondary_muscles',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _instructionsMeta = const VerificationMeta(
+    'instructions',
+  );
+  @override
+  late final GeneratedColumn<String> instructions = GeneratedColumn<String>(
+    'instructions',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isCustomMeta = const VerificationMeta(
     'isCustom',
   );
@@ -94,6 +145,11 @@ class $ExercisesTable extends Exercises
     name,
     muscle,
     equipment,
+    bodyPart,
+    target,
+    gifUrl,
+    secondaryMuscles,
+    instructions,
     isCustom,
     archived,
     createdAt,
@@ -138,6 +194,42 @@ class $ExercisesTable extends Exercises
       );
     } else if (isInserting) {
       context.missing(_equipmentMeta);
+    }
+    if (data.containsKey('body_part')) {
+      context.handle(
+        _bodyPartMeta,
+        bodyPart.isAcceptableOrUnknown(data['body_part']!, _bodyPartMeta),
+      );
+    }
+    if (data.containsKey('target')) {
+      context.handle(
+        _targetMeta,
+        target.isAcceptableOrUnknown(data['target']!, _targetMeta),
+      );
+    }
+    if (data.containsKey('gif_url')) {
+      context.handle(
+        _gifUrlMeta,
+        gifUrl.isAcceptableOrUnknown(data['gif_url']!, _gifUrlMeta),
+      );
+    }
+    if (data.containsKey('secondary_muscles')) {
+      context.handle(
+        _secondaryMusclesMeta,
+        secondaryMuscles.isAcceptableOrUnknown(
+          data['secondary_muscles']!,
+          _secondaryMusclesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('instructions')) {
+      context.handle(
+        _instructionsMeta,
+        instructions.isAcceptableOrUnknown(
+          data['instructions']!,
+          _instructionsMeta,
+        ),
+      );
     }
     if (data.containsKey('is_custom')) {
       context.handle(
@@ -184,6 +276,26 @@ class $ExercisesTable extends Exercises
         DriftSqlType.string,
         data['${effectivePrefix}equipment'],
       )!,
+      bodyPart: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body_part'],
+      ),
+      target: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target'],
+      ),
+      gifUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gif_url'],
+      ),
+      secondaryMuscles: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}secondary_muscles'],
+      ),
+      instructions: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}instructions'],
+      ),
       isCustom: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_custom'],
@@ -210,6 +322,11 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   final String name;
   final String muscle;
   final String equipment;
+  final String? bodyPart;
+  final String? target;
+  final String? gifUrl;
+  final String? secondaryMuscles;
+  final String? instructions;
   final bool isCustom;
   final bool archived;
   final DateTime createdAt;
@@ -218,6 +335,11 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     required this.name,
     required this.muscle,
     required this.equipment,
+    this.bodyPart,
+    this.target,
+    this.gifUrl,
+    this.secondaryMuscles,
+    this.instructions,
     required this.isCustom,
     required this.archived,
     required this.createdAt,
@@ -229,6 +351,21 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     map['name'] = Variable<String>(name);
     map['muscle'] = Variable<String>(muscle);
     map['equipment'] = Variable<String>(equipment);
+    if (!nullToAbsent || bodyPart != null) {
+      map['body_part'] = Variable<String>(bodyPart);
+    }
+    if (!nullToAbsent || target != null) {
+      map['target'] = Variable<String>(target);
+    }
+    if (!nullToAbsent || gifUrl != null) {
+      map['gif_url'] = Variable<String>(gifUrl);
+    }
+    if (!nullToAbsent || secondaryMuscles != null) {
+      map['secondary_muscles'] = Variable<String>(secondaryMuscles);
+    }
+    if (!nullToAbsent || instructions != null) {
+      map['instructions'] = Variable<String>(instructions);
+    }
     map['is_custom'] = Variable<bool>(isCustom);
     map['archived'] = Variable<bool>(archived);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -241,6 +378,21 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       name: Value(name),
       muscle: Value(muscle),
       equipment: Value(equipment),
+      bodyPart: bodyPart == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bodyPart),
+      target: target == null && nullToAbsent
+          ? const Value.absent()
+          : Value(target),
+      gifUrl: gifUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gifUrl),
+      secondaryMuscles: secondaryMuscles == null && nullToAbsent
+          ? const Value.absent()
+          : Value(secondaryMuscles),
+      instructions: instructions == null && nullToAbsent
+          ? const Value.absent()
+          : Value(instructions),
       isCustom: Value(isCustom),
       archived: Value(archived),
       createdAt: Value(createdAt),
@@ -257,6 +409,11 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       name: serializer.fromJson<String>(json['name']),
       muscle: serializer.fromJson<String>(json['muscle']),
       equipment: serializer.fromJson<String>(json['equipment']),
+      bodyPart: serializer.fromJson<String?>(json['bodyPart']),
+      target: serializer.fromJson<String?>(json['target']),
+      gifUrl: serializer.fromJson<String?>(json['gifUrl']),
+      secondaryMuscles: serializer.fromJson<String?>(json['secondaryMuscles']),
+      instructions: serializer.fromJson<String?>(json['instructions']),
       isCustom: serializer.fromJson<bool>(json['isCustom']),
       archived: serializer.fromJson<bool>(json['archived']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -270,6 +427,11 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       'name': serializer.toJson<String>(name),
       'muscle': serializer.toJson<String>(muscle),
       'equipment': serializer.toJson<String>(equipment),
+      'bodyPart': serializer.toJson<String?>(bodyPart),
+      'target': serializer.toJson<String?>(target),
+      'gifUrl': serializer.toJson<String?>(gifUrl),
+      'secondaryMuscles': serializer.toJson<String?>(secondaryMuscles),
+      'instructions': serializer.toJson<String?>(instructions),
       'isCustom': serializer.toJson<bool>(isCustom),
       'archived': serializer.toJson<bool>(archived),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -281,6 +443,11 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     String? name,
     String? muscle,
     String? equipment,
+    Value<String?> bodyPart = const Value.absent(),
+    Value<String?> target = const Value.absent(),
+    Value<String?> gifUrl = const Value.absent(),
+    Value<String?> secondaryMuscles = const Value.absent(),
+    Value<String?> instructions = const Value.absent(),
     bool? isCustom,
     bool? archived,
     DateTime? createdAt,
@@ -289,6 +456,13 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     name: name ?? this.name,
     muscle: muscle ?? this.muscle,
     equipment: equipment ?? this.equipment,
+    bodyPart: bodyPart.present ? bodyPart.value : this.bodyPart,
+    target: target.present ? target.value : this.target,
+    gifUrl: gifUrl.present ? gifUrl.value : this.gifUrl,
+    secondaryMuscles: secondaryMuscles.present
+        ? secondaryMuscles.value
+        : this.secondaryMuscles,
+    instructions: instructions.present ? instructions.value : this.instructions,
     isCustom: isCustom ?? this.isCustom,
     archived: archived ?? this.archived,
     createdAt: createdAt ?? this.createdAt,
@@ -299,6 +473,15 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       name: data.name.present ? data.name.value : this.name,
       muscle: data.muscle.present ? data.muscle.value : this.muscle,
       equipment: data.equipment.present ? data.equipment.value : this.equipment,
+      bodyPart: data.bodyPart.present ? data.bodyPart.value : this.bodyPart,
+      target: data.target.present ? data.target.value : this.target,
+      gifUrl: data.gifUrl.present ? data.gifUrl.value : this.gifUrl,
+      secondaryMuscles: data.secondaryMuscles.present
+          ? data.secondaryMuscles.value
+          : this.secondaryMuscles,
+      instructions: data.instructions.present
+          ? data.instructions.value
+          : this.instructions,
       isCustom: data.isCustom.present ? data.isCustom.value : this.isCustom,
       archived: data.archived.present ? data.archived.value : this.archived,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -312,6 +495,11 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('name: $name, ')
           ..write('muscle: $muscle, ')
           ..write('equipment: $equipment, ')
+          ..write('bodyPart: $bodyPart, ')
+          ..write('target: $target, ')
+          ..write('gifUrl: $gifUrl, ')
+          ..write('secondaryMuscles: $secondaryMuscles, ')
+          ..write('instructions: $instructions, ')
           ..write('isCustom: $isCustom, ')
           ..write('archived: $archived, ')
           ..write('createdAt: $createdAt')
@@ -320,8 +508,20 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, muscle, equipment, isCustom, archived, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    muscle,
+    equipment,
+    bodyPart,
+    target,
+    gifUrl,
+    secondaryMuscles,
+    instructions,
+    isCustom,
+    archived,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -330,6 +530,11 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.name == this.name &&
           other.muscle == this.muscle &&
           other.equipment == this.equipment &&
+          other.bodyPart == this.bodyPart &&
+          other.target == this.target &&
+          other.gifUrl == this.gifUrl &&
+          other.secondaryMuscles == this.secondaryMuscles &&
+          other.instructions == this.instructions &&
           other.isCustom == this.isCustom &&
           other.archived == this.archived &&
           other.createdAt == this.createdAt);
@@ -340,6 +545,11 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<String> name;
   final Value<String> muscle;
   final Value<String> equipment;
+  final Value<String?> bodyPart;
+  final Value<String?> target;
+  final Value<String?> gifUrl;
+  final Value<String?> secondaryMuscles;
+  final Value<String?> instructions;
   final Value<bool> isCustom;
   final Value<bool> archived;
   final Value<DateTime> createdAt;
@@ -349,6 +559,11 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.name = const Value.absent(),
     this.muscle = const Value.absent(),
     this.equipment = const Value.absent(),
+    this.bodyPart = const Value.absent(),
+    this.target = const Value.absent(),
+    this.gifUrl = const Value.absent(),
+    this.secondaryMuscles = const Value.absent(),
+    this.instructions = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.archived = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -359,6 +574,11 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     required String name,
     required String muscle,
     required String equipment,
+    this.bodyPart = const Value.absent(),
+    this.target = const Value.absent(),
+    this.gifUrl = const Value.absent(),
+    this.secondaryMuscles = const Value.absent(),
+    this.instructions = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.archived = const Value.absent(),
     required DateTime createdAt,
@@ -373,6 +593,11 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<String>? name,
     Expression<String>? muscle,
     Expression<String>? equipment,
+    Expression<String>? bodyPart,
+    Expression<String>? target,
+    Expression<String>? gifUrl,
+    Expression<String>? secondaryMuscles,
+    Expression<String>? instructions,
     Expression<bool>? isCustom,
     Expression<bool>? archived,
     Expression<DateTime>? createdAt,
@@ -383,6 +608,11 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       if (name != null) 'name': name,
       if (muscle != null) 'muscle': muscle,
       if (equipment != null) 'equipment': equipment,
+      if (bodyPart != null) 'body_part': bodyPart,
+      if (target != null) 'target': target,
+      if (gifUrl != null) 'gif_url': gifUrl,
+      if (secondaryMuscles != null) 'secondary_muscles': secondaryMuscles,
+      if (instructions != null) 'instructions': instructions,
       if (isCustom != null) 'is_custom': isCustom,
       if (archived != null) 'archived': archived,
       if (createdAt != null) 'created_at': createdAt,
@@ -395,6 +625,11 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Value<String>? name,
     Value<String>? muscle,
     Value<String>? equipment,
+    Value<String?>? bodyPart,
+    Value<String?>? target,
+    Value<String?>? gifUrl,
+    Value<String?>? secondaryMuscles,
+    Value<String?>? instructions,
     Value<bool>? isCustom,
     Value<bool>? archived,
     Value<DateTime>? createdAt,
@@ -405,6 +640,11 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       name: name ?? this.name,
       muscle: muscle ?? this.muscle,
       equipment: equipment ?? this.equipment,
+      bodyPart: bodyPart ?? this.bodyPart,
+      target: target ?? this.target,
+      gifUrl: gifUrl ?? this.gifUrl,
+      secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
+      instructions: instructions ?? this.instructions,
       isCustom: isCustom ?? this.isCustom,
       archived: archived ?? this.archived,
       createdAt: createdAt ?? this.createdAt,
@@ -426,6 +666,21 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     }
     if (equipment.present) {
       map['equipment'] = Variable<String>(equipment.value);
+    }
+    if (bodyPart.present) {
+      map['body_part'] = Variable<String>(bodyPart.value);
+    }
+    if (target.present) {
+      map['target'] = Variable<String>(target.value);
+    }
+    if (gifUrl.present) {
+      map['gif_url'] = Variable<String>(gifUrl.value);
+    }
+    if (secondaryMuscles.present) {
+      map['secondary_muscles'] = Variable<String>(secondaryMuscles.value);
+    }
+    if (instructions.present) {
+      map['instructions'] = Variable<String>(instructions.value);
     }
     if (isCustom.present) {
       map['is_custom'] = Variable<bool>(isCustom.value);
@@ -449,6 +704,11 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('name: $name, ')
           ..write('muscle: $muscle, ')
           ..write('equipment: $equipment, ')
+          ..write('bodyPart: $bodyPart, ')
+          ..write('target: $target, ')
+          ..write('gifUrl: $gifUrl, ')
+          ..write('secondaryMuscles: $secondaryMuscles, ')
+          ..write('instructions: $instructions, ')
           ..write('isCustom: $isCustom, ')
           ..write('archived: $archived, ')
           ..write('createdAt: $createdAt, ')
@@ -3278,6 +3538,11 @@ typedef $$ExercisesTableCreateCompanionBuilder =
       required String name,
       required String muscle,
       required String equipment,
+      Value<String?> bodyPart,
+      Value<String?> target,
+      Value<String?> gifUrl,
+      Value<String?> secondaryMuscles,
+      Value<String?> instructions,
       Value<bool> isCustom,
       Value<bool> archived,
       required DateTime createdAt,
@@ -3289,6 +3554,11 @@ typedef $$ExercisesTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String> muscle,
       Value<String> equipment,
+      Value<String?> bodyPart,
+      Value<String?> target,
+      Value<String?> gifUrl,
+      Value<String?> secondaryMuscles,
+      Value<String?> instructions,
       Value<bool> isCustom,
       Value<bool> archived,
       Value<DateTime> createdAt,
@@ -3366,6 +3636,31 @@ class $$ExercisesTableFilterComposer
 
   ColumnFilters<String> get equipment => $composableBuilder(
     column: $table.equipment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bodyPart => $composableBuilder(
+    column: $table.bodyPart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get target => $composableBuilder(
+    column: $table.target,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gifUrl => $composableBuilder(
+    column: $table.gifUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get instructions => $composableBuilder(
+    column: $table.instructions,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3464,6 +3759,31 @@ class $$ExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get bodyPart => $composableBuilder(
+    column: $table.bodyPart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get target => $composableBuilder(
+    column: $table.target,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get gifUrl => $composableBuilder(
+    column: $table.gifUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isCustom => $composableBuilder(
     column: $table.isCustom,
     builder: (column) => ColumnOrderings(column),
@@ -3500,6 +3820,25 @@ class $$ExercisesTableAnnotationComposer
 
   GeneratedColumn<String> get equipment =>
       $composableBuilder(column: $table.equipment, builder: (column) => column);
+
+  GeneratedColumn<String> get bodyPart =>
+      $composableBuilder(column: $table.bodyPart, builder: (column) => column);
+
+  GeneratedColumn<String> get target =>
+      $composableBuilder(column: $table.target, builder: (column) => column);
+
+  GeneratedColumn<String> get gifUrl =>
+      $composableBuilder(column: $table.gifUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get secondaryMuscles => $composableBuilder(
+    column: $table.secondaryMuscles,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get instructions => $composableBuilder(
+    column: $table.instructions,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isCustom =>
       $composableBuilder(column: $table.isCustom, builder: (column) => column);
@@ -3596,6 +3935,11 @@ class $$ExercisesTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String> muscle = const Value.absent(),
                 Value<String> equipment = const Value.absent(),
+                Value<String?> bodyPart = const Value.absent(),
+                Value<String?> target = const Value.absent(),
+                Value<String?> gifUrl = const Value.absent(),
+                Value<String?> secondaryMuscles = const Value.absent(),
+                Value<String?> instructions = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -3605,6 +3949,11 @@ class $$ExercisesTableTableManager
                 name: name,
                 muscle: muscle,
                 equipment: equipment,
+                bodyPart: bodyPart,
+                target: target,
+                gifUrl: gifUrl,
+                secondaryMuscles: secondaryMuscles,
+                instructions: instructions,
                 isCustom: isCustom,
                 archived: archived,
                 createdAt: createdAt,
@@ -3616,6 +3965,11 @@ class $$ExercisesTableTableManager
                 required String name,
                 required String muscle,
                 required String equipment,
+                Value<String?> bodyPart = const Value.absent(),
+                Value<String?> target = const Value.absent(),
+                Value<String?> gifUrl = const Value.absent(),
+                Value<String?> secondaryMuscles = const Value.absent(),
+                Value<String?> instructions = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 required DateTime createdAt,
@@ -3625,6 +3979,11 @@ class $$ExercisesTableTableManager
                 name: name,
                 muscle: muscle,
                 equipment: equipment,
+                bodyPart: bodyPart,
+                target: target,
+                gifUrl: gifUrl,
+                secondaryMuscles: secondaryMuscles,
+                instructions: instructions,
                 isCustom: isCustom,
                 archived: archived,
                 createdAt: createdAt,

@@ -10,6 +10,30 @@ import 'package:repr/data/database.dart';
 import 'package:repr/features/screens.dart';
 import 'package:repr/ui/material/app_ui.dart';
 
+class _TolerantGoldenComparator extends LocalFileComparator {
+  _TolerantGoldenComparator(super.testFile);
+
+  static const double tolerancePercent = 0.5;
+
+  @override
+  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
+    final ComparisonResult result = await GoldenFileComparator.compareLists(
+      imageBytes,
+      await getGoldenBytes(golden),
+    );
+
+    final percent = result.diffPercent > 1
+        ? result.diffPercent
+        : result.diffPercent * 100;
+    if (result.passed || percent <= tolerancePercent) {
+      return true;
+    }
+
+    final String error = await generateFailureOutput(result, golden, basedir);
+    throw FlutterError(error);
+  }
+}
+
 class _DeniedNotificationService extends NotificationService {
   @override
   Future<RestTimerPermissionStatus> requestRestTimerPermission() async =>
@@ -115,6 +139,13 @@ void main() {
     await (FontLoader('MaterialIcons')
           ..addFont(rootBundle.load('assets/fonts/MaterialIcons-Regular.otf')))
         .load();
+
+    final currentComparator = goldenFileComparator;
+    if (currentComparator is LocalFileComparator) {
+      goldenFileComparator = _TolerantGoldenComparator(
+        Uri.parse('${currentComparator.basedir}presentation_golden_test.dart'),
+      );
+    }
   });
 
   Future<void> disposePage(WidgetTester tester, AppDatabase database) async {

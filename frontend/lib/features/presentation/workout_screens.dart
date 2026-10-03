@@ -350,35 +350,9 @@ class WorkoutExerciseCard extends ConsumerWidget {
     BuildContext context,
     Exercise exercise,
   ) async {
-    ExerciseApiModel? apiModel;
-    try {
-      final client = ExerciseApiClient();
-      final results = await client.fetchExercises(search: exercise.name);
-      if (results.isNotEmpty) {
-        apiModel = results.firstWhere(
-          (e) => e.name.toLowerCase() == exercise.name.toLowerCase(),
-          orElse: () => results.first,
-        );
-      }
-    } catch (_) {}
-
-    if (!context.mounted) return;
     await showExerciseDemoSheet(
       context,
-      exercise:
-          apiModel ??
-          ExerciseApiModel(
-            id: exercise.id,
-            name: exercise.name,
-            bodyPart: exercise.muscle,
-            equipment: exercise.equipment,
-            target: exercise.muscle,
-            instructions: const [
-              'Jaga postur tubuh tetap stabil dan terkontrol.',
-              'Tarik napas saat fase eksentrik, buang napas saat fase konsentris.',
-              'Pertahankan rentang gerak penuh (full range of motion).',
-            ],
-          ),
+      exercise: ExerciseApiModel.fromLocal(exercise),
     );
   }
 
