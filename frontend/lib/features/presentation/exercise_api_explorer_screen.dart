@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app.dart';
@@ -90,14 +91,25 @@ class _ExerciseApiExplorerScreenState
     try {
       await database.createExercise(
         name: item.name,
-        muscle: item.bodyPart,
+        muscle: item.bodyPart.isNotEmpty
+            ? item.bodyPart
+            : (item.target.isNotEmpty ? item.target : 'Lainnya'),
         equipment: item.equipment,
+        bodyPart: item.bodyPart,
+        target: item.target,
+        gifUrl: item.gifUrl,
+        secondaryMuscles: item.secondaryMuscles.isNotEmpty
+            ? jsonEncode(item.secondaryMuscles)
+            : null,
+        instructions: item.instructions.isNotEmpty
+            ? jsonEncode(item.instructions)
+            : null,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Exercise "${item.name}" berhasil disimpan ke SQLite lokal!',
+              'Exercise "${item.name}" (dengan instruksi & demo) berhasil disimpan ke SQLite lokal!',
             ),
             duration: const Duration(seconds: 2),
           ),
@@ -111,6 +123,38 @@ class _ExerciseApiExplorerScreenState
             backgroundColor: Colors.red,
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _syncAllToLocal() async {
+    setState(() {
+      _isLoading = true;
+      _statusMessage = 'Menyinkronkan seluruh exercise ke database lokal...';
+    });
+    try {
+      final database = ref.read(databaseProvider);
+      final count = await _client.syncAllExercisesToDatabase(database);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage =
+              '✅ Berhasil menyinkronkan $count exercise ke SQLite lokal!';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$count exercise berhasil disimpan ke database lokal!',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = '❌ Gagal sinkronisasi: $e';
+        });
       }
     }
   }
@@ -136,6 +180,11 @@ class _ExerciseApiExplorerScreenState
         title: 'ExerciseDB API Explorer',
         showBack: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.cloud_sync),
+            tooltip: 'Sinkronkan semua ke lokal',
+            onPressed: _syncAllToLocal,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Muat ulang',

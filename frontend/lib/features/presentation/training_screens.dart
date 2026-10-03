@@ -238,34 +238,25 @@ class _ExercisePickerState extends State<_ExercisePicker> {
   final selected = <String>{};
   Future<void> _openExerciseDemo(Exercise item) async {
     ExerciseApiModel? apiModel;
-    try {
-      final client = ExerciseApiClient();
-      final results = await client.fetchExercises(search: item.name);
-      if (results.isNotEmpty) {
-        apiModel = results.firstWhere(
-          (e) => e.name.toLowerCase() == item.name.toLowerCase(),
-          orElse: () => results.first,
-        );
-      }
-    } catch (_) {}
+    if (item.gifUrl != null && item.gifUrl!.isNotEmpty) {
+      apiModel = ExerciseApiModel.fromLocal(item);
+    } else {
+      try {
+        final client = ExerciseApiClient();
+        final results = await client.fetchExercises(search: item.name);
+        if (results.isNotEmpty) {
+          apiModel = results.firstWhere(
+            (e) => e.name.toLowerCase() == item.name.toLowerCase(),
+            orElse: () => results.first,
+          );
+        }
+      } catch (_) {}
+    }
 
     if (!mounted) return;
     await showExerciseDemoSheet(
       context,
-      exercise:
-          apiModel ??
-          ExerciseApiModel(
-            id: item.id,
-            name: item.name,
-            bodyPart: item.muscle,
-            equipment: item.equipment,
-            target: item.muscle,
-            instructions: const [
-              'Jaga postur tubuh tetap stabil dan terkontrol.',
-              'Tarik napas saat menurunkan beban, hembuskan saat mendorong/menarik.',
-              'Fokus pada kontraksi otot target di setiap repetisi.',
-            ],
-          ),
+      exercise: apiModel ?? ExerciseApiModel.fromLocal(item),
       onSelect: () {
         if (!widget.multiple) {
           Navigator.pop(context, [item]);

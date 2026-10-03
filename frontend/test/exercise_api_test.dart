@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:repr/data/database.dart';
 import 'package:repr/data/exercise_api_client.dart';
 import 'package:repr/features/screens.dart';
 import 'package:repr/ui/material/app_ui.dart';
@@ -148,5 +150,137 @@ void main() {
       expect(find.textContaining('Target: Pectorals'), findsOneWidget);
       expect(find.textContaining('Alat: Barbell'), findsOneWidget);
     });
+  });
+
+  group('Exercise Backend to SQLite Sync', () {
+    test(
+      'ExerciseApiModel.fromLocal parses rich fields and JSON collections',
+      () {
+        final local = Exercise(
+          id: 'ex-001',
+          name: 'Incline Dumbbell Press',
+          muscle: 'Dada',
+          equipment: 'Dumbbell',
+          bodyPart: 'Chest',
+          target: 'Upper Pectorals',
+          gifUrl: 'https://cdn.example.com/incline.gif',
+          secondaryMuscles: jsonEncode(['Triceps', 'Shoulders']),
+          instructions: jsonEncode([
+            'Sit on incline bench',
+            'Press dumbbells up',
+          ]),
+          isCustom: false,
+          archived: false,
+          createdAt: DateTime.now(),
+        );
+
+        final apiModel = ExerciseApiModel.fromLocal(local);
+        expect(apiModel.id, 'ex-001');
+        expect(apiModel.name, 'Incline Dumbbell Press');
+        expect(apiModel.bodyPart, 'Chest');
+        expect(apiModel.target, 'Upper Pectorals');
+        expect(apiModel.gifUrl, 'https://cdn.example.com/incline.gif');
+        expect(
+          apiModel.secondaryMuscles,
+          containsAll(['Triceps', 'Shoulders']),
+        );
+        expect(apiModel.instructions, hasLength(2));
+      },
+    );
+
+    test(
+      'upsertExercisesFromApi inserts new exercises and updates existing',
+      () async {
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+
+        final apiItems = [
+          const ExerciseApiModel(
+            id: 'api-1',
+            name: 'Lat Pulldown',
+            bodyPart: 'Back',
+            equipment: 'Cable',
+            gifUrl: 'https://example.com/lat.gif',
+            target: 'Lats',
+            secondaryMuscles: ['Biceps'],
+            instructions: ['Pull bar down to upper chest'],
+          ),
+          const ExerciseApiModel(
+            id: 'api-2',
+            name: 'Leg Press',
+            bodyPart: 'Upper Legs',
+            equipment: 'Machine',
+            target: 'Quadriceps',
+          ),
+        ];
+
+        final count = await db.upsertExercisesFromApi(apiItems);
+        expect(count, 2);
+
+        final saved = await db.watchExercises().first;
+        final lat = saved.firstWhere((e) => e.id == 'api-1');
+        expect(lat.name, 'Lat Pulldown');
+        expect(lat.bodyPart, 'Back');
+        expect(lat.target, 'Lats');
+        expect(lat.gifUrl, 'https://example.com/lat.gif');
+        expect(lat.secondaryMuscles, contains('Biceps'));
+        expect(lat.instructions, contains('Pull bar down'));
+
+        // Test updating existing
+        final updateItems = [
+          const ExerciseApiModel(
+            id: 'api-1',
+            name: 'Lat Pulldown (Updated)',
+            bodyPart: 'Back',
+            equipment: 'Cable',
+            gifUrl: 'https://example.com/lat-v2.gif',
+            target: 'Lats',
+          ),
+        ];
+        await db.upsertExercisesFromApi(updateItems);
+
+        final updatedList = await db.watchExercises().first;
+        final updatedLat = updatedList.firstWhere((e) => e.id == 'api-1');
+        expect(updatedLat.name, 'Lat Pulldown (Updated)');
+        expect(updatedLat.gifUrl, 'https://example.com/lat-v2.gif');
+      },
+    );
+
+    test(
+      'syncAllExercisesToDatabase paginates and syncs into database',
+      () async {
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+
+        final mockData = [
+          {
+            'id': 'sync-1',
+            'name': 'Chest Fly',
+            'bodyPart': 'Chest',
+            'equipment': 'Dumbbell',
+            'target': 'Pectorals',
+          },
+        ];
+
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({'data': mockData, 'total': 1}),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        });
+
+        final client = ExerciseApiClient(
+          client: mockClient,
+          baseUrl: 'http://localhost:3000/api',
+        );
+
+        final syncedCount = await client.syncAllExercisesToDatabase(db);
+        expect(syncedCount, 1);
+
+        final saved = await db.watchExercises().first;
+        expect(saved.any((e) => e.name == 'Chest Fly'), isTrue);
+      },
+    );
   });
 }

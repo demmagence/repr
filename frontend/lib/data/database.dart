@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import 'seed_exercises.dart';
 import '../core/app_metadata.dart';
+import 'exercise_api_client.dart';
 
 part 'database.g.dart';
 
@@ -14,6 +15,11 @@ class Exercises extends Table {
   TextColumn get name => text()();
   TextColumn get muscle => text()();
   TextColumn get equipment => text()();
+  TextColumn get bodyPart => text().nullable()();
+  TextColumn get target => text().nullable()();
+  TextColumn get gifUrl => text().nullable()();
+  TextColumn get secondaryMuscles => text().nullable()();
+  TextColumn get instructions => text().nullable()();
   BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
@@ -120,7 +126,7 @@ class AppDatabase extends _$AppDatabase {
   static const uuid = Uuid();
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -139,6 +145,18 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await _normalizeActiveWorkoutDrafts();
         await _createSingleActiveWorkoutIndex();
+      }
+      if (from < 3) {
+        final tableNames = await customSelect(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='exercises'",
+        ).get();
+        if (tableNames.isNotEmpty) {
+          await m.addColumn(exercises, exercises.bodyPart);
+          await m.addColumn(exercises, exercises.target);
+          await m.addColumn(exercises, exercises.gifUrl);
+          await m.addColumn(exercises, exercises.secondaryMuscles);
+          await m.addColumn(exercises, exercises.instructions);
+        }
       }
     },
     beforeOpen: (_) async {
@@ -250,6 +268,12 @@ class AppDatabase extends _$AppDatabase {
     required String name,
     required String muscle,
     required String equipment,
+    String? bodyPart,
+    String? target,
+    String? gifUrl,
+    String? secondaryMuscles,
+    String? instructions,
+    bool isCustom = true,
   }) async {
     final id = uuid.v4();
     await into(exercises).insert(
@@ -258,11 +282,60 @@ class AppDatabase extends _$AppDatabase {
         name: name.trim(),
         muscle: muscle,
         equipment: equipment,
-        isCustom: const Value(true),
+        bodyPart: Value(bodyPart),
+        target: Value(target),
+        gifUrl: Value(gifUrl),
+        secondaryMuscles: Value(secondaryMuscles),
+        instructions: Value(instructions),
+        isCustom: Value(isCustom),
         createdAt: DateTime.now(),
       ),
     );
     return id;
+  }
+
+  Future<int> upsertExercisesFromApi(
+    List<ExerciseApiModel> apiExercises,
+  ) async {
+    return transaction(() async {
+      int count = 0;
+      for (final item in apiExercises) {
+        if (item.name.trim().isEmpty) continue;
+        final id = item.id.isNotEmpty ? item.id : uuid.v4();
+        await into(exercises).insertOnConflictUpdate(
+          ExercisesCompanion(
+            id: Value(id),
+            name: Value(item.name),
+            muscle: Value(
+              item.bodyPart.isNotEmpty
+                  ? item.bodyPart
+                  : (item.target.isNotEmpty ? item.target : 'Lainnya'),
+            ),
+            bodyPart: Value(item.bodyPart.isNotEmpty ? item.bodyPart : null),
+            target: Value(item.target.isNotEmpty ? item.target : null),
+            equipment: Value(
+              item.equipment.isNotEmpty ? item.equipment : 'bodyweight',
+            ),
+            gifUrl: Value(item.gifUrl),
+            secondaryMuscles: Value(
+              item.secondaryMuscles.isNotEmpty
+                  ? jsonEncode(item.secondaryMuscles)
+                  : null,
+            ),
+            instructions: Value(
+              item.instructions.isNotEmpty
+                  ? jsonEncode(item.instructions)
+                  : null,
+            ),
+            isCustom: const Value(false),
+            archived: const Value(false),
+            createdAt: Value(DateTime.now()),
+          ),
+        );
+        count++;
+      }
+      return count;
+    });
   }
 
   Future<void> archiveExercise(String id) =>

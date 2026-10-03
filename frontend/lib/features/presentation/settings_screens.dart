@@ -84,6 +84,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _syncExercises() async {
+    setState(() => loaded = false);
+    try {
+      final client = ref.read(exerciseApiClientProvider);
+      final database = ref.read(databaseProvider);
+      final count = await client.syncAllExercisesToDatabase(database);
+      if (mounted) {
+        setState(() => loaded = true);
+        showMessage(
+          context,
+          'Berhasil menyinkronkan $count exercise dari backend ke database lokal!',
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => loaded = true);
+        showMessage(
+          context,
+          'Gagal sinkronisasi: Pastikan backend aktif ($error)',
+        );
+      }
+    }
+  }
+
   Future<void> _createExercise() async {
     final name = TextEditingController();
     var muscle = 'Dada';
@@ -296,6 +320,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ? 'Selesaikan atau buang workout aktif terlebih dahulu'
                             : 'Ganti data dari file backup Repr',
                         onTap: hasActiveWorkout ? null : _import,
+                      ),
+                      const Divider(height: 1),
+                      AppListRow(
+                        leading: const Icon(Icons.cloud_sync),
+                        title: 'Sinkronkan katalog exercise',
+                        subtitle:
+                            'Unduh dan perbarui katalog exercise & gerakan dari backend',
+                        onTap: _syncExercises,
                       ),
                     ],
                   ),

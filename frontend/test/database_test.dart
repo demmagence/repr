@@ -71,7 +71,7 @@ void main() {
         )
         .getSingleOrNull();
 
-    expect(legacy.schemaVersion, 2);
+    expect(legacy.schemaVersion, 3);
     expect(index?.read<String>('name'), 'one_active_workout_idx');
   });
 

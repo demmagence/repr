@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'database.dart';
 
 class ExerciseApiModel {
   const ExerciseApiModel({
@@ -54,6 +55,37 @@ class ExerciseApiModel {
     'secondaryMuscles': secondaryMuscles,
     'instructions': instructions,
   };
+
+  static ExerciseApiModel fromLocal(Exercise item) {
+    List<String> sec = const [];
+    if (item.secondaryMuscles != null && item.secondaryMuscles!.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(item.secondaryMuscles!);
+        if (decoded is List) {
+          sec = decoded.map((e) => e.toString()).toList();
+        }
+      } catch (_) {}
+    }
+    List<String> inst = const [];
+    if (item.instructions != null && item.instructions!.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(item.instructions!);
+        if (decoded is List) {
+          inst = decoded.map((e) => e.toString()).toList();
+        }
+      } catch (_) {}
+    }
+    return ExerciseApiModel(
+      id: item.id,
+      name: item.name,
+      bodyPart: item.bodyPart ?? item.muscle,
+      equipment: item.equipment,
+      gifUrl: item.gifUrl,
+      target: item.target ?? item.muscle,
+      secondaryMuscles: sec,
+      instructions: inst,
+    );
+  }
 }
 
 class ExerciseApiClient {
@@ -134,5 +166,25 @@ class ExerciseApiClient {
       return list.map((e) => e.toString()).toList();
     }
     return [];
+  }
+
+  /// Sinkronkan seluruh katalog exercise dari backend ke database SQLite lokal.
+  Future<int> syncAllExercisesToDatabase(
+    AppDatabase database, {
+    int maxTotal = 200,
+  }) async {
+    int totalSynced = 0;
+    int offset = 0;
+    const pageSize = 50;
+
+    while (offset < maxTotal) {
+      final batch = await fetchExercises(limit: pageSize, offset: offset);
+      if (batch.isEmpty) break;
+      final inserted = await database.upsertExercisesFromApi(batch);
+      totalSynced += inserted;
+      if (batch.length < pageSize) break;
+      offset += pageSize;
+    }
+    return totalSynced;
   }
 }
