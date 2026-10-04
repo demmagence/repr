@@ -126,7 +126,7 @@ class AppDatabase extends _$AppDatabase {
   static const uuid = Uuid();
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -181,9 +181,35 @@ class AppDatabase extends _$AppDatabase {
           }
         }
       }
+      if (from < 4) {
+        for (var i = 0; i < seedExercises.length; i++) {
+          final item = seedExercises[i];
+          await (update(
+            exercises,
+          )..where((e) => e.name.equals(item.name))).write(
+            ExercisesCompanion(
+              gifUrl: Value(item.gifUrl),
+            ),
+          );
+        }
+      }
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
+      // Automatically sanitize any legacy 404 URLs on startup
+      try {
+        final oldRows = await (select(exercises)..where((e) => e.gifUrl.like('%exercisedb%'))).get();
+        if (oldRows.isNotEmpty) {
+          for (var i = 0; i < seedExercises.length; i++) {
+            final item = seedExercises[i];
+            await (update(exercises)..where((e) => e.name.equals(item.name))).write(
+              ExercisesCompanion(
+                gifUrl: Value(item.gifUrl),
+              ),
+            );
+          }
+        }
+      } catch (_) {}
     },
   );
 

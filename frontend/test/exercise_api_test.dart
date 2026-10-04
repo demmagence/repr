@@ -114,6 +114,24 @@ void main() {
       expect(resolved, contains('/media/exercises/0025.jpg'));
       expect(resolved.startsWith('http://'), isTrue);
     });
+
+    test('resolveLocalAsset resolves bundled assets and legacy hashes', () {
+      expect(ExerciseApiClient.resolveLocalAsset(null), isNull);
+      expect(ExerciseApiClient.resolveLocalAsset(''), isNull);
+      expect(
+        ExerciseApiClient.resolveLocalAsset('/media/exercises/0025.jpg'),
+        'assets/exercises/0025.jpg',
+      );
+      expect(
+        ExerciseApiClient.resolveLocalAsset(null, exerciseId: '0025'),
+        'assets/exercises/0025.jpg',
+      );
+      // Legacy ExerciseDB hash resolution
+      expect(
+        ExerciseApiClient.resolveLocalAsset('https://v2.exercisedb.io/image/9Z7KjV4v-B9z8l'),
+        'assets/exercises/0025.jpg',
+      );
+    });
   });
 
   group('ExerciseDemoSheet Widget', () {

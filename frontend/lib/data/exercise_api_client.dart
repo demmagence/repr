@@ -112,6 +112,61 @@ class ExerciseApiClient {
     return 'http://localhost:3000';
   }
 
+  static const Map<String, String> _hashToIdMap = {
+    '9Z7KjV4v-B9z8l': '0025',
+    'Y9wB5YmR4c6fGg': '0033',
+    'X8vC7BnM1s9fLp': '0289',
+    'A1bC2dE3fG4hIj': '0662',
+    'P4oI5uY6tR7eWq': '0652',
+    'Q1wE2rT3yU4iOp': '0261',
+    'L7mN8bV9cX2zAs': '0022',
+    'K3jH2gF1dE9sAw': '0027',
+    'Z9xX8c7v6b5n4m': '0043',
+    'M5nB6vC7xZ8lKj': '0334',
+    'B2nM3kL4jH5gFd': '0108',
+    'H8gF7dS6aP5oIu': '0031',
+    'C9vB8nM7lK6jHg': '0301',
+    'U7yT6rE5wQ4iOk': '0241',
+    'V3bN2mK1lO9pIu': '0047',
+    'N7bV8cX9zA1sD2': '0585',
+    'D8fG7hJ6kL5mNb': '0443',
+    'T6rE5wQ4iO3pLa': '0052',
+    'W1eR2tY3uI4oPa': '0001',
+    'E4rT5yU6iO7pL8': '0601',
+  };
+
+  static const Set<String> _bundledAssetIds = {
+    '0001', '0022', '0025', '0027', '0031', '0033', '0043', '0047',
+    '0052', '0108', '0241', '0261', '0289', '0301', '0334', '0443',
+    '0585', '0601', '0652', '0662',
+  };
+
+  /// Returns bundled local asset path (e.g. 'assets/exercises/0025.jpg')
+  /// for offline or local preview.
+  static String? resolveLocalAsset(String? url, {String? exerciseId}) {
+    if (exerciseId != null && _bundledAssetIds.contains(exerciseId)) {
+      return 'assets/exercises/$exerciseId.jpg';
+    }
+    if (url == null || url.trim().isEmpty) return null;
+    final trimmed = url.trim();
+
+    // Check if filename contains a known exercise ID
+    for (final id in _bundledAssetIds) {
+      if (trimmed.contains(id)) {
+        return 'assets/exercises/$id.jpg';
+      }
+    }
+
+    // Check legacy hash map for backward compatibility
+    for (final entry in _hashToIdMap.entries) {
+      if (trimmed.contains(entry.key)) {
+        return 'assets/exercises/${entry.value}.jpg';
+      }
+    }
+
+    return null;
+  }
+
   /// Resolves an image URL. If it's a relative path (e.g. /media/exercises/0025.jpg),
   /// prefixes it with the backend media host.
   static String resolveImageUrl(String? url) {

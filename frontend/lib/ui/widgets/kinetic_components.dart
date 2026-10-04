@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/exercise_api_client.dart';
 
 // KineticCard: iOS-style container with subtle borders
 class KineticCard extends StatelessWidget {
@@ -235,3 +236,69 @@ class KineticBottomNav extends StatelessWidget {
     );
   }
 }
+
+/// AppExerciseImage: Renders exercise movement illustrations.
+/// Automatically resolves bundled local assets (offline-first) with fallback
+/// to self-hosted backend media or error placeholder.
+class AppExerciseImage extends StatelessWidget {
+  const AppExerciseImage({
+    super.key,
+    this.gifUrl,
+    this.exerciseId,
+    this.fit = BoxFit.cover,
+    this.fallbackIconSize = 22,
+    this.fallbackColor = const Color(0xFF71717A),
+  });
+
+  final String? gifUrl;
+  final String? exerciseId;
+  final BoxFit fit;
+  final double fallbackIconSize;
+  final Color fallbackColor;
+
+  Widget _buildFallback() {
+    return Center(
+      child: Icon(
+        Icons.fitness_center_rounded,
+        size: fallbackIconSize,
+        color: fallbackColor,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localAsset = ExerciseApiClient.resolveLocalAsset(
+      gifUrl,
+      exerciseId: exerciseId,
+    );
+
+    if (localAsset != null) {
+      return Image.asset(
+        localAsset,
+        fit: fit,
+        errorBuilder: (_, __, ___) {
+          if (gifUrl != null && gifUrl!.isNotEmpty) {
+            return Image.network(
+              ExerciseApiClient.resolveImageUrl(gifUrl),
+              fit: fit,
+              errorBuilder: (_, __, ___) => _buildFallback(),
+            );
+          }
+          return _buildFallback();
+        },
+      );
+    }
+
+    if (gifUrl != null && gifUrl!.isNotEmpty) {
+      return Image.network(
+        ExerciseApiClient.resolveImageUrl(gifUrl),
+        fit: fit,
+        errorBuilder: (_, __, ___) => _buildFallback(),
+      );
+    }
+
+    return _buildFallback();
+  }
+}
+

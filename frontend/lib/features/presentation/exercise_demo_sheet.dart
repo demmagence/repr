@@ -282,25 +282,16 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
               child: Stack(
                 children: [
                   Center(
-                    child: widget.exercise.gifUrl != null &&
-                            widget.exercise.gifUrl!.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.network(
-                              ExerciseApiClient.resolveImageUrl(widget.exercise.gifUrl),
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.fitness_center_rounded,
-                                size: 80,
-                                color: Color(0xFF52525B),
-                              ),
-                            ),
-                          )
-                        : const Icon(
-                            Icons.fitness_center_rounded,
-                            size: 80,
-                            color: Color(0xFF52525B),
-                          ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: AppExerciseImage(
+                        gifUrl: widget.exercise.gifUrl,
+                        exerciseId: widget.exercise.id,
+                        fit: BoxFit.contain,
+                        fallbackIconSize: 80,
+                        fallbackColor: const Color(0xFF52525B),
+                      ),
+                    ),
                   ),
                   Positioned(
                     left: 14,
@@ -1361,25 +1352,16 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
               child: Stack(
                 children: [
                   Center(
-                    child: widget.exercise.gifUrl != null &&
-                            widget.exercise.gifUrl!.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.network(
-                              ExerciseApiClient.resolveImageUrl(widget.exercise.gifUrl),
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.fitness_center_rounded,
-                                size: 80,
-                                color: Color(0xFF52525B),
-                              ),
-                            ),
-                          )
-                        : const Icon(
-                            Icons.fitness_center_rounded,
-                            size: 80,
-                            color: Color(0xFF52525B),
-                          ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: AppExerciseImage(
+                        gifUrl: widget.exercise.gifUrl,
+                        exerciseId: widget.exercise.id,
+                        fit: BoxFit.contain,
+                        fallbackIconSize: 80,
+                        fallbackColor: const Color(0xFF52525B),
+                      ),
+                    ),
                   ),
                   // Top Right Kinetic Form Badge
                   Positioned(

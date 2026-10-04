@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app.dart';
 import '../../data/exercise_api_client.dart';
 import '../../ui/material/app_ui.dart';
+import '../../ui/widgets/kinetic_components.dart';
 import 'exercise_demo_sheet.dart';
 
 class ExerciseApiExplorerScreen extends ConsumerStatefulWidget {
@@ -350,15 +351,12 @@ class _ExerciseApiExplorerScreenState
                         width: 72,
                         height: 72,
                         color: colorScheme.surfaceContainerHighest,
-                        child: ex.gifUrl != null && ex.gifUrl!.isNotEmpty
-                            ? Image.network(
-                                ExerciseApiClient.resolveImageUrl(ex.gifUrl),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Center(
-                                  child: Icon(Icons.fitness_center),
-                                ),
-                              )
-                            : const Center(child: Icon(Icons.fitness_center)),
+                        child: AppExerciseImage(
+                          gifUrl: ex.gifUrl,
+                          exerciseId: ex.id,
+                          fit: BoxFit.cover,
+                          fallbackIconSize: 28,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),

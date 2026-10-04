@@ -724,29 +724,12 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(13),
-                                  child: item.gifUrl != null &&
-                                          item.gifUrl!.isNotEmpty
-                                      ? Image.network(
-                                          ExerciseApiClient.resolveImageUrl(
-                                            item.gifUrl,
-                                          ),
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              const Center(
-                                            child: Icon(
-                                              Icons.fitness_center_rounded,
-                                              size: 22,
-                                              color: Color(0xFF71717A),
-                                            ),
-                                          ),
-                                        )
-                                      : const Center(
-                                          child: Icon(
-                                            Icons.fitness_center_rounded,
-                                            size: 22,
-                                            color: Color(0xFF71717A),
-                                          ),
-                                        ),
+                                  child: AppExerciseImage(
+                                    gifUrl: item.gifUrl,
+                                    exerciseId: item.id,
+                                    fit: BoxFit.cover,
+                                    fallbackIconSize: 22,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 14),
