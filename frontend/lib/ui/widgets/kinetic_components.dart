@@ -245,6 +245,7 @@ class AppExerciseImage extends StatelessWidget {
     super.key,
     this.gifUrl,
     this.exerciseId,
+    this.animate = false,
     this.fit = BoxFit.cover,
     this.fallbackIconSize = 22,
     this.fallbackColor = const Color(0xFF71717A),
@@ -252,6 +253,7 @@ class AppExerciseImage extends StatelessWidget {
 
   final String? gifUrl;
   final String? exerciseId;
+  final bool animate;
   final BoxFit fit;
   final double fallbackIconSize;
   final Color fallbackColor;
@@ -271,6 +273,7 @@ class AppExerciseImage extends StatelessWidget {
     final localAsset = ExerciseApiClient.resolveLocalAsset(
       gifUrl,
       exerciseId: exerciseId,
+      staticMode: !animate,
     );
 
     if (localAsset != null) {

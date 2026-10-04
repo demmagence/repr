@@ -143,13 +143,17 @@ class ExerciseApiClient {
 
   /// Returns bundled local asset path (e.g. 'assets/exercises/0025_EIeI8Vf.gif')
   /// for offline or local preview.
-  static String? resolveLocalAsset(String? url, {String? exerciseId}) {
+  static String? resolveLocalAsset(String? url, {String? exerciseId, bool staticMode = false}) {
     if (url != null && url.trim().isNotEmpty) {
       final trimmed = url.trim();
       final lastSegment = trimmed.split('/').last.split('?').first;
       if (lastSegment.endsWith('.gif') ||
           lastSegment.endsWith('.jpg') ||
           lastSegment.endsWith('.png')) {
+        if (staticMode && lastSegment.endsWith('.gif')) {
+          final filenameWithoutExt = lastSegment.substring(0, lastSegment.length - 4);
+          return 'assets/exercises_static/$filenameWithoutExt.png';
+        }
         return 'assets/exercises/$lastSegment';
       }
 

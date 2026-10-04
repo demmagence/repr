@@ -285,6 +285,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: AppExerciseImage(
+                        animate: true,
                         gifUrl: widget.exercise.gifUrl,
                         exerciseId: widget.exercise.id,
                         fit: BoxFit.contain,
@@ -1355,6 +1356,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: AppExerciseImage(
+                        animate: true,
                         gifUrl: widget.exercise.gifUrl,
                         exerciseId: widget.exercise.id,
                         fit: BoxFit.contain,

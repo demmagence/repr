@@ -78,6 +78,7 @@ flutter:
   assets:
     - assets/icon/repr_icon.png
     - assets/exercises/
+    - assets/exercises_static/
     - assets/fonts/MaterialIcons-Regular.otf
     - assets/fonts/Roboto-Regular.ttf
     - assets/fonts/Roboto-Medium.ttf
