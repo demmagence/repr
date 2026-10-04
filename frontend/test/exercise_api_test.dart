@@ -126,6 +126,10 @@ void main() {
         ExerciseApiClient.resolveLocalAsset(null, exerciseId: '0025'),
         'assets/exercises/0025.jpg',
       );
+      expect(
+        ExerciseApiClient.resolveLocalAsset('/media/exercises/0025_EIeI8Vf.gif'),
+        'assets/exercises/0025_EIeI8Vf.gif',
+      );
       // Legacy ExerciseDB hash resolution
       expect(
         ExerciseApiClient.resolveLocalAsset('https://v2.exercisedb.io/image/9Z7KjV4v-B9z8l'),

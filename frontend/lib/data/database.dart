@@ -126,7 +126,7 @@ class AppDatabase extends _$AppDatabase {
   static const uuid = Uuid();
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -181,25 +181,30 @@ class AppDatabase extends _$AppDatabase {
           }
         }
       }
-      if (from < 4) {
-        for (var i = 0; i < seedExercises.length; i++) {
-          final item = seedExercises[i];
-          await (update(
-            exercises,
-          )..where((e) => e.name.equals(item.name))).write(
-            ExercisesCompanion(
-              gifUrl: Value(item.gifUrl),
-            ),
-          );
+      if (from >= 3 && from < 5) {
+        final tableNames = await customSelect(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='exercises'",
+        ).get();
+        if (tableNames.isNotEmpty) {
+          for (var i = 0; i < seedExercises.length; i++) {
+            final item = seedExercises[i];
+            await (update(
+              exercises,
+            )..where((e) => e.name.equals(item.name))).write(
+              ExercisesCompanion(
+                gifUrl: Value(item.gifUrl),
+              ),
+            );
+          }
         }
       }
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
-      // Automatically sanitize any legacy 404 URLs on startup
+      // Automatically sanitize any legacy 404 or old jpg URLs to 3D GIFs
       try {
-        final oldRows = await (select(exercises)..where((e) => e.gifUrl.like('%exercisedb%'))).get();
-        if (oldRows.isNotEmpty) {
+        final needsUpgrade = await (select(exercises)..where((e) => e.gifUrl.like('%.jpg%') | e.gifUrl.like('%exercisedb%') | e.gifUrl.isNull())).get();
+        if (needsUpgrade.isNotEmpty) {
           for (var i = 0; i < seedExercises.length; i++) {
             final item = seedExercises[i];
             await (update(exercises)..where((e) => e.name.equals(item.name))).write(

@@ -27,7 +27,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Chest",
     target: "Pectorals",
-    gifUrl: "/media/exercises/0025.jpg",
+    gifUrl: "/media/exercises/0025_EIeI8Vf.gif",
     secondaryMuscles: ["Triceps", "Anterior Deltoids"],
     instructions: [
       "Berbaring di bench datar dengan kaki menapak kokoh di lantai.",
@@ -43,7 +43,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Chest",
     target: "Upper Pectorals",
-    gifUrl: "/media/exercises/0033.jpg",
+    gifUrl: "/media/exercises/0047_3TZduzM.gif",
     secondaryMuscles: ["Shoulders", "Triceps"],
     instructions: [
       "Posisikan bench pada sudut kemiringan 30-45 derajat.",
@@ -59,6 +59,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Chest",
     target: "Lower Pectorals",
+    gifUrl: "/media/exercises/0033_GrO65fd.gif",
     secondaryMuscles: ["Triceps", "Anterior Deltoids"],
     instructions: [
       "Kunci kaki pada bantalan decline bench lalu berbaring.",
@@ -73,7 +74,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Chest",
     target: "Pectorals",
-    gifUrl: "/media/exercises/0289.jpg",
+    gifUrl: "/media/exercises/0289_SpYC0Kp.gif",
     secondaryMuscles: ["Triceps", "Deltoids"],
     instructions: [
       "Duduk di tepi bench datar lalu bawa dumbbell ke paha.",
@@ -88,6 +89,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Chest",
     target: "Upper Pectorals",
+    gifUrl: "/media/exercises/3545_TVdivgY.gif",
     secondaryMuscles: ["Triceps", "Shoulders"],
     instructions: [
       "Atur bench pada kemiringan 30-45 derajat.",
@@ -102,6 +104,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Chest",
     target: "Pectorals",
+    gifUrl: "/media/exercises/0577_T0yTjgW.gif",
     secondaryMuscles: ["Triceps", "Anterior Deltoids"],
     instructions: [
       "Atur ketinggian kursi mesin agar pegangan sejajar dada tengah.",
@@ -116,6 +119,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Chest",
     target: "Pectorals",
+    gifUrl: "/media/exercises/1262_w4dLzSx.gif",
     secondaryMuscles: ["Anterior Deltoids"],
     instructions: [
       "Duduk tegak di mesin pec fly dengan punggung menempel sandaran.",
@@ -130,6 +134,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Chest",
     target: "Pectorals",
+    gifUrl: "/media/exercises/1320_UFGF6gk.gif",
     secondaryMuscles: ["Anterior Deltoids"],
     instructions: [
       "Atur katrol kabel pada posisi tinggi di kedua sisi.",
@@ -144,7 +149,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Chest",
     target: "Pectorals",
-    gifUrl: "/media/exercises/0662.jpg",
+    gifUrl: "/media/exercises/0662_I4hDWkc.gif",
     secondaryMuscles: ["Triceps", "Core", "Shoulders"],
     instructions: [
       "Posisikan tangan sedikit lebih lebar dari lebar bahu di lantai.",
@@ -159,6 +164,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Chest",
     target: "Lower Pectorals",
+    gifUrl: "/media/exercises/3287_LkoAWAE.gif",
     secondaryMuscles: ["Triceps", "Anterior Deltoids"],
     instructions: [
       "Genggam parallel bar dan dorong tubuh ke atas.",
@@ -173,7 +179,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Back",
     target: "Lats",
-    gifUrl: "/media/exercises/0652.jpg",
+    gifUrl: "/media/exercises/0652_lBDjFxJ.gif",
     secondaryMuscles: ["Biceps", "Rhomboids", "Middle Back"],
     instructions: [
       "Genggam palang pull up dengan telapak tangan menghadap ke depan.",
@@ -188,6 +194,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Back",
     target: "Lats",
+    gifUrl: "/media/exercises/1326_T2mxWqc.gif",
     secondaryMuscles: ["Biceps", "Forearms"],
     instructions: [
       "Genggam palang dengan telapak tangan menghadap ke arah wajah (supinated).",
@@ -202,7 +209,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Back",
     target: "Lats",
-    gifUrl: "/media/exercises/0261.jpg",
+    gifUrl: "/media/exercises/2330_LEprlgG.gif",
     secondaryMuscles: ["Biceps", "Rear Deltoids"],
     instructions: [
       "Duduk pada mesin lat pulldown dan sesuaikan bantalan paha.",
@@ -217,6 +224,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Back",
     target: "Lats",
+    gifUrl: "/media/exercises/0974_DptumMx.gif",
     secondaryMuscles: ["Biceps", "Brachialis"],
     instructions: [
       "Gunakan attachment V-bar pada katrol lat pulldown.",
@@ -230,7 +238,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Back",
     target: "Upper Back",
-    gifUrl: "/media/exercises/0022.jpg",
+    gifUrl: "/media/exercises/0027_eZyBC3j.gif",
     secondaryMuscles: ["Biceps", "Lats", "Rear Deltoids"],
     instructions: [
       "Berdiri dengan kaki selebar bahu dan lutut sedikit ditekuk.",
@@ -245,6 +253,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Back",
     target: "Upper Back",
+    gifUrl: "/media/exercises/3017_r0z6xzQ.gif",
     secondaryMuscles: ["Lats", "Hamstrings", "Glutes"],
     instructions: [
       "Mulai dengan barbell di lantai setiap repetisi.",
@@ -258,6 +267,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Back",
     target: "Lats",
+    gifUrl: "/media/exercises/0293_BJ0Hz5L.gif",
     secondaryMuscles: ["Biceps", "Rhomboids"],
     instructions: [
       "Tumpu satu lutut dan satu tangan pada bench datar.",
@@ -272,6 +282,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Back",
     target: "Middle Back",
+    gifUrl: "/media/exercises/0159_kesXOpB.gif",
     secondaryMuscles: ["Biceps", "Lats", "Rear Deltoids"],
     instructions: [
       "Duduk pada bangku kabel dengan kaki pada pijakan dan lutut sedikit ditekuk.",
@@ -285,6 +296,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Back",
     target: "Middle Back",
+    gifUrl: "/media/exercises/1349_BgljGjd.gif",
     secondaryMuscles: ["Biceps", "Lats"],
     instructions: [
       "Posisikan tubuh di atas t-bar row dengan dada bertumpu jika memakai chest-supported.",
@@ -298,6 +310,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Back",
     target: "Lats",
+    gifUrl: "/media/exercises/0238_x69MAlq.gif",
     secondaryMuscles: ["Triceps", "Core"],
     instructions: [
       "Berdiri menghadap katrol tinggi dengan stang lurus atau tali.",
@@ -311,7 +324,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Back",
     target: "Glutes",
-    gifUrl: "/media/exercises/0027.jpg",
+    gifUrl: "/media/exercises/0032_ila4NZS.gif",
     secondaryMuscles: ["Hamstrings", "Lower Back", "Lats", "Forearms"],
     instructions: [
       "Berdiri dengan kaki selebar pinggul, bar di atas pertengahan kaki.",
@@ -327,6 +340,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Back",
     target: "Upper Back",
+    gifUrl: "/media/exercises/0074_za9Ni4z.gif",
     secondaryMuscles: ["Traps", "Glutes", "Hamstrings"],
     instructions: [
       "Posisikan bar di power rack setinggi lutut.",
@@ -340,6 +354,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Back",
     target: "Lower Back",
+    gifUrl: "/media/exercises/1314_qLpO4vV.gif",
     secondaryMuscles: ["Glutes", "Hamstrings"],
     instructions: [
       "Posisikan paha pada bantalan hyperextension bench.",
@@ -353,7 +368,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Shoulders",
     target: "Deltoids",
-    gifUrl: "/media/exercises/0043.jpg",
+    gifUrl: "/media/exercises/0091_kTbSH9h.gif",
     secondaryMuscles: ["Triceps", "Upper Chest", "Core"],
     instructions: [
       "Berdiri tegak dengan bar bersandar di atas tulang selangka.",
@@ -368,6 +383,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Shoulders",
     target: "Deltoids",
+    gifUrl: "/media/exercises/0361_84RyJf8.gif",
     secondaryMuscles: ["Triceps", "Upper Chest"],
     instructions: [
       "Duduk di bench dengan sandaran tegak.",
@@ -382,6 +398,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Shoulders",
     target: "Deltoids",
+    gifUrl: "/media/exercises/2137_Xy4jlWA.gif",
     secondaryMuscles: ["Triceps"],
     instructions: [
       "Mulai dengan dumbbell di depan dada, telapak menghadap tubuh.",
@@ -395,6 +412,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Shoulders",
     target: "Deltoids",
+    gifUrl: "/media/exercises/0587_CggQhII.gif",
     secondaryMuscles: ["Triceps"],
     instructions: [
       "Atur kursi agar pegangan setinggi bahu.",
@@ -408,7 +426,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Shoulders",
     target: "Lateral Deltoids",
-    gifUrl: "/media/exercises/0334.jpg",
+    gifUrl: "/media/exercises/0311_AQ0mC4Y.gif",
     secondaryMuscles: ["Traps"],
     instructions: [
       "Berdiri tegak memegang dumbbell di samping paha.",
@@ -423,6 +441,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Shoulders",
     target: "Lateral Deltoids",
+    gifUrl: "/media/exercises/0178_goJ6ezq.gif",
     secondaryMuscles: ["Traps"],
     instructions: [
       "Atur katrol di posisi paling bawah.",
@@ -436,6 +455,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Shoulders",
     target: "Anterior Deltoids",
+    gifUrl: "/media/exercises/0310_3eGE2JC.gif",
     secondaryMuscles: ["Upper Chest"],
     instructions: [
       "Pegang dumbbell di depan paha.",
@@ -449,6 +469,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Shoulders",
     target: "Rear Deltoids",
+    gifUrl: "/media/exercises/0378_8DiFDVA.gif",
     secondaryMuscles: ["Rhomboids", "Traps"],
     instructions: [
       "Duduk menghadap bantalan mesin reverse pec fly.",
@@ -462,7 +483,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Shoulders",
     target: "Rear Deltoids",
-    gifUrl: "/media/exercises/0108.jpg",
+    gifUrl: "/media/exercises/0233_ZfyAGhK.gif",
     secondaryMuscles: ["Traps", "Rotator Cuff"],
     instructions: [
       "Pasang tali pada katrol setinggi dada/wajah.",
@@ -476,6 +497,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Shoulders",
     target: "Traps",
+    gifUrl: "/media/exercises/0095_dG7tG5y.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Berdiri memegang barbell di depan paha.",
@@ -489,6 +511,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Shoulders",
     target: "Traps",
+    gifUrl: "/media/exercises/0406_NJzBsGJ.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Pegang dumbbell di samping badan.",
@@ -502,7 +525,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Arms",
     target: "Biceps",
-    gifUrl: "/media/exercises/0031.jpg",
+    gifUrl: "/media/exercises/0031_25GPyDY.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Berdiri tegak memegang barbell dengan telapak menghadap ke atas.",
@@ -517,6 +540,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Arms",
     target: "Biceps",
+    gifUrl: "/media/exercises/0023_Yza7XrQ.gif",
     secondaryMuscles: ["Brachialis", "Forearms"],
     instructions: [
       "Pegang pegangan melengkung pada EZ bar.",
@@ -530,6 +554,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Upper Arms",
     target: "Biceps",
+    gifUrl: "/media/exercises/0285_BU15nH4.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Pegang sepasang dumbbell di samping badan.",
@@ -543,7 +568,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Upper Arms",
     target: "Brachialis",
-    gifUrl: "/media/exercises/0301.jpg",
+    gifUrl: "/media/exercises/1648_6em2Dxj.gif",
     secondaryMuscles: ["Biceps", "Forearms"],
     instructions: [
       "Pegang dumbbell dengan posisi telapak saling berhadapan (netral).",
@@ -557,6 +582,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Upper Arms",
     target: "Biceps (Long Head)",
+    gifUrl: "/media/exercises/0315_F3xgbjF.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Duduk di incline bench dengan lengan menggantung ke bawah.",
@@ -570,6 +596,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Upper Arms",
     target: "Biceps (Short Head)",
+    gifUrl: "/media/exercises/1615_OAguZoG.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Sandarkan lengan atas pada bantalan preacher bench.",
@@ -583,6 +610,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Upper Arms",
     target: "Biceps",
+    gifUrl: "/media/exercises/0868_G08RZcQ.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Pasang pegangan lurus pada katrol bawah kabel.",
@@ -595,7 +623,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Upper Arms",
     target: "Triceps",
-    gifUrl: "/media/exercises/0241.jpg",
+    gifUrl: "/media/exercises/2406_ThKP69G.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Pegang stang atau tali pada katrol tinggi dengan siku ditekuk 90 derajat.",
@@ -609,6 +637,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Upper Arms",
     target: "Triceps (Long Head)",
+    gifUrl: "/media/exercises/0194_2IxROQ1.gif",
     secondaryMuscles: ["Core"],
     instructions: [
       "Pegang tali kabel di atas kepala menghadap menjauhi katrol.",
@@ -621,6 +650,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Arms",
     target: "Triceps",
+    gifUrl: "/media/exercises/0060_h8LFzo9.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Berbaring di bench datar memegang EZ bar lurus di atas dada.",
@@ -634,6 +664,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Arms",
     target: "Triceps",
+    gifUrl: "/media/exercises/0030_J6Dx1Mu.gif",
     secondaryMuscles: ["Chest", "Shoulders"],
     instructions: [
       "Genggam barbell dengan jarak selebar bahu di bench press.",
@@ -647,6 +678,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Upper Arms",
     target: "Triceps",
+    gifUrl: "/media/exercises/0306_OTgkHwR.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Pegang satu dumbbell dengan kedua tangan di belakang kepala.",
@@ -659,6 +691,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Upper Arms",
     target: "Triceps",
+    gifUrl: "/media/exercises/0814_X6C6i5Y.gif",
     secondaryMuscles: ["Chest", "Shoulders"],
     instructions: [
       "Gunakan parallel bar dengan posisi tubuh tegak lurus.",
@@ -671,6 +704,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Lower Arms",
     target: "Wrist Flexors",
+    gifUrl: "/media/exercises/1411_yzYH9pI.gif",
     secondaryMuscles: ["Forearms"],
     instructions: [
       "Sandarkan lengan bawah di paha atau bench dengan telapak tangan ke atas.",
@@ -683,6 +717,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Lengan bawah",
     target: "Brachioradialis",
+    gifUrl: "/media/exercises/0080_xNrS20v.gif",
     secondaryMuscles: ["Biceps"],
     instructions: [
       "Pegang bar dengan telapak menghadap ke bawah (pronated).",
@@ -695,7 +730,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Legs",
     target: "Quads",
-    gifUrl: "/media/exercises/0047.jpg",
+    gifUrl: "/media/exercises/1461_DhMl549.gif",
     secondaryMuscles: ["Glutes", "Hamstrings", "Calves", "Core"],
     instructions: [
       "Posisikan bar di atas otot traps atas dengan kaki selebar bahu.",
@@ -709,6 +744,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Legs",
     target: "Quads",
+    gifUrl: "/media/exercises/0024_Y7YcmIJ.gif",
     secondaryMuscles: ["Core", "Glutes"],
     instructions: [
       "Sandarkan bar di bahu depan dengan siku diangkat tinggi.",
@@ -721,6 +757,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Upper Legs",
     target: "Quads",
+    gifUrl: "/media/exercises/1760_yn8yg1r.gif",
     secondaryMuscles: ["Glutes", "Core"],
     instructions: [
       "Pegang satu dumbbell di depan dada dengan kedua tangan.",
@@ -733,7 +770,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Upper Legs",
     target: "Quads",
-    gifUrl: "/media/exercises/0585.jpg",
+    gifUrl: "/media/exercises/2287_V07qpXy.gif",
     secondaryMuscles: ["Glutes", "Hamstrings"],
     instructions: [
       "Duduk pada kursi mesin leg press dengan kaki selebar bahu di platform.",
@@ -747,6 +784,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Upper Legs",
     target: "Quads",
+    gifUrl: "/media/exercises/0741_gf3ZjB9.gif",
     secondaryMuscles: ["Glutes"],
     instructions: [
       "Sandarkan punggung dan bahu pada bantalan mesin hack squat.",
@@ -759,6 +797,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Upper Legs",
     target: "Quads",
+    gifUrl: "/media/exercises/0585_my33uHU.gif",
     instructions: [
       "Duduk pada mesin leg extension dengan bantalan di atas pergelangan kaki.",
       "Luruskan kaki ke atas hingga lutut lurus penuh.",
@@ -771,6 +810,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Upper Legs",
     target: "Quads",
+    gifUrl: "/media/exercises/0410_qx4fgX7.gif",
     secondaryMuscles: ["Glutes", "Hamstrings"],
     instructions: [
       "Letakkan satu kaki di belakang bertumpu pada bench.",
@@ -784,7 +824,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Upper Legs",
     target: "Quads",
-    gifUrl: "/media/exercises/0443.jpg",
+    gifUrl: "/media/exercises/1460_IZVHb27.gif",
     secondaryMuscles: ["Glutes", "Hamstrings"],
     instructions: [
       "Pegang sepasang dumbbell di samping paha.",
@@ -798,6 +838,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Upper Legs",
     target: "Quads",
+    gifUrl: "/media/exercises/1684_76vfTdU.gif",
     secondaryMuscles: ["Glutes"],
     instructions: [
       "Pegang dumbbell dan injakkan satu kaki di atas kotak/bench kokoh.",
@@ -810,7 +851,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Legs",
     target: "Hamstrings",
-    gifUrl: "/media/exercises/0052.jpg",
+    gifUrl: "/media/exercises/0085_wQ2c4XD.gif",
     secondaryMuscles: ["Glutes", "Lower Back"],
     instructions: [
       "Pegang bar setinggi pinggul dengan lutut sedikit ditekuk.",
@@ -824,6 +865,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Legs",
     target: "Hamstrings",
+    gifUrl: "/media/exercises/1009_kuMiR2T.gif",
     secondaryMuscles: ["Lower Back"],
     instructions: [
       "Lakukan deadlift dengan kaki relatif lurus untuk isolasi hamstring maksimal.",
@@ -835,6 +877,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Upper Legs",
     target: "Hamstrings",
+    gifUrl: "/media/exercises/0582_nnmCTLN.gif",
     secondaryMuscles: ["Calves"],
     instructions: [
       "Tengkurap di mesin lying leg curl dengan bantalan di belakang pergelangan kaki.",
@@ -847,6 +890,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Upper Legs",
     target: "Hamstrings",
+    gifUrl: "/media/exercises/0599_Zg3XY7P.gif",
     instructions: [
       "Duduk di mesin seated leg curl dan kunci bantalan paha.",
       "Tekuk kaki ke bawah ke arah bawah kursi.",
@@ -858,6 +902,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Upper Legs",
     target: "Hamstrings",
+    gifUrl: "/media/exercises/0044_XlZ4lAC.gif",
     secondaryMuscles: ["Lower Back", "Glutes"],
     instructions: [
       "Letakkan bar di punggung atas seperti squat.",
@@ -870,6 +915,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Glutes",
     target: "Gluteus Maximus",
+    gifUrl: "/media/exercises/3236_Pjbc0Kt.gif",
     secondaryMuscles: ["Hamstrings", "Quads"],
     instructions: [
       "Sandarkan punggung atas pada bench datar dengan barbell di atas pinggul.",
@@ -883,6 +929,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Glutes",
     target: "Gluteus Maximus",
+    gifUrl: "/media/exercises/1409_qKBpF7I.gif",
     secondaryMuscles: ["Hamstrings"],
     instructions: [
       "Berbaring telentang di lantai dengan lutut ditekuk.",
@@ -895,6 +942,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Glutes",
     target: "Gluteus Maximus",
+    gifUrl: "/media/exercises/0860_HEJ6DIX.gif",
     secondaryMuscles: ["Hamstrings"],
     instructions: [
       "Ikatkan tali pergelangan kaki ke katrol bawah kabel.",
@@ -907,6 +955,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Glutes",
     target: "Gluteus Medius",
+    gifUrl: "/media/exercises/0597_CHpahtl.gif",
     instructions: [
       "Duduk di mesin abduction dengan bantalan di luar lutut.",
       "Buka paha ke luar melawan resistensi mesin.",
@@ -918,6 +967,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Upper Legs",
     target: "Adductors",
+    gifUrl: "/media/exercises/0598_oHsrypV.gif",
     instructions: [
       "Duduk di mesin adduction dengan bantalan di dalam lutut.",
       "Rapatkan kedua paha ke dalam melawan beban.",
@@ -929,6 +979,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Lower Legs",
     target: "Gastrocnemius",
+    gifUrl: "/media/exercises/0605_ykUOVze.gif",
     secondaryMuscles: ["Soleus"],
     instructions: [
       "Posisikan bantalan di atas bahu dengan ujung kaki di tepi platform.",
@@ -941,6 +992,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Machine",
     bodyPart: "Lower Legs",
     target: "Soleus",
+    gifUrl: "/media/exercises/0594_bOOdeyc.gif",
     instructions: [
       "Duduk dengan bantalan di atas lutut.",
       "Angkat tumit ke atas setinggi mungkin.",
@@ -952,6 +1004,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Lower Legs",
     target: "Gastrocnemius",
+    gifUrl: "/media/exercises/0284_u5ESqzH.gif",
     instructions: [
       "Bungkukkan badan ke depan dan lakukan calf raise bertumpu pada ujung kaki.",
     ],
@@ -962,7 +1015,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Waist",
     target: "Abs",
-    gifUrl: "/media/exercises/0001.jpg",
+    gifUrl: "/media/exercises/0972_tZkGYZ9.gif",
     secondaryMuscles: ["Hip Flexors"],
     instructions: [
       "Berbaring telentang dengan lutut ditekuk dan telapak kaki di lantai.",
@@ -976,6 +1029,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Cable",
     bodyPart: "Waist",
     target: "Abs",
+    gifUrl: "/media/exercises/0685_oLrKqDH.gif",
     instructions: [
       "Berlutut menghadap katrol tinggi dengan tali di samping kepala.",
       "Tekuk torso ke arah paha menggunakan kontraksi otot perut.",
@@ -987,6 +1041,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Waist",
     target: "Lower Abs",
+    gifUrl: "/media/exercises/0472_I3tsCnC.gif",
     secondaryMuscles: ["Hip Flexors", "Forearms"],
     instructions: [
       "Gantungkan badan pada palang pull up.",
@@ -999,6 +1054,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Waist",
     target: "Lower Abs",
+    gifUrl: "/media/exercises/0012_UGhRD1A.gif",
     secondaryMuscles: ["Hip Flexors"],
     instructions: [
       "Berbaring telentang di matras dengan tangan di samping panggul.",
@@ -1011,6 +1067,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Waist",
     target: "Obliques",
+    gifUrl: "/media/exercises/0687_XVDdcoj.gif",
     secondaryMuscles: ["Abs"],
     instructions: [
       "Duduk dengan lutut ditekuk dan condongkan torso ke belakang 45 derajat.",
@@ -1023,6 +1080,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Waist",
     target: "Abs",
+    gifUrl: "/media/exercises/0857_NAgVB3t.gif",
     secondaryMuscles: ["Lats", "Shoulders"],
     instructions: [
       "Berlutut di lantai memegang ab wheel di depan lutut.",
@@ -1036,7 +1094,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Bodyweight",
     bodyPart: "Waist",
     target: "Abs",
-    gifUrl: "/media/exercises/0601.jpg",
+    gifUrl: "/media/exercises/3544_5VXmnV5.gif",
     secondaryMuscles: ["Glutes", "Shoulders"],
     instructions: [
       "Posisikan lengan bawah di lantai dengan siku di bawah bahu.",
@@ -1050,6 +1108,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Dumbbell",
     bodyPart: "Full Body",
     target: "Traps & Grip",
+    gifUrl: "/media/exercises/2133_qPEzJjA.gif",
     secondaryMuscles: ["Forearms", "Core", "Quads"],
     instructions: [
       "Pegang sepasang dumbbell berat di samping badan.",
@@ -1062,6 +1121,7 @@ const seedExercises = <SeedExerciseItem>[
     equipment: "Barbell",
     bodyPart: "Full Body",
     target: "Shoulders & Hips",
+    gifUrl: "/media/exercises/0028_SGY8Zui.gif",
     secondaryMuscles: ["Hamstrings", "Quads", "Triceps", "Upper Back"],
     instructions: [
       "Tarik bar secara eksplosif dari lantai ke bahu depan (clean).",

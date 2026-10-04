@@ -77,7 +77,7 @@ void main() {
         )
         .getSingleOrNull();
 
-    expect(legacy.schemaVersion, 3);
+    expect(legacy.schemaVersion, 5);
     expect(index?.read<String>('name'), 'one_active_workout_idx');
   });
 
@@ -181,7 +181,7 @@ void main() {
       );
       addTearDown(legacy.close);
 
-      expect(legacy.schemaVersion, 3);
+      expect(legacy.schemaVersion, 5);
       final migrated = await (legacy.select(
         legacy.exercises,
       )..where((e) => e.id.equals('ex-1'))).getSingle();

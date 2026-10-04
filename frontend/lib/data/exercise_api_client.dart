@@ -141,27 +141,28 @@ class ExerciseApiClient {
     '0585', '0601', '0652', '0662',
   };
 
-  /// Returns bundled local asset path (e.g. 'assets/exercises/0025.jpg')
+  /// Returns bundled local asset path (e.g. 'assets/exercises/0025_EIeI8Vf.gif')
   /// for offline or local preview.
   static String? resolveLocalAsset(String? url, {String? exerciseId}) {
+    if (url != null && url.trim().isNotEmpty) {
+      final trimmed = url.trim();
+      final lastSegment = trimmed.split('/').last.split('?').first;
+      if (lastSegment.endsWith('.gif') ||
+          lastSegment.endsWith('.jpg') ||
+          lastSegment.endsWith('.png')) {
+        return 'assets/exercises/$lastSegment';
+      }
+
+      // Check legacy hash map for backward compatibility
+      for (final entry in _hashToIdMap.entries) {
+        if (trimmed.contains(entry.key)) {
+          return 'assets/exercises/${entry.value}.jpg';
+        }
+      }
+    }
+
     if (exerciseId != null && _bundledAssetIds.contains(exerciseId)) {
       return 'assets/exercises/$exerciseId.jpg';
-    }
-    if (url == null || url.trim().isEmpty) return null;
-    final trimmed = url.trim();
-
-    // Check if filename contains a known exercise ID
-    for (final id in _bundledAssetIds) {
-      if (trimmed.contains(id)) {
-        return 'assets/exercises/$id.jpg';
-      }
-    }
-
-    // Check legacy hash map for backward compatibility
-    for (final entry in _hashToIdMap.entries) {
-      if (trimmed.contains(entry.key)) {
-        return 'assets/exercises/${entry.value}.jpg';
-      }
     }
 
     return null;
