@@ -1060,6 +1060,41 @@ class AppDatabase extends _$AppDatabase {
     return result;
   }
 
+  Future<List<ExerciseHistorySession>> getExerciseHistory(
+    String exerciseId,
+  ) async {
+    final query =
+        select(workoutExercises).join([
+            innerJoin(
+              workouts,
+              workouts.id.equalsExp(workoutExercises.workoutId),
+            ),
+          ])
+          ..where(workoutExercises.exerciseId.equals(exerciseId))
+          ..orderBy([OrderingTerm.desc(workouts.startedAt)]);
+    final rows = await query.get();
+    final result = <ExerciseHistorySession>[];
+    for (final row in rows) {
+      final item = row.readTable(workoutExercises);
+      final workout = row.readTable(workouts);
+      final sets =
+          await (select(workoutSets)
+                ..where((s) => s.workoutExerciseId.equals(item.id))
+                ..orderBy([(s) => OrderingTerm.asc(s.position)]))
+              .get();
+      if (sets.isNotEmpty) {
+        result.add(
+          ExerciseHistorySession(
+            workout: workout,
+            workoutExercise: item,
+            sets: sets,
+          ),
+        );
+      }
+    }
+    return result;
+  }
+
   Future<Map<String, Object?>> exportDocument({AppMetadata? metadata}) async {
     final meta = metadata ?? metadataService.currentMetadata;
     return {
@@ -1417,4 +1452,16 @@ class _ValidatedBackup {
   final List<WorkoutExercise> workoutExercises;
   final List<WorkoutSet> workoutSets;
   final List<AppSetting> settings;
+}
+
+class ExerciseHistorySession {
+  const ExerciseHistorySession({
+    required this.workout,
+    required this.workoutExercise,
+    required this.sets,
+  });
+
+  final Workout workout;
+  final WorkoutExercise workoutExercise;
+  final List<WorkoutSet> sets;
 }
