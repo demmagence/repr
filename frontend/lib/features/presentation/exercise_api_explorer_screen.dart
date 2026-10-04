@@ -352,7 +352,7 @@ class _ExerciseApiExplorerScreenState
                         color: colorScheme.surfaceContainerHighest,
                         child: ex.gifUrl != null && ex.gifUrl!.isNotEmpty
                             ? Image.network(
-                                ex.gifUrl!,
+                                ExerciseApiClient.resolveImageUrl(ex.gifUrl),
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => const Center(
                                   child: Icon(Icons.fitness_center),

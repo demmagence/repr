@@ -287,7 +287,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.network(
-                              widget.exercise.gifUrl!,
+                              ExerciseApiClient.resolveImageUrl(widget.exercise.gifUrl),
                               fit: BoxFit.contain,
                               errorBuilder: (_, __, ___) => const Icon(
                                 Icons.fitness_center_rounded,
@@ -1366,7 +1366,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.network(
-                              widget.exercise.gifUrl!,
+                              ExerciseApiClient.resolveImageUrl(widget.exercise.gifUrl),
                               fit: BoxFit.contain,
                               errorBuilder: (_, __, ___) => const Icon(
                                 Icons.fitness_center_rounded,

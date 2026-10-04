@@ -104,6 +104,29 @@ class ExerciseApiClient {
     return 'http://localhost:3000/api';
   }
 
+  /// Media base URL (without /api prefix)
+  static String get defaultMediaBaseUrl {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:3000';
+    }
+    return 'http://localhost:3000';
+  }
+
+  /// Resolves an image URL. If it's a relative path (e.g. /media/exercises/0025.jpg),
+  /// prefixes it with the backend media host.
+  static String resolveImageUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return '';
+    final trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final prefix = defaultMediaBaseUrl;
+    if (trimmed.startsWith('/')) {
+      return '$prefix$trimmed';
+    }
+    return '$prefix/$trimmed';
+  }
+
   Future<List<ExerciseApiModel>> fetchExercises({
     String? search,
     String? bodyPart,

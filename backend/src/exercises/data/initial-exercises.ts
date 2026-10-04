@@ -15,7 +15,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "barbell bench press",
     bodyPart: "chest",
     equipment: "barbell",
-    gifUrl: "https://v2.exercisedb.io/image/9Z7KjV4v-B9z8l",
+    gifUrl: "/media/exercises/0025.jpg",
     target: "pectorals",
     secondaryMuscles: ["triceps", "anterior deltoids"],
     instructions: [
@@ -31,7 +31,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "barbell incline bench press",
     bodyPart: "chest",
     equipment: "barbell",
-    gifUrl: "https://v2.exercisedb.io/image/Y9wB5YmR4c6fGg",
+    gifUrl: "/media/exercises/0033.jpg",
     target: "pectorals",
     secondaryMuscles: ["shoulders", "triceps"],
     instructions: [
@@ -47,7 +47,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "dumbbell bench press",
     bodyPart: "chest",
     equipment: "dumbbell",
-    gifUrl: "https://v2.exercisedb.io/image/X8vC7BnM1s9fLp",
+    gifUrl: "/media/exercises/0289.jpg",
     target: "pectorals",
     secondaryMuscles: ["triceps", "deltoids"],
     instructions: [
@@ -63,7 +63,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "push-up",
     bodyPart: "chest",
     equipment: "body weight",
-    gifUrl: "https://v2.exercisedb.io/image/A1bC2dE3fG4hIj",
+    gifUrl: "/media/exercises/0662.jpg",
     target: "pectorals",
     secondaryMuscles: ["triceps", "core", "shoulders"],
     instructions: [
@@ -79,7 +79,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "barbell deadlift",
     bodyPart: "back",
     equipment: "barbell",
-    gifUrl: "https://v2.exercisedb.io/image/K3jH2gF1dE9sAw",
+    gifUrl: "/media/exercises/0027.jpg",
     target: "glutes",
     secondaryMuscles: ["hamstrings", "lower back", "lats", "forearms"],
     instructions: [
@@ -96,7 +96,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "barbell bent over row",
     bodyPart: "back",
     equipment: "barbell",
-    gifUrl: "https://v2.exercisedb.io/image/L7mN8bV9cX2zAs",
+    gifUrl: "/media/exercises/0022.jpg",
     target: "upper back",
     secondaryMuscles: ["biceps", "lats", "rear deltoids"],
     instructions: [
@@ -112,7 +112,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "pull-up",
     bodyPart: "back",
     equipment: "body weight",
-    gifUrl: "https://v2.exercisedb.io/image/P4oI5uY6tR7eWq",
+    gifUrl: "/media/exercises/0652.jpg",
     target: "lats",
     secondaryMuscles: ["biceps", "rhomboids", "middle back"],
     instructions: [
@@ -128,7 +128,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "cable lat pulldown",
     bodyPart: "back",
     equipment: "cable",
-    gifUrl: "https://v2.exercisedb.io/image/Q1wE2rT3yU4iOp",
+    gifUrl: "/media/exercises/0261.jpg",
     target: "lats",
     secondaryMuscles: ["biceps", "rear deltoids"],
     instructions: [
@@ -144,7 +144,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "barbell overhead press",
     bodyPart: "shoulders",
     equipment: "barbell",
-    gifUrl: "https://v2.exercisedb.io/image/Z9xX8c7v6b5n4m",
+    gifUrl: "/media/exercises/0043.jpg",
     target: "deltoids",
     secondaryMuscles: ["triceps", "upper chest", "core"],
     instructions: [
@@ -160,7 +160,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "dumbbell lateral raise",
     bodyPart: "shoulders",
     equipment: "dumbbell",
-    gifUrl: "https://v2.exercisedb.io/image/M5nB6vC7xZ8lKj",
+    gifUrl: "/media/exercises/0334.jpg",
     target: "deltoids",
     secondaryMuscles: ["traps"],
     instructions: [
@@ -176,7 +176,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "barbell bicep curl",
     bodyPart: "upper arms",
     equipment: "barbell",
-    gifUrl: "https://v2.exercisedb.io/image/H8gF7dS6aP5oIu",
+    gifUrl: "/media/exercises/0031.jpg",
     target: "biceps",
     secondaryMuscles: ["forearms"],
     instructions: [
@@ -192,7 +192,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "cable triceps pushdown",
     bodyPart: "upper arms",
     equipment: "cable",
-    gifUrl: "https://v2.exercisedb.io/image/U7yT6rE5wQ4iOk",
+    gifUrl: "/media/exercises/0241.jpg",
     target: "triceps",
     secondaryMuscles: ["forearms"],
     instructions: [
@@ -208,7 +208,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "barbell back squat",
     bodyPart: "upper legs",
     equipment: "barbell",
-    gifUrl: "https://v2.exercisedb.io/image/V3bN2mK1lO9pIu",
+    gifUrl: "/media/exercises/0047.jpg",
     target: "quads",
     secondaryMuscles: ["glutes", "hamstrings", "calves", "core"],
     instructions: [
@@ -224,7 +224,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "barbell romanian deadlift",
     bodyPart: "upper legs",
     equipment: "barbell",
-    gifUrl: "https://v2.exercisedb.io/image/T6rE5wQ4iO3pLa",
+    gifUrl: "/media/exercises/0052.jpg",
     target: "hamstrings",
     secondaryMuscles: ["glutes", "lower back"],
     instructions: [
@@ -240,7 +240,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "3/4 sit-up",
     bodyPart: "waist",
     equipment: "body weight",
-    gifUrl: "https://v2.exercisedb.io/image/W1eR2tY3uI4oPa",
+    gifUrl: "/media/exercises/0001.jpg",
     target: "abs",
     secondaryMuscles: ["hip flexors", "lower back"],
     instructions: [
@@ -256,7 +256,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "dumbbell lunges",
     bodyPart: "upper legs",
     equipment: "dumbbell",
-    gifUrl: "https://v2.exercisedb.io/image/D8fG7hJ6kL5mNb",
+    gifUrl: "/media/exercises/0443.jpg",
     target: "quads",
     secondaryMuscles: ["glutes", "hamstrings", "calves"],
     instructions: [
@@ -272,7 +272,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "dumbbell hammer curl",
     bodyPart: "upper arms",
     equipment: "dumbbell",
-    gifUrl: "https://v2.exercisedb.io/image/C9vB8nM7lK6jHg",
+    gifUrl: "/media/exercises/0301.jpg",
     target: "biceps",
     secondaryMuscles: ["brachialis", "forearms"],
     instructions: [
@@ -287,7 +287,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "cable face pull",
     bodyPart: "shoulders",
     equipment: "cable",
-    gifUrl: "https://v2.exercisedb.io/image/B2nM3kL4jH5gFd",
+    gifUrl: "/media/exercises/0108.jpg",
     target: "rear deltoids",
     secondaryMuscles: ["traps", "rotator cuff", "rhomboids"],
     instructions: [
@@ -303,7 +303,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "leg press",
     bodyPart: "upper legs",
     equipment: "leverage machine",
-    gifUrl: "https://v2.exercisedb.io/image/N7bV8cX9zA1sD2",
+    gifUrl: "/media/exercises/0585.jpg",
     target: "quads",
     secondaryMuscles: ["glutes", "hamstrings"],
     instructions: [
@@ -319,7 +319,7 @@ export const INITIAL_EXERCISES: ExerciseData[] = [
     name: "plank",
     bodyPart: "waist",
     equipment: "body weight",
-    gifUrl: "https://v2.exercisedb.io/image/E4rT5yU6iO7pL8",
+    gifUrl: "/media/exercises/0601.jpg",
     target: "abs",
     secondaryMuscles: ["core", "shoulders", "glutes"],
     instructions: [

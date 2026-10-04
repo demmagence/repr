@@ -727,7 +727,9 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                                   child: item.gifUrl != null &&
                                           item.gifUrl!.isNotEmpty
                                       ? Image.network(
-                                          item.gifUrl!,
+                                          ExerciseApiClient.resolveImageUrl(
+                                            item.gifUrl,
+                                          ),
                                           fit: BoxFit.cover,
                                           errorBuilder: (_, __, ___) =>
                                               const Center(

@@ -102,6 +102,18 @@ void main() {
       expect(item.id, '0025');
       expect(item.name, 'barbell bench press');
     });
+
+    test('resolveImageUrl handles relative and absolute URLs correctly', () {
+      expect(ExerciseApiClient.resolveImageUrl(null), '');
+      expect(ExerciseApiClient.resolveImageUrl(''), '');
+      expect(
+        ExerciseApiClient.resolveImageUrl('https://example.com/bench.jpg'),
+        'https://example.com/bench.jpg',
+      );
+      final resolved = ExerciseApiClient.resolveImageUrl('/media/exercises/0025.jpg');
+      expect(resolved, contains('/media/exercises/0025.jpg'));
+      expect(resolved.startsWith('http://'), isTrue);
+    });
   });
 
   group('ExerciseDemoSheet Widget', () {
