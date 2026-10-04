@@ -53,135 +53,297 @@ class TrainingScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final active = ref.watch(activeWorkoutProvider).valueOrNull;
     final routines = ref.watch(routinesProvider);
-    return AppPageShell(
-      topBar: const AppTopBar(title: 'Repr'),
-      body: ListView(
-        padding: pagePadding,
-        children: [
-          if (active != null) ...[
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: AppListRow(
-                leading: const AppAvatar(
-                  child: Icon(Icons.timer_outlined, size: 20),
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 100.0),
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Train',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
                 ),
-                title: active.name,
-                subtitle: 'Workout sedang berjalan',
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/workout/${active.id}'),
+                Row(
+                  children: [
+                    KineticIconButton(
+                      icon: const Icon(Icons.add_rounded, color: Color(0xFFD4D4D8), size: 22),
+                      onPressed: () => showRoutineEditor(context, ref),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+
+            // Active workout banner
+            if (active != null) ...[
+              KineticCard(
+                padding: const EdgeInsets.all(16),
+                child: InkWell(
+                  onTap: () => context.push('/workout/${active.id}'),
+                  child: Row(
+                    children: [
+                      const CircularProgressBadge(
+                        progress: 0.5,
+                        label: '1',
+                        size: 40,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              active.name,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const Text(
+                              'Workout sedang berjalan • Ketuk untuk lanjut',
+                              style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF8E8E93)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
+            // Quick Start Button
+            KineticCard(
+              padding: EdgeInsets.zero,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => _start(context, ref),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1E20),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFF27272A)),
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Mulai Latihan Kosong',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Catat latihan baru tanpa template',
+                              style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF71717A)),
+                    ],
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-          ],
-          AppButton(
-            onPressed: () => _start(context, ref),
-            icon: Icons.add,
-            label: 'Mulai latihan kosong',
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  'Routine',
-                  style: Theme.of(context).textTheme.titleLarge,
+            const SizedBox(height: 24),
+
+            // Routines Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Template Routine',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              AppButton(
-                onPressed: () => showRoutineEditor(context, ref),
-                icon: Icons.add,
-                label: 'Buat',
-                expand: false,
-                variant: AppActionVariant.quiet,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          routines.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text('Gagal memuat routine: $error'),
-            data: (items) => items.isEmpty
-                ? const SizedBox(
-                    height: 240,
-                    child: EmptyState(
-                      icon: Icons.view_list_outlined,
-                      title: 'Belum ada routine',
-                      body:
-                          'Buat template latihan agar sesi berikutnya lebih cepat dimulai.',
+                TextButton(
+                  onPressed: () => showRoutineEditor(context, ref),
+                  child: const Text(
+                    '+ Buat Baru',
+                    style: TextStyle(
+                      color: Color(0xFFA1A1AA),
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w500,
                     ),
-                  )
-                : Column(
-                    children: items
-                        .map(
-                          (routine) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: AppCard(
-                              padding: EdgeInsets.zero,
-                              child: AppListRow(
-                                leading: AppAvatar(
-                                  child: Text(
-                                    routine.name.substring(0, 1).toUpperCase(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Routine list
+            routines.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Text('Gagal memuat routine: $error'),
+              data: (items) => items.isEmpty
+                  ? const SizedBox(
+                      height: 200,
+                      child: EmptyState(
+                        icon: Icons.view_list_outlined,
+                        title: 'Belum ada routine',
+                        body:
+                            'Buat template latihan agar sesi berikutnya lebih cepat dimulai.',
+                      ),
+                    )
+                  : Column(
+                      children: items
+                          .map(
+                            (routine) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: KineticCard(
+                                padding: EdgeInsets.zero,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(24),
+                                  onTap: () =>
+                                      _start(context, ref, routineId: routine.id),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(14.0),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF1E1E20),
+                                            borderRadius:
+                                                BorderRadius.circular(14),
+                                            border: Border.all(
+                                              color: const Color(0xFF27272A),
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              routine.name
+                                                  .substring(0, 1)
+                                                  .toUpperCase(),
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                routine.name,
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                routine.notes.isEmpty
+                                                    ? 'Template tersimpan • Ketuk untuk mulai'
+                                                    : routine.notes,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 12.5,
+                                                  color: Color(0xFF8E8E93),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.more_vert_rounded,
+                                            color: Color(0xFF71717A),
+                                          ),
+                                          onPressed: () async {
+                                            final value =
+                                                await showAppActionSheet<String>(
+                                              context: context,
+                                              title: routine.name,
+                                              actions: const [
+                                                AppAction(
+                                                  value: 'start',
+                                                  label: 'Mulai Latihan',
+                                                ),
+                                                AppAction(
+                                                  value: 'edit',
+                                                  label: 'Edit Routine',
+                                                ),
+                                                AppAction(
+                                                  value: 'delete',
+                                                  label: 'Hapus Routine',
+                                                ),
+                                              ],
+                                            );
+                                            if (!context.mounted) return;
+                                            if (value == 'start') {
+                                              await _start(
+                                                context,
+                                                ref,
+                                                routineId: routine.id,
+                                              );
+                                            } else if (value == 'edit') {
+                                              await showRoutineEditor(
+                                                context,
+                                                ref,
+                                                routine: routine,
+                                              );
+                                            } else if (value == 'delete') {
+                                              await ref
+                                                  .read(databaseProvider)
+                                                  .deleteRoutine(routine.id);
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                title: routine.name,
-                                subtitle: routine.notes.isEmpty
-                                    ? 'Template latihan tersimpan'
-                                    : routine.notes,
-                                onTap: () =>
-                                    _start(context, ref, routineId: routine.id),
-                                trailing: AppIconButton(
-                                  icon: Icons.more_vert,
-                                  semanticLabel: 'Menu ${routine.name}',
-                                  onPressed: () async {
-                                    final value =
-                                        await showAppActionSheet<String>(
-                                          context: context,
-                                          title: routine.name,
-                                          actions: const [
-                                            AppAction(
-                                              value: 'start',
-                                              label: 'Mulai',
-                                            ),
-                                            AppAction(
-                                              value: 'edit',
-                                              label: 'Edit routine',
-                                            ),
-                                            AppAction(
-                                              value: 'delete',
-                                              label: 'Hapus',
-                                            ),
-                                          ],
-                                        );
-                                    if (!context.mounted) return;
-                                    if (value == 'start') {
-                                      await _start(
-                                        context,
-                                        ref,
-                                        routineId: routine.id,
-                                      );
-                                    } else if (value == 'edit') {
-                                      await showRoutineEditor(
-                                        context,
-                                        ref,
-                                        routine: routine,
-                                      );
-                                    } else if (value == 'delete') {
-                                      await ref
-                                          .read(databaseProvider)
-                                          .deleteRoutine(routine.id);
-                                    }
-                                  },
                                 ),
                               ),
                             ),
-                          ),
-                        )
-                        .toList(),
-                  ),
-          ),
-        ],
+                          )
+                          .toList(),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
