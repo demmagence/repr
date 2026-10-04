@@ -471,4 +471,47 @@ void main() {
     expect((await database.watchRoutines().first).single.name, 'Tetap ada');
     expect(await database.watchExercises().first, hasLength(80));
   });
+
+  test('removeWorkoutExercise menghapus exercise beserta seluruh set terkait', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+
+    final exercise = (await database.watchExercises().first).first;
+    final workoutId = await database.startWorkout();
+    await database.addExerciseToWorkout(workoutId, exercise.id);
+
+    var exercises = await database.getWorkoutExercises(workoutId);
+    expect(exercises, hasLength(1));
+    expect(exercises.first.sets, hasLength(3));
+
+    await database.removeWorkoutExercise(exercises.first.item.id);
+
+    exercises = await database.getWorkoutExercises(workoutId);
+    expect(exercises, isEmpty);
+  });
+
+  test('watchWorkoutExercises reaktif saat workout set diperbarui', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+
+    final exercise = (await database.watchExercises().first).first;
+    final workoutId = await database.startWorkout();
+    await database.addExerciseToWorkout(workoutId, exercise.id);
+
+    final stream = database.watchWorkoutExercises(workoutId);
+    final initialList = await stream.first;
+    expect(initialList.first.sets.first.weightGrams, 0);
+
+    // Update weight of set
+    await database.updateWorkoutSet(
+      id: initialList.first.sets.first.id,
+      weightGrams: 50000,
+      reps: 12,
+    );
+
+    // Stream should emit updated data without re-fetching manually
+    final updatedList = await stream.first;
+    expect(updatedList.first.sets.first.weightGrams, 50000);
+    expect(updatedList.first.sets.first.reps, 12);
+  });
 }

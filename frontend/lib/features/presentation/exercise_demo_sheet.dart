@@ -275,61 +275,22 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
             Container(
               height: 220,
               decoration: BoxDecoration(
-                color: const Color(0xFF161618),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: const Color(0xFF27272A)),
               ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: AppExerciseImage(
-                        animate: true,
-                        gifUrl: widget.exercise.gifUrl,
-                        exerciseId: widget.exercise.id,
-                        fit: BoxFit.contain,
-                        fallbackIconSize: 80,
-                        fallbackColor: const Color(0xFF52525B),
-                      ),
-                    ),
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: AppExerciseImage(
+                    animate: true,
+                    gifUrl: widget.exercise.gifUrl,
+                    exerciseId: widget.exercise.id,
+                    fit: BoxFit.contain,
+                    fallbackIconSize: 80,
+                    fallbackColor: const Color(0xFF52525B),
                   ),
-                  Positioned(
-                    left: 14,
-                    bottom: 14,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF3F3F46)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEF4444),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'ACTIVE ${_capitalize(widget.exercise.target).toUpperCase()}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -933,15 +894,20 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: const [
-                                Text(
-                                  'RECORDED SESSIONS',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF71717A),
-                                    letterSpacing: 0.5,
+                                Expanded(
+                                  child: Text(
+                                    'RECORDED SESSIONS',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF71717A),
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
+                                SizedBox(width: 4),
                                 Icon(
                                   Icons.calendar_today_outlined,
                                   size: 14,
@@ -988,15 +954,20 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: const [
-                                Text(
-                                  'AVG LOAD',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF71717A),
-                                    letterSpacing: 0.5,
+                                Expanded(
+                                  child: Text(
+                                    'AVG LOAD',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF71717A),
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
+                                SizedBox(width: 4),
                                 Icon(
                                   Icons.fitness_center_rounded,
                                   size: 14,
@@ -1346,94 +1317,22 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
             Container(
               height: 240,
               decoration: BoxDecoration(
-                color: const Color(0xFF161618),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: const Color(0xFF27272A)),
               ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: AppExerciseImage(
-                        animate: true,
-                        gifUrl: widget.exercise.gifUrl,
-                        exerciseId: widget.exercise.id,
-                        fit: BoxFit.contain,
-                        fallbackIconSize: 80,
-                        fallbackColor: const Color(0xFF52525B),
-                      ),
-                    ),
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: AppExerciseImage(
+                    animate: true,
+                    gifUrl: widget.exercise.gifUrl,
+                    exerciseId: widget.exercise.id,
+                    fit: BoxFit.contain,
+                    fallbackIconSize: 80,
+                    fallbackColor: const Color(0xFF52525B),
                   ),
-                  // Top Right Kinetic Form Badge
-                  Positioned(
-                    top: 14,
-                    right: 14,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF3F3F46)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEF4444),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'KINETIC FORM',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Bottom Left Target Badge
-                  Positioned(
-                    left: 14,
-                    bottom: 14,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF3F3F46)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.adjust_rounded,
-                            size: 13,
-                            color: Color(0xFFEF4444),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Target Otot: ${_capitalize(widget.exercise.target)}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 16),

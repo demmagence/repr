@@ -700,13 +700,19 @@ class AppDatabase extends _$AppDatabase {
               exercises,
               exercises.id.equalsExp(workoutExercises.exerciseId),
             ),
+            leftOuterJoin(
+              workoutSets,
+              workoutSets.workoutExerciseId.equalsExp(workoutExercises.id),
+            ),
           ])
           ..where(workoutExercises.workoutId.equals(workoutId))
           ..orderBy([OrderingTerm.asc(workoutExercises.position)]);
     return query.watch().asyncMap((rows) async {
       final result = <WorkoutExerciseView>[];
+      final seenExerciseIds = <String>{};
       for (final row in rows) {
         final workoutExercise = row.readTable(workoutExercises);
+        if (!seenExerciseIds.add(workoutExercise.id)) continue;
         final sets =
             await (select(workoutSets)
                   ..where((s) => s.workoutExerciseId.equals(workoutExercise.id))
@@ -717,6 +723,13 @@ class AppDatabase extends _$AppDatabase {
         );
       }
       return result;
+    });
+  }
+
+  Future<void> removeWorkoutExercise(String id) async {
+    await transaction(() async {
+      await (delete(workoutSets)..where((s) => s.workoutExerciseId.equals(id))).go();
+      await (delete(workoutExercises)..where((e) => e.id.equals(id))).go();
     });
   }
 

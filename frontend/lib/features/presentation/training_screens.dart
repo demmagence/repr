@@ -801,159 +801,249 @@ Future<void> showRoutineEditor(
   BuildContext context,
   WidgetRef ref, {
   Routine? routine,
-}) async {
-  final database = ref.read(databaseProvider);
-  final allExercises = await database.getAllExercises();
-  if (!context.mounted) return;
-  final byId = {for (final exercise in allExercises) exercise.id: exercise};
-  RoutineTemplate? template;
-  if (routine != null) template = await database.getRoutineTemplate(routine.id);
-  if (!context.mounted) return;
+}) {
+  return Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => RoutineEditorScreen(routine: routine),
+    ),
+  );
+}
 
-  final name = TextEditingController(text: template?.routine.name ?? '');
-  final notes = TextEditingController(text: template?.routine.notes ?? '');
-  final items = <_RoutineExerciseDraft>[
-    for (final item in template?.exercises ?? const <RoutineExerciseTemplate>[])
-      if (byId[item.exerciseId] != null)
-        _RoutineExerciseDraft(
-          exercise: byId[item.exerciseId]!,
+class RoutineEditorScreen extends ConsumerStatefulWidget {
+  const RoutineEditorScreen({super.key, this.routine});
+
+  final Routine? routine;
+
+  @override
+  ConsumerState<RoutineEditorScreen> createState() => _RoutineEditorScreenState();
+}
+
+class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _notesController;
+  bool _loading = true;
+  final List<_RoutineExerciseDraft> _items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _notesController = TextEditingController();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final database = ref.read(databaseProvider);
+    final allExercises = await database.getAllExercises();
+    final byId = {for (final exercise in allExercises) exercise.id: exercise};
+
+    if (widget.routine != null) {
+      final template = await database.getRoutineTemplate(widget.routine!.id);
+      _nameController.text = template.routine.name;
+      _notesController.text = template.routine.notes;
+      for (final item in template.exercises) {
+        final ex = byId[item.exerciseId];
+        if (ex != null) {
+          _items.add(
+            _RoutineExerciseDraft(
+              exercise: ex,
+              notes: item.notes,
+              restSeconds: item.restSeconds,
+              setTypes: [...item.setTypes],
+            ),
+          );
+        }
+      }
+    }
+    if (mounted) {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_nameController.text.trim().isEmpty || _items.isEmpty) {
+      showMessage(context, 'Isi nama dan tambahkan minimal satu exercise.');
+      return;
+    }
+    final database = ref.read(databaseProvider);
+    final exerciseTemplates = [
+      for (final item in _items)
+        RoutineExerciseTemplate(
+          exerciseId: item.exercise.id,
           notes: item.notes,
           restSeconds: item.restSeconds,
           setTypes: [...item.setTypes],
         ),
-  ];
+    ];
+    if (widget.routine == null) {
+      await database.createRoutineTemplate(
+        name: _nameController.text,
+        notes: _notesController.text,
+        exercises: exerciseTemplates,
+      );
+    } else {
+      await database.updateRoutineTemplate(
+        id: widget.routine!.id,
+        name: _nameController.text,
+        notes: _notesController.text,
+        exercises: exerciseTemplates,
+      );
+    }
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
 
-  try {
-    await showAppDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AppDialog(
-          title: routine == null ? 'Routine baru' : 'Edit routine',
-          actions: [
-            AppButton(
-              label: 'Batal',
-              expand: false,
-              variant: AppActionVariant.quiet,
-              onPressed: () => Navigator.pop(context),
-            ),
-            AppButton(
-              label: 'Simpan',
-              expand: false,
-              onPressed: () async {
-                if (name.text.trim().isEmpty || items.isEmpty) {
-                  return showMessage(
-                    context,
-                    'Isi nama dan tambahkan minimal satu exercise.',
-                  );
-                }
-                final exerciseTemplates = [
-                  for (final item in items)
-                    RoutineExerciseTemplate(
-                      exerciseId: item.exercise.id,
-                      notes: item.notes,
-                      restSeconds: item.restSeconds,
-                      setTypes: [...item.setTypes],
-                    ),
-                ];
-                if (routine == null) {
-                  await database.createRoutineTemplate(
-                    name: name.text,
-                    notes: notes.text,
-                    exercises: exerciseTemplates,
-                  );
-                } else {
-                  await database.updateRoutineTemplate(
-                    id: routine.id,
-                    name: name.text,
-                    notes: notes.text,
-                    exercises: exerciseTemplates,
-                  );
-                }
-                if (context.mounted) Navigator.pop(context);
-              },
-            ),
-          ],
-          child: SizedBox(
-            width: 440,
-            height: MediaQuery.sizeOf(context).height * .68,
-            child: Column(
-              children: [
-                AppTextField(
-                  controller: name,
-                  label: 'Nama routine',
-                  hint: 'Contoh: Push Day',
-                ),
-                const SizedBox(height: 10),
-                AppTextField(
-                  controller: notes,
-                  label: 'Catatan routine',
-                  hint: 'Opsional',
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 10),
-                AppButton(
-                  onPressed: () async {
-                    final selected = await showExercisePicker(
-                      dialogContext,
-                      ref,
-                      multiple: true,
-                    );
-                    if (selected == null || !context.mounted) return;
-                    setState(() {
-                      final existing = items
-                          .map((item) => item.exercise.id)
-                          .toSet();
-                      for (final exercise in selected) {
-                        if (existing.add(exercise.id)) {
-                          items.add(_RoutineExerciseDraft(exercise: exercise));
-                        }
-                      }
-                    });
-                  },
-                  icon: Icons.add,
-                  variant: AppActionVariant.secondary,
-                  label: 'Tambah exercise',
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: items.isEmpty
-                      ? const AppEmptyState(
-                          icon: Icons.fitness_center,
-                          title: 'Belum ada exercise',
-                          body: 'Tambahkan gerakan untuk menyusun routine.',
-                        )
-                      : ReorderableListView.builder(
-                          buildDefaultDragHandles: false,
-                          itemCount: items.length,
-                          onReorderItem: (oldIndex, newIndex) {
-                            setState(() {
-                              final item = items.removeAt(oldIndex);
-                              items.insert(newIndex, item);
-                            });
-                          },
-                          itemBuilder: (context, index) => Padding(
-                            key: ValueKey(items[index].exercise.id),
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _RoutineExerciseEditor(
-                              index: index,
-                              item: items[index],
-                              onChanged: () => setState(() {}),
-                              onDelete: () =>
-                                  setState(() => items.removeAt(index)),
-                            ),
-                          ),
-                        ),
-                ),
-              ],
-            ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF09090B),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF09090B),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.routine == null ? 'Routine baru' : 'Edit routine',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 14, top: 10, bottom: 10),
+            child: ElevatedButton(
+              onPressed: _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              child: const Text(
+                'Simpan',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
       ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                children: [
+                  AppTextField(
+                    controller: _nameController,
+                    label: 'Nama routine',
+                    hint: 'Contoh: Push Day',
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _notesController,
+                    label: 'Catatan routine',
+                    hint: 'Opsional',
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'DAFTAR EXERCISE',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF71717A),
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF27272A),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                        ),
+                        onPressed: () async {
+                          final selected = await showExercisePicker(
+                            context,
+                            ref,
+                            multiple: true,
+                          );
+                          if (selected == null || !mounted) return;
+                          setState(() {
+                            final existing =
+                                _items.map((item) => item.exercise.id).toSet();
+                            for (final exercise in selected) {
+                              if (existing.add(exercise.id)) {
+                                _items.add(
+                                  _RoutineExerciseDraft(exercise: exercise),
+                                );
+                              }
+                            }
+                          });
+                        },
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('Tambah exercise'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (_items.isEmpty)
+                    const AppEmptyState(
+                      icon: Icons.fitness_center,
+                      title: 'Belum ada exercise',
+                      body: 'Tambahkan gerakan untuk menyusun routine.',
+                    )
+                  else
+                    ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      buildDefaultDragHandles: false,
+                      itemCount: _items.length,
+                      onReorderItem: (oldIndex, newIndex) {
+                        setState(() {
+                          final item = _items.removeAt(oldIndex);
+                          _items.insert(newIndex, item);
+                        });
+                      },
+                      itemBuilder: (context, index) => Padding(
+                        key: ValueKey(_items[index].exercise.id),
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _RoutineExerciseEditor(
+                          index: index,
+                          item: _items[index],
+                          onChanged: () => setState(() {}),
+                          onDelete: () => setState(() => _items.removeAt(index)),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
     );
-  } finally {
-    name.dispose();
-    notes.dispose();
   }
 }
 
@@ -1050,64 +1140,83 @@ class _RoutineExerciseEditor extends StatelessWidget {
         const SizedBox(height: 8),
         ...List.generate(item.setTypes.length, (setIndex) {
           final type = item.setTypes[setIndex];
-          return Row(
-            children: [
-              SizedBox(width: 34, child: Text('${setIndex + 1}.')),
-              Expanded(
-                child: AppButton(
-                  label: setLabels[type]!,
-                  variant: AppActionVariant.secondary,
-                  onPressed: () async {
-                    final selected = await showAppActionSheet<String>(
-                      context: context,
-                      title: 'Jenis set ${setIndex + 1}',
-                      actions: setLabels.entries
-                          .map(
-                            (entry) =>
-                                AppAction(value: entry.key, label: entry.value),
-                          )
-                          .toList(),
-                    );
-                    if (selected != null) {
-                      item.setTypes[setIndex] = selected;
-                      onChanged();
-                    }
-                  },
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2.0),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 28,
+                  child: Text(
+                    '${setIndex + 1}.',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
-              ),
-              AppIconButton(
-                icon: Icons.arrow_upward,
-                semanticLabel: 'Naikkan set ${setIndex + 1}',
-                onPressed: setIndex == 0
-                    ? null
-                    : () {
-                        final value = item.setTypes.removeAt(setIndex);
-                        item.setTypes.insert(setIndex - 1, value);
+                Expanded(
+                  child: AppButton(
+                    label: setLabels[type]!,
+                    variant: AppActionVariant.secondary,
+                    onPressed: () async {
+                      final selected = await showAppActionSheet<String>(
+                        context: context,
+                        title: 'Jenis set ${setIndex + 1}',
+                        actions: setLabels.entries
+                            .map(
+                              (entry) =>
+                                  AppAction(value: entry.key, label: entry.value),
+                            )
+                            .toList(),
+                      );
+                      if (selected != null) {
+                        item.setTypes[setIndex] = selected;
                         onChanged();
-                      },
-              ),
-              AppIconButton(
-                icon: Icons.arrow_downward,
-                semanticLabel: 'Turunkan set ${setIndex + 1}',
-                onPressed: setIndex == item.setTypes.length - 1
-                    ? null
-                    : () {
-                        final value = item.setTypes.removeAt(setIndex);
-                        item.setTypes.insert(setIndex + 1, value);
-                        onChanged();
-                      },
-              ),
-              AppIconButton(
-                icon: Icons.remove_circle_outline,
-                semanticLabel: 'Hapus set ${setIndex + 1}',
-                onPressed: item.setTypes.length == 1
-                    ? null
-                    : () {
-                        item.setTypes.removeAt(setIndex);
-                        onChanged();
-                      },
-              ),
-            ],
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.arrow_upward, size: 18),
+                  tooltip: 'Naikkan set ${setIndex + 1}',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  onPressed: setIndex == 0
+                      ? null
+                      : () {
+                          final value = item.setTypes.removeAt(setIndex);
+                          item.setTypes.insert(setIndex - 1, value);
+                          onChanged();
+                        },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_downward, size: 18),
+                  tooltip: 'Turunkan set ${setIndex + 1}',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  onPressed: setIndex == item.setTypes.length - 1
+                      ? null
+                      : () {
+                          final value = item.setTypes.removeAt(setIndex);
+                          item.setTypes.insert(setIndex + 1, value);
+                          onChanged();
+                        },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline, size: 18),
+                  tooltip: 'Hapus set ${setIndex + 1}',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  onPressed: item.setTypes.length == 1
+                      ? null
+                      : () {
+                          item.setTypes.removeAt(setIndex);
+                          onChanged();
+                        },
+                ),
+              ],
+            ),
           );
         }),
         AppButton(

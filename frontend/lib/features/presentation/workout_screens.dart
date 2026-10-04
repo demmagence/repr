@@ -238,32 +238,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                         ),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      const SizedBox(width: 12),
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF161618),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF27272A)),
-                        ),
-                        child: Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              'assets/icon/repr_icon.png',
-                              width: 22,
-                              height: 22,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.remove_red_eye_outlined,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
                           'Active Workout',
@@ -953,9 +928,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                       exercise: ExerciseApiModel.fromLocal(view.exercise),
                     );
                   } else if (val == 'delete') {
-                    for (final s in view.sets) {
-                      await database.removeSet(s.id);
-                    }
+                    await database.removeWorkoutExercise(view.item.id);
                   }
                 },
                 itemBuilder: (ctx) => [
@@ -1136,6 +1109,45 @@ class WorkoutExerciseCard extends ConsumerWidget {
                           child: _MicroStepper(
                             label: 'WEIGHT (KG)',
                             value: formatKg(set.weightGrams),
+                            onTapValue: () async {
+                              final ctrl = TextEditingController(text: formatKg(set.weightGrams));
+                              final val = await showDialog<String>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: const Color(0xFF161618),
+                                  title: const Text('Ubah Beban (kg)', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                  content: TextField(
+                                    controller: ctrl,
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    autofocus: true,
+                                    style: const TextStyle(color: Colors.white, fontSize: 20),
+                                    decoration: const InputDecoration(
+                                      suffixText: 'kg',
+                                      suffixStyle: TextStyle(color: Colors.white70),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Batal', style: TextStyle(color: Color(0xFF71717A))),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, ctrl.text),
+                                      child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (val != null) {
+                                final parsed = double.tryParse(val.replaceAll(',', '.'));
+                                if (parsed != null && parsed >= 0) {
+                                  database.updateWorkoutSet(
+                                    id: set.id,
+                                    weightGrams: (parsed * 1000).round(),
+                                  );
+                                }
+                              }
+                            },
                             onMinus: () {
                               final newGrams = (set.weightGrams - 2500).clamp(
                                 0,
@@ -1161,6 +1173,45 @@ class WorkoutExerciseCard extends ConsumerWidget {
                           child: _MicroStepper(
                             label: 'TARGET REPS',
                             value: '${set.reps}',
+                            onTapValue: () async {
+                              final ctrl = TextEditingController(text: '${set.reps}');
+                              final val = await showDialog<String>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: const Color(0xFF161618),
+                                  title: const Text('Ubah Repetisi', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                  content: TextField(
+                                    controller: ctrl,
+                                    keyboardType: TextInputType.number,
+                                    autofocus: true,
+                                    style: const TextStyle(color: Colors.white, fontSize: 20),
+                                    decoration: const InputDecoration(
+                                      suffixText: 'reps',
+                                      suffixStyle: TextStyle(color: Colors.white70),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Batal', style: TextStyle(color: Color(0xFF71717A))),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, ctrl.text),
+                                      child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (val != null) {
+                                final parsed = int.tryParse(val);
+                                if (parsed != null && parsed >= 0) {
+                                  database.updateWorkoutSet(
+                                    id: set.id,
+                                    reps: parsed,
+                                  );
+                                }
+                              }
+                            },
                             onMinus: () {
                               final newReps = (set.reps - 1).clamp(1, 999);
                               database.updateWorkoutSet(
@@ -1260,12 +1311,14 @@ class _MicroStepper extends StatelessWidget {
     required this.value,
     required this.onMinus,
     required this.onPlus,
+    this.onTapValue,
   });
 
   final String label;
   final String value;
   final VoidCallback onMinus;
   final VoidCallback onPlus;
+  final VoidCallback? onTapValue;
 
   @override
   Widget build(BuildContext context) {
@@ -1294,32 +1347,36 @@ class _MicroStepper extends StatelessWidget {
             children: [
               InkWell(
                 onTap: onMinus,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  width: 28,
-                  height: 28,
+                  width: 32,
+                  height: 32,
                   decoration: const BoxDecoration(
                     color: Color(0xFF27272A),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.remove,
-                    size: 14,
+                    size: 16,
                     color: Colors.white,
                   ),
                 ),
               ),
               Expanded(
-                child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontFeatures: tabularFigures,
+                child: InkWell(
+                  onTap: onTapValue,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontFeatures: tabularFigures,
+                        ),
                       ),
                     ),
                   ),
@@ -1327,15 +1384,15 @@ class _MicroStepper extends StatelessWidget {
               ),
               InkWell(
                 onTap: onPlus,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  width: 28,
-                  height: 28,
+                  width: 32,
+                  height: 32,
                   decoration: const BoxDecoration(
                     color: Color(0xFF27272A),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.add, size: 14, color: Colors.white),
+                  child: const Icon(Icons.add, size: 16, color: Colors.white),
                 ),
               ),
             ],
