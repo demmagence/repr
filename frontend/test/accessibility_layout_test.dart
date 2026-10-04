@@ -47,6 +47,7 @@ void main() {
           final database = AppDatabase(NativeDatabase.memory());
           final workoutId = (await tester.runAsync(database.startWorkout))!;
           final pages = <String, Widget>{
+            'Workouts': const DashboardScreen(),
             'Latihan': const TrainingScreen(),
             'Workout': WorkoutScreen(id: workoutId),
             'Riwayat': const HistoryScreen(),
@@ -54,35 +55,46 @@ void main() {
             'Pengaturan': const SettingsScreen(),
           };
 
-          for (final page in pages.entries) {
-            await tester.pumpWidget(
-              ProviderScope(
-                overrides: [
-                  databaseProvider.overrideWithValue(database),
-                  notificationProvider.overrideWithValue(
-                    _NoopNotificationService(),
-                  ),
-                ],
-                child: MaterialApp(
-                  theme: buildAppTheme(),
-                  home: MediaQuery(
-                    data: MediaQueryData(
-                      size: size,
-                      textScaler: TextScaler.linear(scale),
+          final originalOnError = FlutterError.onError;
+          final errors = <String>[];
+          FlutterError.onError = (details) {
+            errors.add(details.toString());
+          };
+
+          try {
+            for (final page in pages.entries) {
+              await tester.pumpWidget(
+                ProviderScope(
+                  overrides: [
+                    databaseProvider.overrideWithValue(database),
+                    notificationProvider.overrideWithValue(
+                      _NoopNotificationService(),
                     ),
-                    child: page.value,
+                  ],
+                  child: MaterialApp(
+                    theme: buildAppTheme(),
+                    home: MediaQuery(
+                      data: MediaQueryData(
+                        size: size,
+                        textScaler: TextScaler.linear(scale),
+                      ),
+                      child: page.value,
+                    ),
                   ),
                 ),
-              ),
-            );
-            await tester.pump();
-            await tester.pump(const Duration(milliseconds: 350));
-            expect(
-              tester.takeException(),
-              isNull,
-              reason: '${page.key} overflow pada $size scale $scale',
-            );
+              );
+              await tester.pump();
+              await tester.pump(const Duration(milliseconds: 350));
+            }
+          } finally {
+            FlutterError.onError = originalOnError;
           }
+
+          expect(
+            errors,
+            isEmpty,
+            reason: 'Overflows pada $size scale $scale',
+          );
 
           await tester.pumpWidget(const SizedBox.shrink());
           await tester.pump(const Duration(milliseconds: 1));

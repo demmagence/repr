@@ -46,7 +46,7 @@ final workoutExercisesProvider = StreamProvider.autoDispose
 
 final routerProvider = Provider<GoRouter>(
   (ref) => GoRouter(
-    initialLocation: '/latihan',
+    initialLocation: '/workouts',
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
@@ -54,33 +54,45 @@ final routerProvider = Provider<GoRouter>(
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/latihan',
+                path: '/workouts',
                 builder: (_, __) => const DashboardScreen(),
               ),
+              GoRoute(path: '/latihan', redirect: (_, __) => '/workouts'),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/riwayat',
+                path: '/train',
+                builder: (_, __) => const TrainingScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/history',
                 builder: (_, __) => const HistoryScreen(),
               ),
+              GoRoute(path: '/riwayat', redirect: (_, __) => '/history'),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/progres',
+                path: '/metrics',
                 builder: (_, __) => const ProgressScreen(),
               ),
+              GoRoute(path: '/progres', redirect: (_, __) => '/metrics'),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/pengaturan',
+                path: '/settings',
                 builder: (_, __) => const SettingsScreen(),
               ),
+              GoRoute(path: '/pengaturan', redirect: (_, __) => '/settings'),
             ],
           ),
         ],
@@ -119,6 +131,7 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell shell;
   @override
   Widget build(BuildContext context) => Scaffold(
+    extendBody: true,
     body: shell,
     bottomNavigationBar: KineticBottomNav(
       currentIndex: shell.currentIndex,

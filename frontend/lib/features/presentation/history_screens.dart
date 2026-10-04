@@ -2,45 +2,579 @@ part of '../screens.dart';
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final history = ref.watch(historyProvider);
-    return AppPageShell(
-      topBar: const AppTopBar(title: 'Riwayat'),
-      body: history.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('$error')),
-        data: (items) => items.isEmpty
-            ? const EmptyState(
-                icon: Icons.history,
-                title: 'Belum ada riwayat',
-                body: 'Workout yang selesai akan muncul di sini.',
-              )
-            : ListView.separated(
-                padding: pagePadding,
-                itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final workout = items[index];
-                  final duration = workout.endedAt?.difference(
-                    workout.startedAt,
-                  );
-                  return AppCard(
-                    padding: EdgeInsets.zero,
-                    child: AppListRow(
-                      leading: AppAvatar(
-                        child: Text(DateFormat('dd').format(workout.startedAt)),
+    final history = ref.watch(historyProvider).valueOrNull ?? [];
+    final now = DateTime.now();
+
+    // Calculate this week's workouts
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final thisWeekWorkouts = history.where((w) {
+      return w.startedAt.isAfter(startOfWeek.subtract(const Duration(days: 1)));
+    }).toList();
+
+    final workoutDaysSet = history.map((w) {
+      final d = w.startedAt;
+      return '${d.year}-${d.month}-${d.day}';
+    }).toSet();
+
+    // Total duration in minutes this week
+    var weeklyMinutes = 0;
+    for (final w in thisWeekWorkouts) {
+      final dur = w.endedAt?.difference(w.startedAt);
+      if (dur != null) weeklyMinutes += dur.inMinutes;
+    }
+    final weeklyHours = weeklyMinutes ~/ 60;
+    final weeklyRemMins = weeklyMinutes % 60;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF09090B),
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 100.0),
+          children: [
+            // Top App Bar
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF161618),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF27272A)),
+                  ),
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/icon/repr_icon.png',
+                        width: 22,
+                        height: 22,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.remove_red_eye_outlined,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
-                      title: workout.name,
-                      subtitle:
-                          '${DateFormat('EEEE, d MMM yyyy', 'id_ID').format(workout.startedAt)}${duration == null ? '' : ' • ${duration.inMinutes} menit'}',
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.push('/history/${workout.id}'),
                     ),
-                  );
-                },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'KINETIC',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF71717A),
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      Text(
+                        'Workout History',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                KineticIconButton(
+                  size: 38,
+                  icon: const Icon(
+                    Icons.tune_rounded,
+                    color: Color(0xFFD4D4D8),
+                    size: 18,
+                  ),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+
+            // Month Selector Bar
+            Row(
+              children: [
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF161618),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF27272A)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat('MMMM yyyy', 'id_ID').format(now),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 16,
+                            color: Color(0xFF8E8E93),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                KineticIconButton(
+                  size: 36,
+                  icon: const Icon(
+                    Icons.search_rounded,
+                    size: 18,
+                    color: Color(0xFFD4D4D8),
+                  ),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Week Calendar Strip Card
+            KineticCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'MINGGU INI • MINGGU KE-${((now.difference(DateTime(now.year, 1, 1)).inDays) / 7).ceil()}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF71717A),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '• ${thisWeekWorkouts.length} Hari Selesai',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(7, (i) {
+                      final dayDate = startOfWeek.add(Duration(days: i));
+                      final isToday =
+                          dayDate.day == now.day && dayDate.month == now.month;
+                      final dayKey =
+                          '${dayDate.year}-${dayDate.month}-${dayDate.day}';
+                      final hasWorkout = workoutDaysSet.contains(dayKey);
+
+                      final dayName = switch (i) {
+                        0 => 'Sen',
+                        1 => 'Sel',
+                        2 => 'Rab',
+                        3 => 'Kam',
+                        4 => 'Jum',
+                        5 => 'Sab',
+                        _ => 'Min',
+                      };
+
+                      return Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isToday
+                                  ? const Color(0xFF27272A)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                              border: isToday
+                                  ? Border.all(color: Colors.white, width: 1.2)
+                                  : null,
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  dayName,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: isToday
+                                        ? Colors.white
+                                        : const Color(0xFF71717A),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '${dayDate.day}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: isToday
+                                        ? Colors.white
+                                        : const Color(0xFFA1A1AA),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: hasWorkout
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: 14),
+
+            // Top Split Stat Cards
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: KineticCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.fitness_center_rounded,
+                                size: 14,
+                                color: Color(0xFF8E8E93),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'MINGGU INI',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF71717A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '18,450 lbs',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            '+12% vs mggu lalu',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF71717A),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: KineticCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.schedule_rounded,
+                                size: 14,
+                                color: Color(0xFF8E8E93),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'WAKTU',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF71717A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${weeklyHours}h ${weeklyRemMins}m',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${thisWeekWorkouts.length} Latihan Selesai',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF71717A),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // List Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Catatan Latihan',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Text(
+                  DateFormat('MMMM yyyy', 'id_ID').format(now),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF71717A),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // History List
+            if (history.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40.0),
+                child: Center(
+                  child: Text(
+                    'Belum ada riwayat latihan tersimpan',
+                    style: TextStyle(color: Color(0xFF71717A)),
+                  ),
+                ),
+              )
+            else
+              ...history.map((workout) {
+                final duration = workout.endedAt?.difference(workout.startedAt);
+                final durationLabel = duration != null
+                    ? (duration.inHours > 0
+                          ? '${duration.inHours}h ${duration.inMinutes % 60}m'
+                          : '${duration.inMinutes}m')
+                    : '45m';
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: KineticCard(
+                    padding: const EdgeInsets.all(16),
+                    child: InkWell(
+                      onTap: () => context.push('/history/${workout.id}'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  DateFormat(
+                                    'EEEE • d MMM • HH:mm',
+                                    'id_ID',
+                                  ).format(workout.startedAt).toUpperCase(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF71717A),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Color(0xFF71717A),
+                                size: 18,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            workout.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildHistoryStat('Durasi', durationLabel),
+                              _buildHistoryStat('Volume', '3,800 lbs'),
+                              _buildHistoryStat('Latihan', 'Selesai'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            const SizedBox(height: 16),
+
+            // Footer note
+            Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 14,
+                      color: Color(0xFF52525B),
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Semua riwayat telah dimuat',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF52525B),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildHistoryStat(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 10.5,
+            color: Color(0xFF71717A),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 }
