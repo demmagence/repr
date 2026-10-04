@@ -958,49 +958,76 @@ class WorkoutExerciseCard extends ConsumerWidget {
 
             if (set.completed) {
               // Completed Set Row
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                child: Row(
-                  children: [
-                    Semantics(
-                      label: 'Selesaikan set ${set.position + 1}',
-                      child: InkWell(
-                        onTap: () => _complete(context, ref, set, false),
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF27272A),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.check,
-                            size: 14,
-                            color: Colors.white,
+              return Dismissible(
+                key: ValueKey('completed-${set.id}'),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 12),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.redAccent,
+                    size: 18,
+                  ),
+                ),
+                onDismissed: (_) => database.removeSet(set.id),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0),
+                  child: Row(
+                    children: [
+                      Semantics(
+                        label: 'Selesaikan set ${set.position + 1}',
+                        child: InkWell(
+                          onTap: () => _complete(context, ref, set, false),
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF27272A),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.check,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'SET ${set.position + 1}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF71717A),
+                      const SizedBox(width: 12),
+                      Text(
+                        'SET ${set.position + 1}',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF71717A),
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${formatKg(set.weightGrams)} kg  ×  ${set.reps} reps',
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFFA1A1AA),
-                        fontFeatures: tabularFigures,
+                      const Spacer(),
+                      Text(
+                        '${formatKg(set.weightGrams)} kg  ×  ${set.reps} reps',
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFFA1A1AA),
+                          fontFeatures: tabularFigures,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => database.removeSet(set.id),
+                        borderRadius: BorderRadius.circular(12),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4.0),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: Color(0xFF52525B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             } else if (isTarget) {
@@ -1096,6 +1123,23 @@ class WorkoutExerciseCard extends ConsumerWidget {
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFFA1A1AA),
                               ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: () => database.removeSet(set.id),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E1E20),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              size: 14,
+                              color: Color(0xFF71717A),
                             ),
                           ),
                         ),
@@ -1234,54 +1278,81 @@ class WorkoutExerciseCard extends ConsumerWidget {
               );
             } else {
               // Upcoming set
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                child: Row(
-                  children: [
-                    Semantics(
-                      label: 'Selesaikan set ${set.position + 1}',
-                      child: InkWell(
-                        onTap: () => _complete(context, ref, set, true),
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF161618),
-                            border: Border.all(color: const Color(0xFF27272A)),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '${set.position + 1}',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: Color(0xFF71717A),
-                                fontWeight: FontWeight.bold,
+              return Dismissible(
+                key: ValueKey('upcoming-${set.id}'),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 12),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.redAccent,
+                    size: 18,
+                  ),
+                ),
+                onDismissed: (_) => database.removeSet(set.id),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0),
+                  child: Row(
+                    children: [
+                      Semantics(
+                        label: 'Selesaikan set ${set.position + 1}',
+                        child: InkWell(
+                          onTap: () => _complete(context, ref, set, true),
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF161618),
+                              border: Border.all(color: const Color(0xFF27272A)),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${set.position + 1}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Color(0xFF71717A),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'SET ${set.position + 1}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF52525B),
+                      const SizedBox(width: 12),
+                      Text(
+                        'SET ${set.position + 1}',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF52525B),
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${formatKg(set.weightGrams)} kg  ×  ${set.reps > 0 ? '${set.reps} reps' : 'Target'}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF52525B),
-                        fontFeatures: tabularFigures,
+                      const Spacer(),
+                      Text(
+                        '${formatKg(set.weightGrams)} kg  ×  ${set.reps > 0 ? '${set.reps} reps' : 'Target'}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF52525B),
+                          fontFeatures: tabularFigures,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => database.removeSet(set.id),
+                        borderRadius: BorderRadius.circular(12),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4.0),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: Color(0xFF52525B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }

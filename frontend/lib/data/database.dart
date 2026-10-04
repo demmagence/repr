@@ -770,8 +770,24 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  Future<void> removeSet(String id) =>
-      (delete(workoutSets)..where((s) => s.id.equals(id))).go();
+  Future<void> removeSet(String id) async {
+    await transaction(() async {
+      final target = await (select(workoutSets)..where((s) => s.id.equals(id))).getSingleOrNull();
+      if (target == null) return;
+      await (delete(workoutSets)..where((s) => s.id.equals(id))).go();
+      final remaining = await (select(workoutSets)
+            ..where((s) => s.workoutExerciseId.equals(target.workoutExerciseId))
+            ..orderBy([(s) => OrderingTerm.asc(s.position)]))
+          .get();
+      for (var i = 0; i < remaining.length; i++) {
+        if (remaining[i].position != i) {
+          await (update(workoutSets)..where((s) => s.id.equals(remaining[i].id))).write(
+            WorkoutSetsCompanion(position: Value(i)),
+          );
+        }
+      }
+    });
+  }
 
   Future<List<WorkoutSet>> previousSets(
     String exerciseId,
