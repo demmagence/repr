@@ -113,7 +113,7 @@ class CircularProgressBadge extends StatelessWidget {
   }
 }
 
-// KineticBottomNav: Custom bottom navigation matching the HTML design
+// KineticBottomNav: Responsive floating pill bottom navigation matching Stitch designs
 class KineticBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -126,24 +126,41 @@ class KineticBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF09090B),
-        border: Border(
-          top: BorderSide(color: Color(0xFF27272A), width: 0.5),
-        ),
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20.0,
+        right: 20.0,
+        bottom: bottomInset > 0 ? bottomInset : 16.0,
+        top: 6.0,
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(0, Icons.home_filled, 'Home'),
-              _buildNavItem(1, Icons.bar_chart_rounded, 'Analytics'),
-              _buildNavItem(2, Icons.person_rounded, 'Profile'),
-            ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161618),
+          borderRadius: BorderRadius.circular(36.0),
+          border: Border.all(
+            color: const Color(0xFF27272A),
+            width: 1.0,
           ),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black54,
+              blurRadius: 16.0,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(0, Icons.grid_view_rounded, 'Workouts'),
+            _buildNavItem(1, Icons.fitness_center_rounded, 'Train'),
+            _buildNavItem(2, Icons.calendar_today_rounded, 'History'),
+            _buildNavItem(3, Icons.show_chart_rounded, 'Metrics'),
+            _buildNavItem(4, Icons.settings_rounded, 'Settings'),
+          ],
         ),
       ),
     );
@@ -151,27 +168,35 @@ class KineticBottomNav extends StatelessWidget {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = currentIndex == index;
-    return GestureDetector(
-      onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? Colors.white : const Color(0xFF8E8E93),
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? Colors.white : const Color(0xFF8E8E93),
+    const activeColor = Colors.white;
+    const inactiveColor = Color(0xFF71717A);
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onTap(index),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? activeColor : inactiveColor,
+              size: 22,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? activeColor : inactiveColor,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
