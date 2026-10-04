@@ -450,6 +450,7 @@ class _ExercisePickerState extends State<_ExercisePicker> {
       muscle: muscle,
       equipment: equipment,
     );
+
     return AppPageShell(
       topBar: AppTopBar(
         title: 'Pilih exercise',
@@ -473,43 +474,201 @@ class _ExercisePickerState extends State<_ExercisePicker> {
             : const [],
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppTextField(
-                  leading: Icons.search,
-                  hint: 'Cari nama, otot, atau alat',
-                  onChanged: (value) => setState(() => query = value),
-                ),
-                const SizedBox(height: 8),
-                AppSelect<String>(
-                  key: const Key('exercise-muscle-filter'),
-                  label: 'Filter otot',
-                  value: muscle ?? '',
-                  options: {
-                    '': 'Semua otot',
-                    for (final value in muscles) value: value,
-                  },
-                  onChanged: (value) => setState(
-                    () =>
-                        muscle = value == null || value.isEmpty ? null : value,
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF161618),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF27272A)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.search_rounded,
+                        color: Color(0xFF71717A),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: null,
+                          onChanged: (value) => setState(() => query = value),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                            border: InputBorder.none,
+                            hintText: 'Search exercise',
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF71717A),
+                              fontSize: 14,
+                            ),
+                            suffixIcon: query.isNotEmpty
+                                ? IconButton(
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      size: 18,
+                                      color: Color(0xFF71717A),
+                                    ),
+                                    onPressed: () => setState(() => query = ''),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                AppSelect<String>(
-                  key: const Key('exercise-equipment-filter'),
-                  label: 'Filter peralatan',
-                  value: equipment ?? '',
-                  options: {
-                    '': 'Semua peralatan',
-                    for (final value in equipmentOptions) value: value,
-                  },
-                  onChanged: (value) => setState(
-                    () => equipment = value == null || value.isEmpty
-                        ? null
-                        : value,
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      PopupMenuButton<String>(
+                        key: const Key('exercise-equipment-filter'),
+                        initialValue: equipment,
+                        tooltip: 'Filter Peralatan',
+                        color: const Color(0xFF161618),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: Color(0xFF27272A)),
+                        ),
+                        onSelected: (value) => setState(
+                          () => equipment = value.isEmpty ? null : value,
+                        ),
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: '',
+                            child: Text('All Equipment', style: TextStyle(color: Colors.white)),
+                          ),
+                          for (final opt in equipmentOptions)
+                            PopupMenuItem(
+                              value: opt,
+                              child: Text(opt, style: const TextStyle(color: Colors.white)),
+                            ),
+                        ],
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: equipment != null
+                                ? const Color(0xFF27272A)
+                                : const Color(0xFF161618),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: equipment != null
+                                  ? Colors.white24
+                                  : const Color(0xFF27272A),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                equipment ?? 'All Equipment',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: equipment != null
+                                      ? Colors.white
+                                      : const Color(0xFFA1A1AA),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 16,
+                                color: Color(0xFF71717A),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      PopupMenuButton<String>(
+                        key: const Key('exercise-muscle-filter'),
+                        initialValue: muscle,
+                        tooltip: 'Filter Otot',
+                        color: const Color(0xFF161618),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: Color(0xFF27272A)),
+                        ),
+                        onSelected: (value) => setState(
+                          () => muscle = value.isEmpty ? null : value,
+                        ),
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: '',
+                            child: Text('All Muscles', style: TextStyle(color: Colors.white)),
+                          ),
+                          for (final opt in muscles)
+                            PopupMenuItem(
+                              value: opt,
+                              child: Text(opt, style: const TextStyle(color: Colors.white)),
+                            ),
+                        ],
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: muscle != null
+                                ? const Color(0xFF27272A)
+                                : const Color(0xFF161618),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: muscle != null
+                                  ? Colors.white24
+                                  : const Color(0xFF27272A),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                muscle ?? 'All Muscles',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: muscle != null
+                                      ? Colors.white
+                                      : const Color(0xFFA1A1AA),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 16,
+                                color: Color(0xFF71717A),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  query.isEmpty && muscle == null && equipment == null
+                      ? 'Recent Exercises'
+                      : 'Exercises (${items.length})',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF71717A),
+                    letterSpacing: 0.3,
                   ),
                 ),
               ],
@@ -522,48 +681,127 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                     title: 'Exercise tidak ditemukan',
                     body: 'Ubah pencarian atau filter yang dipilih.',
                   )
-                : ListView.builder(
+                : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 24),
                     itemCount: items.length,
+                    separatorBuilder: (_, __) => const Divider(
+                      height: 1,
+                      indent: 80,
+                      color: Color(0xFF1E1E20),
+                    ),
                     itemBuilder: (context, index) {
                       final item = items[index];
-                      return AppCheckTile(
-                        value: selected.contains(item.id),
-                        leading: InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () => _openExerciseDemo(item),
-                          child: Stack(
-                            alignment: Alignment.bottomRight,
+                      final isSelected = selected.contains(item.id);
+
+                      return InkWell(
+                        onTap: () {
+                          if (!widget.multiple) {
+                            Navigator.pop(context, [item]);
+                          } else {
+                            setState(
+                              () => isSelected
+                                  ? selected.remove(item.id)
+                                  : selected.add(item.id),
+                            );
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          child: Row(
                             children: [
-                              AppAvatar(child: Text(item.name.substring(0, 1))),
                               Container(
-                                padding: const EdgeInsets.all(2),
+                                width: 50,
+                                height: 50,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  shape: BoxShape.circle,
+                                  color: const Color(0xFF161618),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: const Color(0xFF27272A),
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.play_arrow,
-                                  size: 10,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(13),
+                                  child: item.gifUrl != null &&
+                                          item.gifUrl!.isNotEmpty
+                                      ? Image.network(
+                                          item.gifUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              const Center(
+                                            child: Icon(
+                                              Icons.fitness_center_rounded,
+                                              size: 22,
+                                              color: Color(0xFF71717A),
+                                            ),
+                                          ),
+                                        )
+                                      : const Center(
+                                          child: Icon(
+                                            Icons.fitness_center_rounded,
+                                            size: 22,
+                                            color: Color(0xFF71717A),
+                                          ),
+                                        ),
                                 ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(0xFFF4F4F5),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      '${item.muscle} • ${item.equipment}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        color: Color(0xFF8E8E93),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (widget.multiple) ...[
+                                Icon(
+                                  isSelected
+                                      ? Icons.check_circle_rounded
+                                      : Icons.radio_button_unchecked_rounded,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : const Color(0xFF52525B),
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              KineticIconButton(
+                                size: 34,
+                                icon: const Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 18,
+                                  color: Color(0xFFA1A1AA),
+                                ),
+                                onPressed: () => _openExerciseDemo(item),
                               ),
                             ],
                           ),
                         ),
-                        title: item.name,
-                        subtitle: '${item.muscle} • ${item.equipment}',
-                        onChanged: (_) {
-                          if (!widget.multiple) {
-                            return Navigator.pop(context, [item]);
-                          }
-                          setState(
-                            () => selected.contains(item.id)
-                                ? selected.remove(item.id)
-                                : selected.add(item.id),
-                          );
-                        },
                       );
                     },
                   ),

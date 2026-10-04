@@ -142,6 +142,9 @@ void main() {
       await tester.tap(find.text('Open Demo'));
       await tester.pumpAndSettle();
 
+      await tester.tap(find.text('How to'));
+      await tester.pumpAndSettle();
+
       expect(find.text('Barbell Bench Press'), findsOneWidget);
       expect(find.text('Petunjuk Gerakan'), findsOneWidget);
       expect(find.textContaining('Lie back on a flat bench'), findsOneWidget);
