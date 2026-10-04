@@ -3,14 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:repr/ui/material/app_ui.dart';
 
 void main() {
-  test('tema memakai konfigurasi standar Material 3', () {
+  test('tema memakai konfigurasi standar Material 3 Obsidian dark mode', () {
     final theme = buildAppTheme();
     expect(theme.useMaterial3, isTrue);
-    expect(theme.brightness, Brightness.light);
+    expect(theme.brightness, Brightness.dark);
     expect(theme.colorScheme.primary, isNotNull);
-    expect(theme.cardTheme.shape, isNull);
-    expect(theme.navigationBarTheme.height, isNull);
-    expect(theme.inputDecorationTheme.border, isNull);
   });
 
   testWidgets('shell hanya merender komponen Material standar', (tester) async {

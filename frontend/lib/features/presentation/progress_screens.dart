@@ -16,7 +16,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     // Calculate total sessions in last 90 days
     final now = DateTime.now();
     final ninetyDaysAgo = now.subtract(const Duration(days: 90));
-    final recentSessions = history.where((w) => w.startedAt.isAfter(ninetyDaysAgo)).length;
+    final recentSessions = history
+        .where((w) => w.startedAt.isAfter(ninetyDaysAgo))
+        .length;
 
     return Scaffold(
       backgroundColor: const Color(0xFF09090B),
@@ -53,32 +55,39 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'KINETIC',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF71717A),
-                        letterSpacing: 1.2,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'KINETIC',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF71717A),
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Analytics',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      Text(
+                        'Analytics',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const Spacer(),
                 KineticIconButton(
                   size: 38,
-                  icon: const Icon(Icons.tune_rounded, color: Color(0xFFD4D4D8), size: 18),
+                  icon: const Icon(
+                    Icons.tune_rounded,
+                    color: Color(0xFFD4D4D8),
+                    size: 18,
+                  ),
                   onPressed: () {},
                 ),
               ],
@@ -105,139 +114,213 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
             const SizedBox(height: 16),
 
             // Top Split Grid (Weight & Frequency)
-            Row(
-              children: [
-                // Weight Card
-                Expanded(
-                  child: KineticCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            Text(
-                              'WEIGHT',
-                              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A), letterSpacing: 0.5),
-                            ),
-                            Icon(Icons.tune_rounded, color: Color(0xFF52525B), size: 15),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: const [
-                            Text(
-                              '198.4',
-                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'lbs',
-                              style: TextStyle(fontSize: 12.5, color: Color(0xFF8E8E93)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        // Mini Sparkline Graph
-                        SizedBox(
-                          height: 32,
-                          child: LineChart(
-                            LineChartData(
-                              gridData: const FlGridData(show: false),
-                              titlesData: const FlTitlesData(show: false),
-                              borderData: FlBorderData(show: false),
-                              lineBarsData: [
-                                LineChartBarData(
-                                  spots: const [
-                                    FlSpot(0, 203),
-                                    FlSpot(1, 201),
-                                    FlSpot(2, 200.5),
-                                    FlSpot(3, 199.2),
-                                    FlSpot(4, 198.4),
-                                  ],
-                                  isCurved: true,
-                                  color: Colors.white,
-                                  barWidth: 2,
-                                  dotData: FlDotData(
-                                    show: true,
-                                    checkToShowDot: (spot, barData) => spot.x == 4,
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Weight Card
+                  Expanded(
+                    child: KineticCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Expanded(
+                                child: Text(
+                                  'WEIGHT',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF71717A),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.tune_rounded,
+                                color: Color(0xFF52525B),
+                                size: 15,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: const [
+                                Text(
+                                  '198.4',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'lbs',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: Color(0xFF8E8E93),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          '↘ -4.2 lbs  3M Delta',
-                          style: TextStyle(fontSize: 11, color: Color(0xFF71717A), fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          // Mini Sparkline Graph
+                          SizedBox(
+                            height: 32,
+                            child: LineChart(
+                              LineChartData(
+                                gridData: const FlGridData(show: false),
+                                titlesData: const FlTitlesData(show: false),
+                                borderData: FlBorderData(show: false),
+                                lineBarsData: [
+                                  LineChartBarData(
+                                    spots: const [
+                                      FlSpot(0, 203),
+                                      FlSpot(1, 201),
+                                      FlSpot(2, 200.5),
+                                      FlSpot(3, 199.2),
+                                      FlSpot(4, 198.4),
+                                    ],
+                                    isCurved: true,
+                                    color: Colors.white,
+                                    barWidth: 2,
+                                    dotData: FlDotData(
+                                      show: true,
+                                      checkToShowDot: (spot, barData) =>
+                                          spot.x == 4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            '↘ -4.2 lbs  3M Delta',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF71717A),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                // Frequency Card
-                Expanded(
-                  child: KineticCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            Text(
-                              'FREQUENCY',
-                              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A), letterSpacing: 0.5),
+                  const SizedBox(width: 12),
+                  // Frequency Card
+                  Expanded(
+                    child: KineticCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Expanded(
+                                child: Text(
+                                  'FREQUENCY',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF71717A),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.tune_rounded,
+                                color: Color(0xFF52525B),
+                                size: 15,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: const [
+                                Text(
+                                  '4.8',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'd/wk',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: Color(0xFF8E8E93),
+                                  ),
+                                ),
+                              ],
                             ),
-                            Icon(Icons.tune_rounded, color: Color(0xFF52525B), size: 15),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: const [
-                            Text(
-                              '4.8',
-                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          const SizedBox(height: 12),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              children: [
+                                const CircularProgressBadge(
+                                  progress: 0.96,
+                                  label: '',
+                                  size: 32,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  '96%',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 4),
-                            Text(
-                              'd/wk',
-                              style: TextStyle(fontSize: 12.5, color: Color(0xFF8E8E93)),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Optimal $recentSessions/38 Sessions',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF71717A),
+                              fontWeight: FontWeight.w600,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            const CircularProgressBadge(
-                              progress: 0.96,
-                              label: '',
-                              size: 32,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              '96%',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Optimal $recentSessions/38 Sessions',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF71717A), fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 14),
 
@@ -250,20 +333,42 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
-                      Text(
-                        'GROSS MECHANICAL LOAD',
-                        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A), letterSpacing: 0.5),
+                      Expanded(
+                        child: Text(
+                          'GROSS MECHANICAL LOAD',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF71717A),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
+                      SizedBox(width: 8),
                       Text(
                         '↗ +14.2%',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    '34,200 lbs / week avg',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '34,200 lbs / week avg',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   SizedBox(
@@ -275,9 +380,15 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                         barTouchData: BarTouchData(enabled: false),
                         titlesData: FlTitlesData(
                           show: true,
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          leftTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
                           bottomTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
@@ -289,8 +400,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                                     'W$idx',
                                     style: TextStyle(
                                       fontSize: 10,
-                                      fontWeight: idx == 8 ? FontWeight.bold : FontWeight.w500,
-                                      color: idx == 8 ? Colors.white : const Color(0xFF71717A),
+                                      fontWeight: idx == 8
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      color: idx == 8
+                                          ? Colors.white
+                                          : const Color(0xFF71717A),
                                     ),
                                   ),
                                 );
@@ -327,13 +442,33 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
-                      Text(
-                        'BENCHMARK RECORDS',
-                        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A), letterSpacing: 0.5),
+                      Expanded(
+                        child: Text(
+                          'BENCHMARK RECORDS',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF71717A),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
-                      Text(
-                        '1-Rep Max Telemetry',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF71717A)),
+                      SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '1-Rep Max Telemetry',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF71717A),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -361,13 +496,26 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
-                      Text(
-                        'VOLUME DISTRIBUTION',
-                        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A), letterSpacing: 0.5),
+                      Expanded(
+                        child: Text(
+                          'VOLUME DISTRIBUTION',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF71717A),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
+                      SizedBox(width: 8),
                       Text(
                         'Hypertrophy Split',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF71717A)),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF71717A),
+                        ),
                       ),
                     ],
                   ),
@@ -379,41 +527,86 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                       height: 8,
                       child: Row(
                         children: const [
-                          Expanded(flex: 28, child: ColoredBox(color: Colors.white)),
+                          Expanded(
+                            flex: 28,
+                            child: ColoredBox(color: Colors.white),
+                          ),
                           SizedBox(width: 2),
-                          Expanded(flex: 26, child: ColoredBox(color: Color(0xFFA1A1AA))),
+                          Expanded(
+                            flex: 26,
+                            child: ColoredBox(color: Color(0xFFA1A1AA)),
+                          ),
                           SizedBox(width: 2),
-                          Expanded(flex: 24, child: ColoredBox(color: Color(0xFF71717A))),
+                          Expanded(
+                            flex: 24,
+                            child: ColoredBox(color: Color(0xFF71717A)),
+                          ),
                           SizedBox(width: 2),
-                          Expanded(flex: 14, child: ColoredBox(color: Color(0xFF3F3F46))),
+                          Expanded(
+                            flex: 14,
+                            child: ColoredBox(color: Color(0xFF3F3F46)),
+                          ),
                           SizedBox(width: 2),
-                          Expanded(flex: 8, child: ColoredBox(color: Color(0xFF27272A))),
+                          Expanded(
+                            flex: 8,
+                            child: ColoredBox(color: Color(0xFF27272A)),
+                          ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 14),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildDistributionLabel('Chest', '28%'),
-                      _buildDistributionLabel('Back', '26%'),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: _buildDistributionLabel('Chest', '28%'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: _buildDistributionLabel('Back', '26%'),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildDistributionLabel('Legs', '24%'),
-                      _buildDistributionLabel('Arms', '14%'),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: _buildDistributionLabel('Legs', '24%'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: _buildDistributionLabel('Arms', '14%'),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildDistributionLabel('Shoulders', '8%'),
-                      const SizedBox(),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: _buildDistributionLabel('Shoulders', '8%'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(child: SizedBox()),
                     ],
                   ),
                 ],
@@ -426,18 +619,33 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: InkWell(
                 onTap: () {
-                  showMessage(context, 'Mempersiapkan ekspor telemetri .CSV...');
+                  showMessage(
+                    context,
+                    'Mempersiapkan ekspor telemetri .CSV...',
+                  );
                 },
                 child: Row(
                   children: const [
                     Icon(Icons.download_rounded, color: Colors.white, size: 18),
                     SizedBox(width: 12),
-                    Text(
-                      'Export Biometric Telemetry (.CSV)',
-                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Export Biometric Telemetry (.CSV)',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                    Spacer(),
-                    Icon(Icons.chevron_right_rounded, color: Color(0xFF71717A), size: 20),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: Color(0xFF71717A),
+                      size: 20,
+                    ),
                   ],
                 ),
               ),
@@ -504,17 +712,35 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               exercise,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93), fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF8E8E93),
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 6),
-            Text(
-              weight,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                weight,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               '↑ $delta',
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF71717A)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF71717A),
+              ),
             ),
           ],
         ),
@@ -528,12 +754,25 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         Container(
           width: 6,
           height: 6,
-          decoration: const BoxDecoration(color: Color(0xFF8E8E93), shape: BoxShape.circle),
+          decoration: const BoxDecoration(
+            color: Color(0xFF8E8E93),
+            shape: BoxShape.circle,
+          ),
         ),
         const SizedBox(width: 8),
-        Text(muscle, style: const TextStyle(fontSize: 12.5, color: Color(0xFF8E8E93))),
+        Text(
+          muscle,
+          style: const TextStyle(fontSize: 12.5, color: Color(0xFF8E8E93)),
+        ),
         const SizedBox(width: 14),
-        Text(percent, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.white)),
+        Text(
+          percent,
+          style: const TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ],
     );
   }

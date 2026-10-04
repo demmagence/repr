@@ -33,7 +33,9 @@ class DashboardScreen extends ConsumerWidget {
               onPressed: () => Navigator.pop(context, true),
             ),
           ],
-          child: const Text('Lanjutkan workout yang sedang berjalan atau buang draftnya.'),
+          child: const Text(
+            'Lanjutkan workout yang sedang berjalan atau buang draftnya.',
+          ),
         ),
       );
       if (discard != true) return;
@@ -69,24 +71,37 @@ class DashboardScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Workouts',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
+                const Expanded(
+                  child: Text(
+                    'Workouts',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     KineticIconButton(
-                      icon: const Icon(Icons.tune_rounded, color: Color(0xFFD4D4D8), size: 18),
+                      icon: const Icon(
+                        Icons.tune_rounded,
+                        color: Color(0xFFD4D4D8),
+                        size: 18,
+                      ),
                       onPressed: () => context.go('/metrics'),
                     ),
                     const SizedBox(width: 10),
                     KineticIconButton(
-                      icon: const Icon(Icons.add_rounded, color: Color(0xFFD4D4D8), size: 22),
+                      icon: const Icon(
+                        Icons.add_rounded,
+                        color: Color(0xFFD4D4D8),
+                        size: 22,
+                      ),
                       onPressed: () => _startWorkout(context, ref),
                     ),
                   ],
@@ -124,7 +139,10 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                             const Text(
                               'In Progress • Ketuk untuk lanjut',
-                              style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8E8E93),
+                              ),
                             ),
                           ],
                         ),
@@ -138,32 +156,118 @@ class DashboardScreen extends ConsumerWidget {
             ],
 
             // Top Split Grid (Two Cards)
-            Row(
-              children: [
-                // Top Left Card: Primary Routine / Split
-                Expanded(
-                  child: KineticCard(
-                    padding: const EdgeInsets.all(16),
-                    child: InkWell(
-                      onTap: () => _startWorkout(
-                        context,
-                        ref,
-                        routineId: firstRoutine?.id,
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Top Left Card: Primary Routine / Split
+                  Expanded(
+                    child: KineticCard(
+                      padding: const EdgeInsets.all(16),
+                      child: InkWell(
+                        onTap: () => _startWorkout(
+                          context,
+                          ref,
+                          routineId: firstRoutine?.id,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 110),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: const [
+                                  CircularProgressBadge(
+                                    progress: 0.75,
+                                    label: '1',
+                                    size: 38,
+                                  ),
+                                  Icon(
+                                    Icons.tune_rounded,
+                                    color: Color(0xFF52525B),
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    firstRoutine?.name ?? 'Chest + Triceps',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    DateFormat('EEEE', 'id_ID').format(now),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF8E8E93),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: SizedBox(
-                        height: 126,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Top Right Card: Body Weight
+                  Expanded(
+                    child: KineticCard(
+                      padding: const EdgeInsets.all(16),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 110),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const CircularProgressBadge(
-                                  progress: 0.75,
-                                  label: '1',
-                                  size: 42,
+                                Expanded(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: const [
+                                        Text(
+                                          '200',
+                                          style: TextStyle(
+                                            fontSize: 27,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(width: 3),
+                                        Text(
+                                          'lbs',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF8E8E93),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
+                                const SizedBox(width: 4),
                                 const Icon(
                                   Icons.tune_rounded,
                                   color: Color(0xFF52525B),
@@ -171,24 +275,27 @@ class DashboardScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                              children: const [
                                 Text(
-                                  firstRoutine?.name ?? 'Chest + Triceps',
+                                  'Body Weight',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 15,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                SizedBox(height: 2),
                                 Text(
-                                  DateFormat('EEEE', 'id_ID').format(now),
-                                  style: const TextStyle(
-                                    fontSize: 13,
+                                  'Target Maintenance',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
                                     color: Color(0xFF8E8E93),
                                   ),
                                 ),
@@ -199,79 +306,8 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                // Top Right Card: Body Weight
-                Expanded(
-                  child: KineticCard(
-                    padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      height: 126,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: const [
-                                  Text(
-                                    '200',
-                                    style: TextStyle(
-                                      fontSize: 27,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(width: 3),
-                                  Text(
-                                    'lbs',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFF8E8E93),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Icon(
-                                Icons.tune_rounded,
-                                color: Color(0xFF52525B),
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                'Body Weight',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'Target Maintenance',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF8E8E93),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 12),
 
@@ -341,53 +377,67 @@ class DashboardScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Volume lifted',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Volume lifted',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Last 7 days • $recentSevenDaysCount sesi',
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: Color(0xFF8E8E93),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Last 7 days • $recentSevenDaysCount sesi',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFF8E8E93),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  Row(
-                    children: const [
-                      Text(
-                        '3,200',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Text(
+                            '3,200',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'lbs',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF8E8E93),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Icon(
+                            Icons.tune_rounded,
+                            color: Color(0xFF52525B),
+                            size: 16,
+                          ),
+                        ],
                       ),
-                      SizedBox(width: 4),
-                      Text(
-                        'lbs',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF8E8E93),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Icon(
-                        Icons.tune_rounded,
-                        color: Color(0xFF52525B),
-                        size: 16,
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -398,12 +448,16 @@ class DashboardScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Recent History',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                const Expanded(
+                  child: Text(
+                    'Recent History',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 TextButton(
@@ -452,7 +506,9 @@ class DashboardScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 color: const Color(0xFF1E1E20),
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: const Color(0xFF27272A)),
+                                border: Border.all(
+                                  color: const Color(0xFF27272A),
+                                ),
                               ),
                               child: Center(
                                 child: Text(
@@ -536,7 +592,8 @@ class DashboardScreen extends ConsumerWidget {
                 // Approximate past date
                 final daysOffset = (11 - colIndex) * 7 + (3 - rowIndex);
                 final checkDate = now.subtract(Duration(days: daysOffset));
-                final dateKey = '${checkDate.year}-${checkDate.month}-${checkDate.day}';
+                final dateKey =
+                    '${checkDate.year}-${checkDate.month}-${checkDate.day}';
                 final hasWorkout = workoutDays.contains(dateKey);
 
                 return Padding(
@@ -545,7 +602,9 @@ class DashboardScreen extends ConsumerWidget {
                     width: 5,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: hasWorkout ? Colors.white : const Color(0xFF27272A),
+                      color: hasWorkout
+                          ? Colors.white
+                          : const Color(0xFF27272A),
                       shape: BoxShape.circle,
                     ),
                   ),

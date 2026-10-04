@@ -169,7 +169,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       ),
       error: (error, _) => Scaffold(
         backgroundColor: Color(0xFF09090B),
-        body: Center(child: Text('$error', style: const TextStyle(color: Colors.white))),
+        body: Center(
+          child: Text('$error', style: const TextStyle(color: Colors.white)),
+        ),
       ),
       data: (item) {
         if (item == null) {
@@ -210,8 +212,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
           }
         }
 
-        final progressPercent =
-            totalSets > 0 ? (completedSets / totalSets * 100).round() : 0;
+        final progressPercent = totalSets > 0
+            ? (completedSets / totalSets * 100).round()
+            : 0;
 
         return Scaffold(
           backgroundColor: const Color(0xFF09090B),
@@ -220,12 +223,19 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
               children: [
                 // Header (Top App Bar matching Stitch)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     children: [
                       KineticIconButton(
                         size: 38,
-                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                        icon: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       const SizedBox(width: 12),
@@ -254,17 +264,23 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      const Text(
-                        'Active Workout',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                      const Expanded(
+                        child: Text(
+                          'Active Workout',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      const Spacer(),
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF8E8E93)),
+                        icon: const Icon(
+                          Icons.more_vert_rounded,
+                          color: Color(0xFF8E8E93),
+                        ),
                         color: const Color(0xFF161618),
                         onSelected: (val) {
                           if (val == 'finish') _finish();
@@ -273,11 +289,17 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                         itemBuilder: (ctx) => [
                           const PopupMenuItem(
                             value: 'finish',
-                            child: Text('Selesaikan Workout', style: TextStyle(color: Colors.white)),
+                            child: Text(
+                              'Selesaikan Workout',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                           const PopupMenuItem(
                             value: 'discard',
-                            child: Text('Buang Draft Workout', style: TextStyle(color: Colors.redAccent)),
+                            child: Text(
+                              'Buang Draft Workout',
+                              style: TextStyle(color: Colors.redAccent),
+                            ),
                           ),
                         ],
                       ),
@@ -287,33 +309,46 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
 
                 // Under-Header Subtitle & Elapsed Timer
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 6.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            item.name,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                item.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF161618),
                           borderRadius: BorderRadius.circular(16),
@@ -321,7 +356,11 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.timer_outlined, color: Color(0xFF8E8E93), size: 14),
+                            const Icon(
+                              Icons.timer_outlined,
+                              color: Color(0xFF8E8E93),
+                              size: 14,
+                            ),
                             const SizedBox(width: 5),
                             Text(
                               elapsedLabel,
@@ -346,94 +385,133 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                     children: [
                       // Top Split Metric Cards
-                      Row(
-                        children: [
-                          // Left: Sets Progress
-                          Expanded(
-                            child: KineticCard(
-                              padding: const EdgeInsets.all(14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      CircularProgressBadge(
-                                        progress: totalSets > 0 ? (completedSets / totalSets) : 0,
-                                        label: '$completedSets/$totalSets',
-                                        size: 40,
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Left: Sets Progress
+                            Expanded(
+                              child: KineticCard(
+                                padding: const EdgeInsets.all(14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        CircularProgressBadge(
+                                          progress: totalSets > 0
+                                              ? (completedSets / totalSets)
+                                              : 0,
+                                          label: '$completedSets/$totalSets',
+                                          size: 38,
+                                        ),
+                                        const Icon(
+                                          Icons.tune_rounded,
+                                          color: Color(0xFF52525B),
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'SETS PROGRESS',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF71717A),
+                                        letterSpacing: 0.5,
                                       ),
-                                      const Icon(Icons.tune_rounded, color: Color(0xFF52525B), size: 16),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  const Text(
-                                    'SETS PROGRESS',
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF71717A),
-                                      letterSpacing: 0.5,
                                     ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '$progressPercent% Done',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '$progressPercent% Done',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Right: Volume Lifted & Live BPM indicator
-                          Expanded(
-                            child: KineticCard(
-                              padding: const EdgeInsets.all(14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF1E1E20),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: const Color(0xFF27272A)),
-                                        ),
-                                        child: Row(
-                                          children: const [
-                                            Icon(Icons.favorite, color: Colors.white, size: 12),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              '134 bpm',
-                                              style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                            const SizedBox(width: 12),
+                            // Right: Volume Lifted & Live BPM indicator
+                            Expanded(
+                              child: KineticCard(
+                                padding: const EdgeInsets.all(14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 3,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF1E1E20),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color:
+                                                      const Color(0xFF27272A),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: const [
+                                                  Icon(
+                                                    Icons.favorite,
+                                                    color: Colors.white,
+                                                    size: 12,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    '134 bpm',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ],
+                                          ),
                                         ),
-                                      ),
-                                      const Icon(Icons.sensors_rounded, color: Color(0xFF52525B), size: 16),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  const Text(
-                                    'VOLUME LIFTED',
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF71717A),
-                                      letterSpacing: 0.5,
+                                        const SizedBox(width: 4),
+                                        const Icon(
+                                          Icons.sensors_rounded,
+                                          color: Color(0xFF52525B),
+                                          size: 16,
+                                        ),
+                                      ],
                                     ),
-                                  ),
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'VOLUME LIFTED',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF71717A),
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
                                   const SizedBox(height: 2),
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
                                     textBaseline: TextBaseline.alphabetic,
                                     children: [
                                       Text(
@@ -447,7 +525,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                       const SizedBox(width: 3),
                                       const Text(
                                         'kg',
-                                        style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF8E8E93),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -457,12 +538,16 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14),
+                    ),
+                    const SizedBox(height: 14),
 
                       // Rest Timer Card (if active)
                       if (rest != null && !rest.isNegative) ...[
                         KineticCard(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           child: Row(
                             children: [
                               Container(
@@ -472,49 +557,94 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                   color: const Color(0xFF1E1E20),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.hourglass_bottom_rounded, color: Colors.white, size: 18),
+                                child: const Icon(
+                                  Icons.hourglass_bottom_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ),
                               const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'REST TIMER',
-                                    style: TextStyle(fontSize: 10.5, color: Color(0xFF71717A), fontWeight: FontWeight.w600),
-                                  ),
-                                  Text(
-                                    '${rest.inMinutes.toString().padLeft(2, '0')}:${(rest.inSeconds % 60).toString().padLeft(2, '0')}',
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, fontFeatures: tabularFigures),
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              TextButton(
-                                style: TextButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1E1E20),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'REST TIMER',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        color: Color(0xFF71717A),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${rest.inMinutes.toString().padLeft(2, '0')}:${(rest.inSeconds % 60).toString().padLeft(2, '0')}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        fontFeatures: tabularFigures,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                onPressed: () async {
-                                  final newEnd = item.restEndsAt?.add(const Duration(seconds: 30));
-                                  if (newEnd != null) {
-                                    await ref.read(databaseProvider).setRestEnd(widget.id, newEnd);
-                                  }
-                                },
-                                child: const Text('+30s', style: TextStyle(color: Colors.white, fontSize: 12)),
                               ),
                               const SizedBox(width: 8),
                               TextButton(
                                 style: TextButton.styleFrom(
                                   backgroundColor: const Color(0xFF1E1E20),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
                                 onPressed: () async {
-                                  await ref.read(databaseProvider).setRestEnd(widget.id, null);
-                                  await ref.read(notificationProvider).cancelRestTimer();
+                                  final newEnd = item.restEndsAt?.add(
+                                    const Duration(seconds: 30),
+                                  );
+                                  if (newEnd != null) {
+                                    await ref
+                                        .read(databaseProvider)
+                                        .setRestEnd(widget.id, newEnd);
+                                  }
                                 },
-                                child: const Text('Skip', style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
+                                child: const Text(
+                                  '+30s',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1E1E20),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  await ref
+                                      .read(databaseProvider)
+                                      .setRestEnd(widget.id, null);
+                                  await ref
+                                      .read(notificationProvider)
+                                      .cancelRestTimer();
+                                },
+                                child: const Text(
+                                  'Skip',
+                                  style: TextStyle(
+                                    color: Color(0xFF8E8E93),
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -529,23 +659,36 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                           child: Center(
                             child: Column(
                               children: [
-                                const Icon(Icons.fitness_center_rounded, color: Color(0xFF52525B), size: 48),
+                                const Icon(
+                                  Icons.fitness_center_rounded,
+                                  color: Color(0xFF52525B),
+                                  size: 48,
+                                ),
                                 const SizedBox(height: 12),
                                 const Text(
                                   'Belum ada gerakan latihan',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 const Text(
                                   'Tambahkan exercise untuk mulai mencatat sesi',
-                                  style: TextStyle(fontSize: 13, color: Color(0xFF71717A)),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF71717A),
+                                  ),
                                 ),
                                 const SizedBox(height: 16),
                                 ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.black,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
                                   ),
                                   onPressed: _addExercise,
                                   icon: const Icon(Icons.add, size: 18),
@@ -571,7 +714,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
 
                 // Bottom Floating Action Button Bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   decoration: const BoxDecoration(
                     color: Color(0xFF09090B),
                     border: Border(top: BorderSide(color: Color(0xFF1E1E20))),
@@ -585,11 +731,14 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(26),
+                              ),
                               elevation: 0,
                             ),
                             onPressed: () async {
-                              if (firstUncompletedSet != null && targetExerciseView != null) {
+                              if (firstUncompletedSet != null &&
+                                  targetExerciseView != null) {
                                 // Complete the current target set
                                 final database = ref.read(databaseProvider);
                                 await database.updateWorkoutSet(
@@ -597,7 +746,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                   completed: true,
                                 );
                                 // Start rest timer
-                                final end = DateTime.now().add(Duration(seconds: targetExerciseView!.item.restSeconds));
+                                final end = DateTime.now().add(
+                                  Duration(
+                                    seconds:
+                                        targetExerciseView!.item.restSeconds,
+                                  ),
+                                );
                                 await database.setRestEnd(widget.id, end);
                               } else {
                                 // All sets completed, finish workout
@@ -605,12 +759,19 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                               }
                             },
                             icon: Icon(
-                              firstUncompletedSet != null ? Icons.check_circle_rounded : Icons.flag_rounded,
+                              firstUncompletedSet != null
+                                  ? Icons.check_circle_rounded
+                                  : Icons.flag_rounded,
                               size: 20,
                             ),
                             label: Text(
-                              firstUncompletedSet != null ? 'Complete Set & Rest' : 'Selesaikan Workout',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                              firstUncompletedSet != null
+                                  ? 'Complete Set & Rest'
+                                  : 'Selesaikan Workout',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
@@ -618,7 +779,11 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                       const SizedBox(width: 12),
                       KineticIconButton(
                         size: 52,
-                        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+                        icon: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                         onPressed: _addExercise,
                       ),
                     ],
@@ -642,6 +807,57 @@ class WorkoutExerciseCard extends ConsumerWidget {
 
   final String workoutId;
   final WorkoutExerciseView view;
+
+  Future<void> _complete(
+    BuildContext context,
+    WidgetRef ref,
+    WorkoutSet set,
+    bool value,
+  ) async {
+    if (value && (set.reps < 1 || set.weightGrams < 0)) {
+      return showMessage(
+        context,
+        'Isi berat dan reps yang valid terlebih dahulu.',
+      );
+    }
+    final database = ref.read(databaseProvider);
+    await database.updateWorkoutSet(id: set.id, completed: value);
+    if (!value) return;
+    final end = DateTime.now().add(Duration(seconds: view.item.restSeconds));
+    await database.setRestEnd(workoutId, end);
+    final sound = (await database.getSetting('timerSound')) != 'false';
+    final service = ref.read(notificationProvider);
+    final alreadyPrompted =
+        (await database.getSetting('restTimerPermissionPrompted')) == 'true';
+    final permission = alreadyPrompted
+        ? await service.permissionStatus()
+        : await service.requestRestTimerPermission();
+    if (!alreadyPrompted) {
+      await database.setSetting('restTimerPermissionPrompted', 'true');
+    }
+    if (permission.canSchedule) {
+      try {
+        await service.scheduleRestEnd(end, sound: sound);
+      } catch (_) {
+        if (context.mounted) {
+          showMessage(
+            context,
+            'Timer aktif di aplikasi; notifikasi latar tidak tersedia.',
+          );
+        }
+      }
+    } else if ((await database.getSetting('restTimerPermissionNoticeShown')) !=
+        'true') {
+      await database.setSetting('restTimerPermissionNoticeShown', 'true');
+      if (!context.mounted) return;
+      showMessage(
+        context,
+        permission.notificationsGranted
+            ? 'Timer aktif di aplikasi. Izin exact alarm belum diberikan.'
+            : 'Timer aktif di aplikasi. Izin notifikasi belum diberikan.',
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -672,7 +888,11 @@ class WorkoutExerciseCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFF27272A)),
                 ),
-                child: const Icon(Icons.fitness_center_rounded, color: Colors.white, size: 18),
+                child: const Icon(
+                  Icons.fitness_center_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -709,7 +929,11 @@ class WorkoutExerciseCard extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.play_circle_outline, size: 14, color: Color(0xFF8E8E93)),
+                          const Icon(
+                            Icons.play_circle_outline,
+                            size: 14,
+                            color: Color(0xFF8E8E93),
+                          ),
                         ],
                       ),
                     ],
@@ -717,7 +941,10 @@ class WorkoutExerciseCard extends ConsumerWidget {
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_horiz_rounded, color: Color(0xFF71717A)),
+                icon: const Icon(
+                  Icons.more_horiz_rounded,
+                  color: Color(0xFF71717A),
+                ),
                 color: const Color(0xFF161618),
                 onSelected: (val) async {
                   if (val == 'demo') {
@@ -732,8 +959,20 @@ class WorkoutExerciseCard extends ConsumerWidget {
                   }
                 },
                 itemBuilder: (ctx) => [
-                  const PopupMenuItem(value: 'demo', child: Text('Demo Gerakan', style: TextStyle(color: Colors.white))),
-                  const PopupMenuItem(value: 'delete', child: Text('Hapus Exercise', style: TextStyle(color: Colors.redAccent))),
+                  const PopupMenuItem(
+                    value: 'demo',
+                    child: Text(
+                      'Demo Gerakan',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      'Hapus Exercise',
+                      style: TextStyle(color: Colors.redAccent),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -750,22 +989,33 @@ class WorkoutExerciseCard extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: Row(
                   children: [
-                    InkWell(
-                      onTap: () => database.updateWorkoutSet(id: set.id, completed: false),
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF27272A),
-                          shape: BoxShape.circle,
+                    Semantics(
+                      label: 'Selesaikan set ${set.position + 1}',
+                      child: InkWell(
+                        onTap: () => _complete(context, ref, set, false),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF27272A),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                         ),
-                        child: const Icon(Icons.check, size: 14, color: Colors.white),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'SET ${set.position + 1}',
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF71717A)),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF71717A),
+                      ),
                     ),
                     const Spacer(),
                     Text(
@@ -788,7 +1038,10 @@ class WorkoutExerciseCard extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF101012),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFF27272A), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFF27272A),
+                    width: 1.2,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -796,16 +1049,46 @@ class WorkoutExerciseCard extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
-                            const SizedBox(width: 6),
-                            Text(
-                              'SET ${set.position + 1} (TARGET SET)',
-                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
+                        Expanded(
+                          child: Semantics(
+                            label: 'Selesaikan set ${set.position + 1}',
+                            child: InkWell(
+                              onTap: () => _complete(context, ref, set, true),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 18,
+                                    height: 18,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF27272A),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white70),
+                                    ),
+                                    child: const Icon(
+                                      Icons.check,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'SET ${set.position + 1} (TARGET SET)',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         InkWell(
                           onTap: () async {
                             final val = await showAppActionSheet<double>(
@@ -813,20 +1096,33 @@ class WorkoutExerciseCard extends ConsumerWidget {
                               title: 'Pilih RPE',
                               actions: List.generate(19, (i) {
                                 final rpeVal = 1 + i * 0.5;
-                                return AppAction(value: rpeVal, label: rpeVal.toStringAsFixed(rpeVal % 1 == 0 ? 0 : 1));
+                                return AppAction(
+                                  value: rpeVal,
+                                  label: rpeVal.toStringAsFixed(
+                                    rpeVal % 1 == 0 ? 0 : 1,
+                                  ),
+                                );
                               }),
                             );
-                            if (val != null) database.updateWorkoutSet(id: set.id, rpe: val);
+                            if (val != null)
+                              database.updateWorkoutSet(id: set.id, rpe: val);
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF1E1E20),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               'RPE ${set.rpe?.toStringAsFixed(1) ?? '8.5'}',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFA1A1AA)),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFFA1A1AA),
+                              ),
                             ),
                           ),
                         ),
@@ -841,12 +1137,21 @@ class WorkoutExerciseCard extends ConsumerWidget {
                             label: 'WEIGHT (KG)',
                             value: formatKg(set.weightGrams),
                             onMinus: () {
-                              final newGrams = (set.weightGrams - 2500).clamp(0, 1000000);
-                              database.updateWorkoutSet(id: set.id, weightGrams: newGrams);
+                              final newGrams = (set.weightGrams - 2500).clamp(
+                                0,
+                                1000000,
+                              );
+                              database.updateWorkoutSet(
+                                id: set.id,
+                                weightGrams: newGrams,
+                              );
                             },
                             onPlus: () {
                               final newGrams = set.weightGrams + 2500;
-                              database.updateWorkoutSet(id: set.id, weightGrams: newGrams);
+                              database.updateWorkoutSet(
+                                id: set.id,
+                                weightGrams: newGrams,
+                              );
                             },
                           ),
                         ),
@@ -858,10 +1163,16 @@ class WorkoutExerciseCard extends ConsumerWidget {
                             value: '${set.reps}',
                             onMinus: () {
                               final newReps = (set.reps - 1).clamp(1, 999);
-                              database.updateWorkoutSet(id: set.id, reps: newReps);
+                              database.updateWorkoutSet(
+                                id: set.id,
+                                reps: newReps,
+                              );
                             },
                             onPlus: () {
-                              database.updateWorkoutSet(id: set.id, reps: set.reps + 1);
+                              database.updateWorkoutSet(
+                                id: set.id,
+                                reps: set.reps + 1,
+                              );
                             },
                           ),
                         ),
@@ -876,25 +1187,39 @@ class WorkoutExerciseCard extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: Row(
                   children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF161618),
-                        border: Border.all(color: const Color(0xFF27272A)),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${set.position + 1}',
-                          style: const TextStyle(fontSize: 10, color: Color(0xFF71717A), fontWeight: FontWeight.bold),
+                    Semantics(
+                      label: 'Selesaikan set ${set.position + 1}',
+                      child: InkWell(
+                        onTap: () => _complete(context, ref, set, true),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF161618),
+                            border: Border.all(color: const Color(0xFF27272A)),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${set.position + 1}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Color(0xFF71717A),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'SET ${set.position + 1}',
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: Color(0xFF52525B)),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF52525B),
+                      ),
                     ),
                     const Spacer(),
                     Text(
@@ -917,7 +1242,10 @@ class WorkoutExerciseCard extends ConsumerWidget {
             child: TextButton.icon(
               onPressed: () => database.addSet(view.item.id),
               icon: const Icon(Icons.add, size: 16, color: Color(0xFF8E8E93)),
-              label: const Text('Tambah Set', style: TextStyle(color: Color(0xFF8E8E93), fontSize: 13)),
+              label: const Text(
+                'Tambah Set',
+                style: TextStyle(color: Color(0xFF8E8E93), fontSize: 13),
+              ),
             ),
           ),
         ],
@@ -951,7 +1279,14 @@ class _MicroStepper extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: Color(0xFF71717A), letterSpacing: 0.5),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF71717A),
+              letterSpacing: 0.5,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -967,12 +1302,28 @@ class _MicroStepper extends StatelessWidget {
                     color: Color(0xFF27272A),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.remove, size: 14, color: Colors.white),
+                  child: const Icon(
+                    Icons.remove,
+                    size: 14,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              Text(
-                value,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, fontFeatures: tabularFigures),
+              Expanded(
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFeatures: tabularFigures,
+                      ),
+                    ),
+                  ),
+                ),
               ),
               InkWell(
                 onTap: onPlus,

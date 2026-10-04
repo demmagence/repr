@@ -57,10 +57,7 @@ final routerProvider = Provider<GoRouter>(
                 path: '/workouts',
                 builder: (_, __) => const DashboardScreen(),
               ),
-              GoRoute(
-                path: '/latihan',
-                redirect: (_, __) => '/workouts',
-              ),
+              GoRoute(path: '/latihan', redirect: (_, __) => '/workouts'),
             ],
           ),
           StatefulShellBranch(
@@ -77,10 +74,7 @@ final routerProvider = Provider<GoRouter>(
                 path: '/history',
                 builder: (_, __) => const HistoryScreen(),
               ),
-              GoRoute(
-                path: '/riwayat',
-                redirect: (_, __) => '/history',
-              ),
+              GoRoute(path: '/riwayat', redirect: (_, __) => '/history'),
             ],
           ),
           StatefulShellBranch(
@@ -89,10 +83,7 @@ final routerProvider = Provider<GoRouter>(
                 path: '/metrics',
                 builder: (_, __) => const ProgressScreen(),
               ),
-              GoRoute(
-                path: '/progres',
-                redirect: (_, __) => '/metrics',
-              ),
+              GoRoute(path: '/progres', redirect: (_, __) => '/metrics'),
             ],
           ),
           StatefulShellBranch(
@@ -101,10 +92,7 @@ final routerProvider = Provider<GoRouter>(
                 path: '/settings',
                 builder: (_, __) => const SettingsScreen(),
               ),
-              GoRoute(
-                path: '/pengaturan',
-                redirect: (_, __) => '/settings',
-              ),
+              GoRoute(path: '/pengaturan', redirect: (_, __) => '/settings'),
             ],
           ),
         ],

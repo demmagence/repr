@@ -63,32 +63,39 @@ class HistoryScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'KINETIC',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF71717A),
-                        letterSpacing: 1.2,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'KINETIC',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF71717A),
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Workout History',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      Text(
+                        'Workout History',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const Spacer(),
                 KineticIconButton(
                   size: 38,
-                  icon: const Icon(Icons.tune_rounded, color: Color(0xFFD4D4D8), size: 18),
+                  icon: const Icon(
+                    Icons.tune_rounded,
+                    color: Color(0xFFD4D4D8),
+                    size: 18,
+                  ),
                   onPressed: () {},
                 ),
               ],
@@ -98,30 +105,56 @@ class HistoryScreen extends ConsumerWidget {
             // Month Selector Bar
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161618),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF27272A)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.white),
-                      const SizedBox(width: 8),
-                      Text(
-                        DateFormat('MMMM yyyy', 'id_ID').format(now),
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
                       ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF8E8E93)),
-                    ],
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF161618),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF27272A)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat('MMMM yyyy', 'id_ID').format(now),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 16,
+                            color: Color(0xFF8E8E93),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 KineticIconButton(
                   size: 36,
-                  icon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFFD4D4D8)),
+                  icon: const Icon(
+                    Icons.search_rounded,
+                    size: 18,
+                    color: Color(0xFFD4D4D8),
+                  ),
                   onPressed: () {},
                 ),
               ],
@@ -137,13 +170,32 @@ class HistoryScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'MINGGU INI • MINGGU KE-${((now.difference(DateTime(now.year, 1, 1)).inDays) / 7).ceil()}',
-                        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A), letterSpacing: 0.5),
+                      Expanded(
+                        child: Text(
+                          'MINGGU INI • MINGGU KE-${((now.difference(DateTime(now.year, 1, 1)).inDays) / 7).ceil()}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF71717A),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
-                      Text(
-                        '• ${thisWeekWorkouts.length} Hari Selesai',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '• ${thisWeekWorkouts.length} Hari Selesai',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -152,8 +204,10 @@ class HistoryScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(7, (i) {
                       final dayDate = startOfWeek.add(Duration(days: i));
-                      final isToday = dayDate.day == now.day && dayDate.month == now.month;
-                      final dayKey = '${dayDate.year}-${dayDate.month}-${dayDate.day}';
+                      final isToday =
+                          dayDate.day == now.day && dayDate.month == now.month;
+                      final dayKey =
+                          '${dayDate.year}-${dayDate.month}-${dayDate.day}';
                       final hasWorkout = workoutDaysSet.contains(dayKey);
 
                       final dayName = switch (i) {
@@ -166,42 +220,60 @@ class HistoryScreen extends ConsumerWidget {
                         _ => 'Min',
                       };
 
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isToday ? const Color(0xFF27272A) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(16),
-                          border: isToday ? Border.all(color: Colors.white, width: 1.2) : null,
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              dayName,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: isToday ? Colors.white : const Color(0xFF71717A),
-                              ),
+                      return Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 8,
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              '${dayDate.day}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: isToday ? Colors.white : const Color(0xFFA1A1AA),
-                              ),
+                            decoration: BoxDecoration(
+                              color: isToday
+                                  ? const Color(0xFF27272A)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                              border: isToday
+                                  ? Border.all(color: Colors.white, width: 1.2)
+                                  : null,
                             ),
-                            const SizedBox(height: 6),
-                            Container(
-                              width: 4,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: hasWorkout ? Colors.white : Colors.transparent,
-                                shape: BoxShape.circle,
-                              ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  dayName,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: isToday
+                                        ? Colors.white
+                                        : const Color(0xFF71717A),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '${dayDate.day}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: isToday
+                                        ? Colors.white
+                                        : const Color(0xFFA1A1AA),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: hasWorkout
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       );
                     }),
@@ -212,64 +284,125 @@ class HistoryScreen extends ConsumerWidget {
             const SizedBox(height: 14),
 
             // Top Split Stat Cards
-            Row(
-              children: [
-                Expanded(
-                  child: KineticCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: const [
-                            Icon(Icons.fitness_center_rounded, size: 14, color: Color(0xFF8E8E93)),
-                            SizedBox(width: 6),
-                            Text('MINGGU INI', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A))),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          '18,450 lbs',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          '+12% vs mggu lalu',
-                          style: TextStyle(fontSize: 11, color: Color(0xFF71717A), fontWeight: FontWeight.w500),
-                        ),
-                      ],
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: KineticCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.fitness_center_rounded,
+                                size: 14,
+                                color: Color(0xFF8E8E93),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'MINGGU INI',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF71717A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '18,450 lbs',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            '+12% vs mggu lalu',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF71717A),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: KineticCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: const [
-                            Icon(Icons.schedule_rounded, size: 14, color: Color(0xFF8E8E93)),
-                            SizedBox(width: 6),
-                            Text('WAKTU', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A))),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${weeklyHours}h ${weeklyRemMins}m',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${thisWeekWorkouts.length} Latihan Selesai',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF71717A), fontWeight: FontWeight.w500),
-                        ),
-                      ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: KineticCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.schedule_rounded,
+                                size: 14,
+                                color: Color(0xFF8E8E93),
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'WAKTU',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF71717A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${weeklyHours}h ${weeklyRemMins}m',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${thisWeekWorkouts.length} Latihan Selesai',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF71717A),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 20),
 
@@ -277,13 +410,25 @@ class HistoryScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Catatan Latihan',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                const Expanded(
+                  child: Text(
+                    'Catatan Latihan',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
                 Text(
                   DateFormat('MMMM yyyy', 'id_ID').format(now),
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF71717A), fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF71717A),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -305,8 +450,8 @@ class HistoryScreen extends ConsumerWidget {
                 final duration = workout.endedAt?.difference(workout.startedAt);
                 final durationLabel = duration != null
                     ? (duration.inHours > 0
-                        ? '${duration.inHours}h ${duration.inMinutes % 60}m'
-                        : '${duration.inMinutes}m')
+                          ? '${duration.inHours}h ${duration.inMinutes % 60}m'
+                          : '${duration.inMinutes}m')
                     : '45m';
 
                 return Padding(
@@ -321,25 +466,47 @@ class HistoryScreen extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                DateFormat('EEEE • d MMM • HH:mm', 'id_ID').format(workout.startedAt).toUpperCase(),
-                                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF71717A), letterSpacing: 0.5),
+                              Expanded(
+                                child: Text(
+                                  DateFormat(
+                                    'EEEE • d MMM • HH:mm',
+                                    'id_ID',
+                                  ).format(workout.startedAt).toUpperCase(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF71717A),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
                               ),
-                              const Icon(Icons.chevron_right_rounded, color: Color(0xFF71717A), size: 18),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Color(0xFF71717A),
+                                size: 18,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 6),
                           Text(
                             workout.name,
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               _buildHistoryStat('Durasi', durationLabel),
-                              const SizedBox(width: 20),
                               _buildHistoryStat('Volume', '3,800 lbs'),
-                              const SizedBox(width: 20),
                               _buildHistoryStat('Latihan', 'Selesai'),
                             ],
                           ),
@@ -353,16 +520,27 @@ class HistoryScreen extends ConsumerWidget {
 
             // Footer note
             Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF52525B)),
-                  SizedBox(width: 6),
-                  Text(
-                    'Semua riwayat telah dimuat',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF52525B), fontWeight: FontWeight.w500),
-                  ),
-                ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 14,
+                      color: Color(0xFF52525B),
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Semua riwayat telah dimuat',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF52525B),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -377,12 +555,24 @@ class HistoryScreen extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 10.5, color: Color(0xFF71717A), fontWeight: FontWeight.w500),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 10.5,
+            color: Color(0xFF71717A),
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           value,
-          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ],
     );

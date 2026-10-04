@@ -1,4 +1,4 @@
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,16 +11,19 @@ const _textPrimary = Color(0xFFFFFFFF);
 const _textSecondary = Color(0xFF8E8E93);
 
 ThemeData buildAppTheme() {
-  final textTheme = GoogleFonts.plusJakartaSansTextTheme(
-    const TextTheme(
-      bodyLarge: TextStyle(color: _textPrimary),
-      bodyMedium: TextStyle(color: _textPrimary),
-      bodySmall: TextStyle(color: _textSecondary),
-      titleLarge: TextStyle(color: _textPrimary, fontWeight: FontWeight.bold),
-      titleMedium: TextStyle(color: _textPrimary, fontWeight: FontWeight.w600),
-      titleSmall: TextStyle(color: _textPrimary, fontWeight: FontWeight.w500),
-    ),
+  const baseTextTheme = TextTheme(
+    bodyLarge: TextStyle(color: _textPrimary),
+    bodyMedium: TextStyle(color: _textPrimary),
+    bodySmall: TextStyle(color: _textSecondary),
+    titleLarge: TextStyle(color: _textPrimary, fontWeight: FontWeight.bold),
+    titleMedium: TextStyle(color: _textPrimary, fontWeight: FontWeight.w600),
+    titleSmall: TextStyle(color: _textPrimary, fontWeight: FontWeight.w500),
   );
+
+  final isTest = Platform.environment.containsKey('FLUTTER_TEST');
+  final textTheme = isTest
+      ? baseTextTheme
+      : GoogleFonts.plusJakartaSansTextTheme(baseTextTheme);
 
   return ThemeData(
     useMaterial3: true,

@@ -55,7 +55,9 @@ class KineticIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF1E1E20), // Slightly lighter than cardBg for buttons
+      color: const Color(
+        0xFF1E1E20,
+      ), // Slightly lighter than cardBg for buttons
       shape: const CircleBorder(
         side: BorderSide(color: Color(0xFF27272A), width: 1),
       ),
@@ -90,27 +92,62 @@ class CircularProgressBadge extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: progress,
-            strokeWidth: 2.5,
-            backgroundColor: Colors.white12,
-            color: Colors.white,
-          ),
-          Text(
+      child: CustomPaint(
+        painter: _CircularProgressPainter(progress),
+        child: Center(
+          child: Text(
             label,
             style: const TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
-        ],
+        ),
       ),
     );
   }
+}
+
+class _CircularProgressPainter extends CustomPainter {
+  final double progress;
+  const _CircularProgressPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const strokeWidth = 2.5;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    final backgroundPaint = Paint()
+      ..color = Colors.white12
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    if (progress > 0) {
+      final foregroundPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = strokeWidth;
+
+      const pi = 3.141592653589793;
+      final sweepAngle = 2 * pi * progress.clamp(0.0, 1.0);
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -pi / 2,
+        sweepAngle,
+        false,
+        foregroundPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CircularProgressPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 // KineticBottomNav: Responsive floating pill bottom navigation matching Stitch designs
@@ -140,10 +177,7 @@ class KineticBottomNav extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF161618),
           borderRadius: BorderRadius.circular(36.0),
-          border: Border.all(
-            color: const Color(0xFF27272A),
-            width: 1.0,
-          ),
+          border: Border.all(color: const Color(0xFF27272A), width: 1.0),
           boxShadow: const [
             BoxShadow(
               color: Colors.black54,

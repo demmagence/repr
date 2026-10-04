@@ -63,22 +63,26 @@ class TrainingScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Train',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
+                const Expanded(
+                  child: Text(
+                    'Train',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ),
-                Row(
-                  children: [
-                    KineticIconButton(
-                      icon: const Icon(Icons.add_rounded, color: Color(0xFFD4D4D8), size: 22),
-                      onPressed: () => showRoutineEditor(context, ref),
-                    ),
-                  ],
+                KineticIconButton(
+                  icon: const Icon(
+                    Icons.add_rounded,
+                    color: Color(0xFFD4D4D8),
+                    size: 22,
+                  ),
+                  onPressed: () => showRoutineEditor(context, ref),
                 ),
               ],
             ),
@@ -112,12 +116,18 @@ class TrainingScreen extends ConsumerWidget {
                             ),
                             const Text(
                               'Workout sedang berjalan • Ketuk untuk lanjut',
-                              style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8E8E93),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF8E8E93)),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFF8E8E93),
+                      ),
                     ],
                   ),
                 ),
@@ -165,12 +175,18 @@ class TrainingScreen extends ConsumerWidget {
                             SizedBox(height: 2),
                             Text(
                               'Catat latihan baru tanpa template',
-                              style: TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8E8E93),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF71717A)),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFF71717A),
+                      ),
                     ],
                   ),
                 ),
@@ -182,12 +198,16 @@ class TrainingScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Template Routine',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                const Expanded(
+                  child: Text(
+                    'Template Routine',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 TextButton(
@@ -228,8 +248,11 @@ class TrainingScreen extends ConsumerWidget {
                                 padding: EdgeInsets.zero,
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(24),
-                                  onTap: () =>
-                                      _start(context, ref, routineId: routine.id),
+                                  onTap: () => _start(
+                                    context,
+                                    ref,
+                                    routineId: routine.id,
+                                  ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(14.0),
                                     child: Row(
@@ -239,8 +262,9 @@ class TrainingScreen extends ConsumerWidget {
                                           height: 44,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF1E1E20),
-                                            borderRadius:
-                                                BorderRadius.circular(14),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                             border: Border.all(
                                               color: const Color(0xFF27272A),
                                             ),
@@ -294,24 +318,26 @@ class TrainingScreen extends ConsumerWidget {
                                           ),
                                           onPressed: () async {
                                             final value =
-                                                await showAppActionSheet<String>(
-                                              context: context,
-                                              title: routine.name,
-                                              actions: const [
-                                                AppAction(
-                                                  value: 'start',
-                                                  label: 'Mulai Latihan',
-                                                ),
-                                                AppAction(
-                                                  value: 'edit',
-                                                  label: 'Edit Routine',
-                                                ),
-                                                AppAction(
-                                                  value: 'delete',
-                                                  label: 'Hapus Routine',
-                                                ),
-                                              ],
-                                            );
+                                                await showAppActionSheet<
+                                                  String
+                                                >(
+                                                  context: context,
+                                                  title: routine.name,
+                                                  actions: const [
+                                                    AppAction(
+                                                      value: 'start',
+                                                      label: 'Mulai Latihan',
+                                                    ),
+                                                    AppAction(
+                                                      value: 'edit',
+                                                      label: 'Edit Routine',
+                                                    ),
+                                                    AppAction(
+                                                      value: 'delete',
+                                                      label: 'Hapus Routine',
+                                                    ),
+                                                  ],
+                                                );
                                             if (!context.mounted) return;
                                             if (value == 'start') {
                                               await _start(
