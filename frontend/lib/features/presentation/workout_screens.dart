@@ -117,7 +117,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         ),
       ),
     );
-    if (mounted) context.go('/riwayat');
+    if (mounted) context.go('/history');
   }
 
   Future<void> _discard() async {
@@ -145,7 +145,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     if (confirmed != true) return;
     await ref.read(databaseProvider).discardWorkout(widget.id);
     await ref.read(notificationProvider).cancelRestTimer();
-    if (mounted) context.go('/latihan');
+    if (mounted) context.go('/workouts');
   }
 
   Future<void> _addExercise() async {
@@ -160,125 +160,471 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   @override
   Widget build(BuildContext context) {
     final workout = ref.watch(workoutDetailProvider(widget.id));
+    final exercisesAsync = ref.watch(workoutExercisesProvider(widget.id));
+
     return workout.when(
-      loading: () =>
-          const AppPageShell(body: Center(child: CircularProgressIndicator())),
-      error: (error, _) => AppPageShell(body: Center(child: Text('$error'))),
+      loading: () => const Scaffold(
+        backgroundColor: Color(0xFF09090B),
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        backgroundColor: Color(0xFF09090B),
+        body: Center(child: Text('$error', style: const TextStyle(color: Colors.white))),
+      ),
       data: (item) {
-        if (item == null)
-          return const AppPageShell(
+        if (item == null) {
+          return const Scaffold(
+            backgroundColor: Color(0xFF09090B),
             body: EmptyState(
               icon: Icons.error_outline,
               title: 'Workout tidak ditemukan',
               body: 'Draft mungkin sudah dihapus.',
             ),
           );
+        }
+
         final elapsed = DateTime.now().difference(item.startedAt);
         final elapsedLabel =
             '${elapsed.inHours.toString().padLeft(2, '0')}:${(elapsed.inMinutes % 60).toString().padLeft(2, '0')}:${(elapsed.inSeconds % 60).toString().padLeft(2, '0')}';
         final rest = item.restEndsAt?.difference(DateTime.now());
-        return PopScope(
-          canPop: true,
-          child: AppPageShell(
-            topBar: AppTopBar(
-              title: item.name,
-              subtitle: elapsedLabel,
-              showBack: true,
-              actions: [
-                AppButton(
-                  label: 'Selesai',
-                  onPressed: _finish,
-                  expand: false,
-                  variant: AppActionVariant.quiet,
-                ),
-                AppIconButton(
-                  icon: Icons.more_vert,
-                  semanticLabel: 'Menu workout',
-                  onPressed: () async {
-                    final value = await showAppActionSheet<String>(
-                      context: context,
-                      title: 'Menu workout',
-                      actions: const [
-                        AppAction(value: 'discard', label: 'Buang workout'),
-                      ],
-                    );
-                    if (value == 'discard') await _discard();
-                  },
-                ),
-              ],
-            ),
-            body: Column(
+
+        final exercises = exercisesAsync.valueOrNull ?? [];
+
+        // Real-time calculation across all sets
+        int totalSets = 0;
+        int completedSets = 0;
+        double totalVolumeKg = 0.0;
+        WorkoutSet? firstUncompletedSet;
+        WorkoutExerciseView? targetExerciseView;
+
+        for (final ex in exercises) {
+          for (final s in ex.sets) {
+            totalSets++;
+            if (s.completed) {
+              completedSets++;
+              totalVolumeKg += (s.weightGrams * s.reps) / 1000.0;
+            } else if (firstUncompletedSet == null) {
+              firstUncompletedSet = s;
+              targetExerciseView = ex;
+            }
+          }
+        }
+
+        final progressPercent =
+            totalSets > 0 ? (completedSets / totalSets * 100).round() : 0;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFF09090B),
+          body: SafeArea(
+            child: Column(
               children: [
-                if (rest != null && !rest.isNegative)
-                  AppCard(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.timer_outlined),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Istirahat ${rest.inMinutes}:${(rest.inSeconds % 60).toString().padLeft(2, '0')}',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const Spacer(),
-                        AppButton(
-                          label: 'Lewati',
-                          expand: false,
-                          variant: AppActionVariant.quiet,
-                          onPressed: () async {
-                            await ref
-                                .read(databaseProvider)
-                                .setRestEnd(widget.id, null);
-                            await ref
-                                .read(notificationProvider)
-                                .cancelRestTimer();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                Expanded(
-                  child: ref
-                      .watch(workoutExercisesProvider(widget.id))
-                      .when(
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (error, _) => Center(child: Text('$error')),
-                        data: (items) {
-                          if (items.isEmpty) {
-                            return const EmptyState(
-                              icon: Icons.fitness_center,
-                              title: 'Tambahkan exercise',
-                              body:
-                                  'Pilih gerakan pertama untuk mulai mencatat set.',
-                            );
-                          }
-                          return ListView.separated(
-                            padding: pagePadding,
-                            itemCount: items.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) =>
-                                WorkoutExerciseCard(
-                                  workoutId: widget.id,
-                                  view: items[index],
-                                ),
-                          );
-                        },
+                // Header (Top App Bar matching Stitch)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    children: [
+                      KineticIconButton(
+                        size: 38,
+                        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                        onPressed: () => Navigator.pop(context),
                       ),
+                      const SizedBox(width: 12),
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161618),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF27272A)),
+                        ),
+                        child: Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset(
+                              'assets/icon/repr_icon.png',
+                              width: 22,
+                              height: 22,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                Icons.remove_red_eye_outlined,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Active Workout',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF8E8E93)),
+                        color: const Color(0xFF161618),
+                        onSelected: (val) {
+                          if (val == 'finish') _finish();
+                          if (val == 'discard') _discard();
+                        },
+                        itemBuilder: (ctx) => [
+                          const PopupMenuItem(
+                            value: 'finish',
+                            child: Text('Selesaikan Workout', style: TextStyle(color: Colors.white)),
+                          ),
+                          const PopupMenuItem(
+                            value: 'discard',
+                            child: Text('Buang Draft Workout', style: TextStyle(color: Colors.redAccent)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Under-Header Subtitle & Elapsed Timer
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            item.name,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161618),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF27272A)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.timer_outlined, color: Color(0xFF8E8E93), size: 14),
+                            const SizedBox(width: 5),
+                            Text(
+                              elapsedLabel,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                fontFeatures: tabularFigures,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Content List
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                    children: [
+                      // Top Split Metric Cards
+                      Row(
+                        children: [
+                          // Left: Sets Progress
+                          Expanded(
+                            child: KineticCard(
+                              padding: const EdgeInsets.all(14),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      CircularProgressBadge(
+                                        progress: totalSets > 0 ? (completedSets / totalSets) : 0,
+                                        label: '$completedSets/$totalSets',
+                                        size: 40,
+                                      ),
+                                      const Icon(Icons.tune_rounded, color: Color(0xFF52525B), size: 16),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'SETS PROGRESS',
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF71717A),
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$progressPercent% Done',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Right: Volume Lifted & Live BPM indicator
+                          Expanded(
+                            child: KineticCard(
+                              padding: const EdgeInsets.all(14),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF1E1E20),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: const Color(0xFF27272A)),
+                                        ),
+                                        child: Row(
+                                          children: const [
+                                            Icon(Icons.favorite, color: Colors.white, size: 12),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              '134 bpm',
+                                              style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(Icons.sensors_rounded, color: Color(0xFF52525B), size: 16),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'VOLUME LIFTED',
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF71717A),
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(
+                                        totalVolumeKg.toStringAsFixed(0),
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      const Text(
+                                        'kg',
+                                        style: TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Rest Timer Card (if active)
+                      if (rest != null && !rest.isNegative) ...[
+                        KineticCard(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1E1E20),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.hourglass_bottom_rounded, color: Colors.white, size: 18),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'REST TIMER',
+                                    style: TextStyle(fontSize: 10.5, color: Color(0xFF71717A), fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    '${rest.inMinutes.toString().padLeft(2, '0')}:${(rest.inSeconds % 60).toString().padLeft(2, '0')}',
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, fontFeatures: tabularFigures),
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1E1E20),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                ),
+                                onPressed: () async {
+                                  final newEnd = item.restEndsAt?.add(const Duration(seconds: 30));
+                                  if (newEnd != null) {
+                                    await ref.read(databaseProvider).setRestEnd(widget.id, newEnd);
+                                  }
+                                },
+                                child: const Text('+30s', style: TextStyle(color: Colors.white, fontSize: 12)),
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1E1E20),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                ),
+                                onPressed: () async {
+                                  await ref.read(databaseProvider).setRestEnd(widget.id, null);
+                                  await ref.read(notificationProvider).cancelRestTimer();
+                                },
+                                child: const Text('Skip', style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+
+                      // Exercises Cards
+                      if (exercises.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 36.0),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                const Icon(Icons.fitness_center_rounded, color: Color(0xFF52525B), size: 48),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Belum ada gerakan latihan',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Tambahkan exercise untuk mulai mencatat sesi',
+                                  style: TextStyle(fontSize: 13, color: Color(0xFF71717A)),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.black,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  ),
+                                  onPressed: _addExercise,
+                                  icon: const Icon(Icons.add, size: 18),
+                                  label: const Text('Tambah Exercise'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ...exercises.map(
+                          (exView) => Padding(
+                            padding: const EdgeInsets.only(bottom: 14.0),
+                            child: WorkoutExerciseCard(
+                              workoutId: widget.id,
+                              view: exView,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Bottom Floating Action Button Bar
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF09090B),
+                    border: Border(top: BorderSide(color: Color(0xFF1E1E20))),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                              elevation: 0,
+                            ),
+                            onPressed: () async {
+                              if (firstUncompletedSet != null && targetExerciseView != null) {
+                                // Complete the current target set
+                                final database = ref.read(databaseProvider);
+                                await database.updateWorkoutSet(
+                                  id: firstUncompletedSet.id,
+                                  completed: true,
+                                );
+                                // Start rest timer
+                                final end = DateTime.now().add(Duration(seconds: targetExerciseView!.item.restSeconds));
+                                await database.setRestEnd(widget.id, end);
+                              } else {
+                                // All sets completed, finish workout
+                                _finish();
+                              }
+                            },
+                            icon: Icon(
+                              firstUncompletedSet != null ? Icons.check_circle_rounded : Icons.flag_rounded,
+                              size: 20,
+                            ),
+                            label: Text(
+                              firstUncompletedSet != null ? 'Complete Set & Rest' : 'Selesaikan Workout',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      KineticIconButton(
+                        size: 52,
+                        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+                        onPressed: _addExercise,
+                      ),
+                    ],
+                  ),
                 ),
               ],
-            ),
-            bottomBar: SafeArea(
-              minimum: const EdgeInsets.all(12),
-              child: AppButton(
-                onPressed: _addExercise,
-                icon: Icons.add,
-                label: 'Tambah exercise',
-              ),
             ),
           ),
         );
@@ -289,327 +635,360 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
 
 class WorkoutExerciseCard extends ConsumerWidget {
   const WorkoutExerciseCard({
+    super.key,
     required this.workoutId,
     required this.view,
-    super.key,
   });
+
   final String workoutId;
   final WorkoutExerciseView view;
 
-  Future<void> _complete(
-    BuildContext context,
-    WidgetRef ref,
-    WorkoutSet set,
-    bool value,
-  ) async {
-    if (value && (set.reps < 1 || set.weightGrams < 0)) {
-      return showMessage(
-        context,
-        'Isi berat dan reps yang valid terlebih dahulu.',
-      );
-    }
-    final database = ref.read(databaseProvider);
-    await database.updateWorkoutSet(id: set.id, completed: value);
-    if (!value) return;
-    final end = DateTime.now().add(Duration(seconds: view.item.restSeconds));
-    await database.setRestEnd(workoutId, end);
-    final sound = (await database.getSetting('timerSound')) != 'false';
-    final service = ref.read(notificationProvider);
-    final alreadyPrompted =
-        (await database.getSetting('restTimerPermissionPrompted')) == 'true';
-    final permission = alreadyPrompted
-        ? await service.permissionStatus()
-        : await service.requestRestTimerPermission();
-    if (!alreadyPrompted) {
-      await database.setSetting('restTimerPermissionPrompted', 'true');
-    }
-    if (permission.canSchedule) {
-      try {
-        await service.scheduleRestEnd(end, sound: sound);
-      } catch (_) {
-        if (context.mounted)
-          showMessage(
-            context,
-            'Timer aktif di aplikasi; notifikasi latar tidak tersedia.',
-          );
-      }
-    } else if ((await database.getSetting('restTimerPermissionNoticeShown')) !=
-        'true') {
-      await database.setSetting('restTimerPermissionNoticeShown', 'true');
-      if (!context.mounted) return;
-      showMessage(
-        context,
-        permission.notificationsGranted
-            ? 'Timer aktif di aplikasi. Izin exact alarm belum diberikan.'
-            : 'Timer aktif di aplikasi. Izin notifikasi belum diberikan.',
-      );
-    }
-  }
-
-  Future<void> _showExerciseDemo(
-    BuildContext context,
-    Exercise exercise,
-  ) async {
-    await showExerciseDemoSheet(
-      context,
-      exercise: ExerciseApiModel.fromLocal(exercise),
-    );
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) => AppCard(
-    padding: const EdgeInsets.all(11),
-    child: Padding(
-      padding: EdgeInsets.zero,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final database = ref.read(databaseProvider);
+
+    // Find the first uncompleted set in this exercise
+    WorkoutSet? targetSet;
+    for (final s in view.sets) {
+      if (!s.completed) {
+        targetSet = s;
+        break;
+      }
+    }
+
+    return KineticCard(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1E20),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF27272A)),
+                ),
+                child: const Icon(Icons.fitness_center_rounded, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => _showExerciseDemo(context, view.exercise),
+                  onTap: () {
+                    showExerciseDemoSheet(
+                      context,
+                      exercise: ExerciseApiModel.fromLocal(view.exercise),
+                    );
+                  },
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        'ACTIVE LIFT • SET ${targetSet != null ? targetSet.position + 1 : view.sets.length}',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF71717A),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
                       Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Flexible(
                             child: Text(
                               view.exercise.name,
-                              style: Theme.of(context).textTheme.titleMedium,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Icon(
-                            Icons.play_circle_outline,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          const Icon(Icons.play_circle_outline, size: 14, color: Color(0xFF8E8E93)),
                         ],
-                      ),
-                      Text(
-                        '${view.exercise.muscle} • istirahat ${view.item.restSeconds} dtk',
-                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
                 ),
               ),
-              AppIconButton(
-                onPressed: () =>
-                    ref.read(databaseProvider).addSet(view.item.id),
-                icon: Icons.add_circle_outline,
-                semanticLabel: 'Tambah set',
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_horiz_rounded, color: Color(0xFF71717A)),
+                color: const Color(0xFF161618),
+                onSelected: (val) async {
+                  if (val == 'demo') {
+                    showExerciseDemoSheet(
+                      context,
+                      exercise: ExerciseApiModel.fromLocal(view.exercise),
+                    );
+                  } else if (val == 'delete') {
+                    for (final s in view.sets) {
+                      await database.removeSet(s.id);
+                    }
+                  }
+                },
+                itemBuilder: (ctx) => [
+                  const PopupMenuItem(value: 'demo', child: Text('Demo Gerakan', style: TextStyle(color: Colors.white))),
+                  const PopupMenuItem(value: 'delete', child: Text('Hapus Exercise', style: TextStyle(color: Colors.redAccent))),
+                ],
               ),
             ],
           ),
-          FutureBuilder<Map<String, WorkoutSet>>(
-            future: ref
-                .read(databaseProvider)
-                .previousSetMatches(view.exercise.id, workoutId, view.item.id),
-            builder: (context, snapshot) {
-              final matches = snapshot.data ?? const <String, WorkoutSet>{};
-              return Column(
-                children: [
-                  const SizedBox(height: 10),
-                  const Row(
-                    children: [
-                      SizedBox(
-                        width: 38,
-                        child: Text('Set', textAlign: TextAlign.center),
+          const SizedBox(height: 14),
+
+          // Sets list
+          ...view.sets.map((set) {
+            final isTarget = set.id == targetSet?.id;
+
+            if (set.completed) {
+              // Completed Set Row
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () => database.updateWorkoutSet(id: set.id, completed: false),
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF27272A),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.check, size: 14, color: Colors.white),
                       ),
-                      SizedBox(width: 4),
-                      SizedBox(
-                        width: 64,
-                        child: Text('kg', textAlign: TextAlign.center),
-                      ),
-                      SizedBox(width: 4),
-                      SizedBox(
-                        width: 48,
-                        child: Text('Reps', textAlign: TextAlign.center),
-                      ),
-                      SizedBox(width: 4),
-                      SizedBox(
-                        width: 48,
-                        child: Text('RPE', textAlign: TextAlign.center),
-                      ),
-                      Spacer(),
-                    ],
-                  ),
-                  ...view.sets.map(
-                    (set) => SetInputRow(
-                      set: set,
-                      previous: matches[set.id],
-                      onComplete: (value) =>
-                          _complete(context, ref, set, value),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Text(
+                      'SET ${set.position + 1}',
+                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF71717A)),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${formatKg(set.weightGrams)} kg  ×  ${set.reps} reps',
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFA1A1AA),
+                        fontFeatures: tabularFigures,
+                      ),
+                    ),
+                  ],
+                ),
               );
-            },
-          ),
-          AppButton(
-            onPressed: () => ref.read(databaseProvider).addSet(view.item.id),
-            icon: Icons.add,
-            label: 'Tambah set',
-            expand: false,
-            variant: AppActionVariant.quiet,
+            } else if (isTarget) {
+              // TARGET ACTIVE SET BOX (Micro-steppers matching Stitch)
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.all(14.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF101012),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFF27272A), width: 1.2),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                            const SizedBox(width: 6),
+                            Text(
+                              'SET ${set.position + 1} (TARGET SET)',
+                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            final val = await showAppActionSheet<double>(
+                              context: context,
+                              title: 'Pilih RPE',
+                              actions: List.generate(19, (i) {
+                                final rpeVal = 1 + i * 0.5;
+                                return AppAction(value: rpeVal, label: rpeVal.toStringAsFixed(rpeVal % 1 == 0 ? 0 : 1));
+                              }),
+                            );
+                            if (val != null) database.updateWorkoutSet(id: set.id, rpe: val);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E1E20),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'RPE ${set.rpe?.toStringAsFixed(1) ?? '8.5'}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFA1A1AA)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        // Weight Stepper
+                        Expanded(
+                          child: _MicroStepper(
+                            label: 'WEIGHT (KG)',
+                            value: formatKg(set.weightGrams),
+                            onMinus: () {
+                              final newGrams = (set.weightGrams - 2500).clamp(0, 1000000);
+                              database.updateWorkoutSet(id: set.id, weightGrams: newGrams);
+                            },
+                            onPlus: () {
+                              final newGrams = set.weightGrams + 2500;
+                              database.updateWorkoutSet(id: set.id, weightGrams: newGrams);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Reps Stepper
+                        Expanded(
+                          child: _MicroStepper(
+                            label: 'TARGET REPS',
+                            value: '${set.reps}',
+                            onMinus: () {
+                              final newReps = (set.reps - 1).clamp(1, 999);
+                              database.updateWorkoutSet(id: set.id, reps: newReps);
+                            },
+                            onPlus: () {
+                              database.updateWorkoutSet(id: set.id, reps: set.reps + 1);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              // Upcoming set
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF161618),
+                        border: Border.all(color: const Color(0xFF27272A)),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${set.position + 1}',
+                          style: const TextStyle(fontSize: 10, color: Color(0xFF71717A), fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'SET ${set.position + 1}',
+                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: Color(0xFF52525B)),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${formatKg(set.weightGrams)} kg  ×  ${set.reps > 0 ? '${set.reps} reps' : 'Target'}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF52525B),
+                        fontFeatures: tabularFigures,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          }),
+          const SizedBox(height: 10),
+
+          // Add set button
+          Center(
+            child: TextButton.icon(
+              onPressed: () => database.addSet(view.item.id),
+              icon: const Icon(Icons.add, size: 16, color: Color(0xFF8E8E93)),
+              label: const Text('Tambah Set', style: TextStyle(color: Color(0xFF8E8E93), fontSize: 13)),
+            ),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
 
-class SetInputRow extends ConsumerWidget {
-  const SetInputRow({
-    required this.set,
-    required this.onComplete,
-    this.previous,
-    super.key,
+class _MicroStepper extends StatelessWidget {
+  const _MicroStepper({
+    required this.label,
+    required this.value,
+    required this.onMinus,
+    required this.onPlus,
   });
-  final WorkoutSet set;
-  final WorkoutSet? previous;
-  final ValueChanged<bool> onComplete;
+
+  final String label;
+  final String value;
+  final VoidCallback onMinus;
+  final VoidCallback onPlus;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final database = ref.read(databaseProvider);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E20),
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: Color(0xFF71717A), letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 8),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                width: 38,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              InkWell(
+                onTap: onMinus,
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF27272A),
+                    shape: BoxShape.circle,
                   ),
-                  onPressed: set.completed
-                      ? null
-                      : () async {
-                          final value = await showAppActionSheet<String>(
-                            context: context,
-                            title: 'Set ${set.position + 1}',
-                            actions: const [
-                              AppAction(value: 'working', label: 'Working'),
-                              AppAction(value: 'warmUp', label: 'Warm-up'),
-                              AppAction(value: 'drop', label: 'Drop'),
-                              AppAction(value: 'failure', label: 'Failure'),
-                              AppAction(value: 'delete', label: 'Hapus set'),
-                            ],
-                          );
-                          if (value == 'delete') {
-                            await database.removeSet(set.id);
-                          } else if (value != null) {
-                            await database.updateWorkoutSet(
-                              id: set.id,
-                              type: value,
-                            );
-                          }
-                        },
-                  child: Text(switch (set.type) {
-                    'warmUp' => 'W',
-                    'drop' => 'D',
-                    'failure' => 'F',
-                    _ => '${set.position + 1}',
-                  }),
+                  child: const Icon(Icons.remove, size: 14, color: Colors.white),
                 ),
               ),
-              const SizedBox(width: 4),
-              SizedBox(
-                width: 64,
-                child: _AppCompactNumberField(
-                  key: ValueKey('weight-${set.id}-${set.weightGrams}'),
-                  initialValue: set.weightGrams == 0
-                      ? ''
-                      : formatKg(set.weightGrams),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+              Text(
+                value,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, fontFeatures: tabularFigures),
+              ),
+              InkWell(
+                onTap: onPlus,
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF27272A),
+                    shape: BoxShape.circle,
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
-                  ],
-                  enabled: !set.completed,
-                  onChanged: (value) {
-                    final grams = parseKg(value);
-                    if (grams >= 0)
-                      database.updateWorkoutSet(id: set.id, weightGrams: grams);
-                  },
-                ),
-              ),
-              const SizedBox(width: 4),
-              SizedBox(
-                width: 48,
-                child: _AppCompactNumberField(
-                  key: ValueKey('reps-${set.id}-${set.reps}'),
-                  initialValue: set.reps == 0 ? '' : '${set.reps}',
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  enabled: !set.completed,
-                  onChanged: (value) => database.updateWorkoutSet(
-                    id: set.id,
-                    reps: int.tryParse(value) ?? 0,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              SizedBox(
-                width: 48,
-                child: _AppCompactSelect(
-                  value: set.rpe == null
-                      ? '—'
-                      : set.rpe!.toStringAsFixed(set.rpe! % 1 == 0 ? 0 : 1),
-                  enabled: !set.completed,
-                  onTap: () async {
-                    final value = await showAppActionSheet<double>(
-                      context: context,
-                      title: 'Pilih RPE',
-                      actions: List.generate(19, (i) {
-                        final value = 1 + i * .5;
-                        return AppAction(
-                          value: value,
-                          label: value.toStringAsFixed(value % 1 == 0 ? 0 : 1),
-                        );
-                      }),
-                    );
-                    if (value != null) {
-                      await database.updateWorkoutSet(id: set.id, rpe: value);
-                    }
-                  },
-                ),
-              ),
-              const Spacer(),
-              Semantics(
-                label: 'Selesaikan set ${set.position + 1}',
-                child: Checkbox(
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  value: set.completed,
-                  onChanged: (value) {
-                    if (value != null) onComplete(value);
-                  },
+                  child: const Icon(Icons.add, size: 14, color: Colors.white),
                 ),
               ),
             ],
           ),
-          if (previous != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 42, bottom: 2),
-              child: Text(
-                'Sebelumnya: ${formatKg(previous!.weightGrams)} kg × ${previous!.reps}${previous!.rpe == null ? '' : ' • RPE ${previous!.rpe}'}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontFeatures: tabularFigures),
-              ),
-            ),
         ],
       ),
     );
