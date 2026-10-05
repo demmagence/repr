@@ -57,112 +57,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
   }
 
-  testWidgets('ekspor dan impor aktif saat tidak ada workout aktif', (
-    tester,
-  ) async {
-    final database = AppDatabase(NativeDatabase.memory());
-    await pumpSettings(tester, database: database);
-
-    expect(find.text('Ekspor Telemetri Sesi'), findsOneWidget);
-    expect(find.text('Unduh format .CSV / JSON data mentah'), findsOneWidget);
-    expect(find.text('Impor Backup Data'), findsOneWidget);
-    expect(find.text('Pulihkan sesi dari file JSON'), findsOneWidget);
-
-    final exportInkWell = tester.widget<InkWell>(
-      find.ancestor(
-        of: find.text('Ekspor Telemetri Sesi'),
-        matching: find.byType(InkWell),
-      ),
-    );
-    final importInkWell = tester.widget<InkWell>(
-      find.ancestor(
-        of: find.text('Impor Backup Data'),
-        matching: find.byType(InkWell),
-      ),
-    );
-    expect(exportInkWell.onTap, isNotNull);
-    expect(importInkWell.onTap, isNotNull);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1));
-    await tester.runAsync(database.close);
-  });
-
   testWidgets(
-    'ekspor dan impor menampilkan snackbar saat workout aktif',
-    (tester) async {
-      final database = AppDatabase(NativeDatabase.memory());
-      await tester.runAsync(database.startWorkout);
-      await pumpSettings(tester, database: database);
-
-      expect(find.text('Ekspor Telemetri Sesi'), findsOneWidget);
-      expect(find.text('Impor Backup Data'), findsOneWidget);
-
-      final exportInkWell = find.ancestor(
-        of: find.text('Ekspor Telemetri Sesi'),
-        matching: find.byType(InkWell),
-      );
-      final importInkWell = find.ancestor(
-        of: find.text('Impor Backup Data'),
-        matching: find.byType(InkWell),
-      );
-
-      await tester.tap(exportInkWell);
-      await tester.pump();
-      expect(find.text('Selesaikan atau buang workout aktif terlebih dahulu.'), findsOneWidget);
-      // Wait for snackbar to disappear
-      await tester.pump(const Duration(seconds: 4));
-
-      await tester.tap(importInkWell);
-      await tester.pump();
-      expect(find.text('Selesaikan atau buang workout aktif terlebih dahulu.'), findsOneWidget);
-      await tester.pump(const Duration(seconds: 4));
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 1));
-      await tester.runAsync(database.close);
-    },
-  );
-
-  testWidgets(
-    'perubahan status workout memperbarui interaksi ekspor/impor',
+    'SettingsScreen memuat preferensi dan target tanpa seksi tampilan & aplikasi',
     (tester) async {
       final database = AppDatabase(NativeDatabase.memory());
       await pumpSettings(tester, database: database);
 
-      final workoutId = (await tester.runAsync(database.startWorkout))!;
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      final exportInkWellActive = find.ancestor(
-        of: find.text('Ekspor Telemetri Sesi'),
-        matching: find.byType(InkWell),
-      );
-      
-      await tester.tap(exportInkWellActive);
-      await tester.pump();
-      expect(find.text('Selesaikan atau buang workout aktif terlebih dahulu.'), findsOneWidget);
-      await tester.pump(const Duration(seconds: 4));
-
-      await tester.runAsync(() => database.discardWorkout(workoutId));
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      final exportInkWellInactive = tester.widget<InkWell>(
-        find.ancestor(
-          of: find.text('Ekspor Telemetri Sesi'),
-          matching: find.byType(InkWell),
-        ),
-      );
-      expect(exportInkWellInactive.onTap, isNotNull);
+      expect(find.text('PREFERENSI LATIHAN'), findsOneWidget);
+      expect(find.text('TARGET & BIOMETRIK'), findsOneWidget);
+      expect(find.text('TAMPILAN & APLIKASI'), findsNothing);
+      expect(find.text('Palet Obsidian'), findsNothing);
+      expect(find.text('Ekspor Telemetri Sesi'), findsNothing);
+      expect(find.text('Impor Backup Data'), findsNothing);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();

@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../app.dart';
-import '../core/backup_service.dart';
 import '../core/metrics.dart';
 import '../data/database.dart';
 import '../data/exercise_api_client.dart';
