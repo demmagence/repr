@@ -123,9 +123,9 @@ name: repr
     );
   });
 
-  group('SettingsScreen version display dinamik', () {
+  group('SettingsScreen app bar display', () {
     testWidgets(
-      'menampilkan versi dinamis sesuai appMetadataProvider yang di-inject',
+      'tidak menampilkan logo atau teks versi di app bar SettingsScreen',
       (tester) async {
         const customMeta = AppMetadata(version: '3.1.4', buildNumber: '159');
         final service = DefaultAppMetadataService(initialMetadata: customMeta);
@@ -154,7 +154,8 @@ name: repr
         await tester.pump(const Duration(milliseconds: 300));
         await tester.pump(const Duration(milliseconds: 300));
 
-        expect(find.text('Repr 3.1.4'), findsOneWidget);
+        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Repr 3.1.4'), findsNothing);
         expect(find.text('Repr 1.0.0'), findsNothing);
 
         await tester.pumpWidget(const SizedBox.shrink());

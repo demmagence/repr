@@ -30,55 +30,17 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
             // Top App Bar
             Row(
               children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161618),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF27272A)),
-                  ),
-                  child: Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        'assets/icon/repr_icon.png',
-                        width: 22,
-                        height: 22,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.remove_red_eye_outlined,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
+                const Expanded(
+                  child: Text(
+                    'Analytics',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'KINETIC',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF71717A),
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      Text(
-                        'Analytics',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
                 KineticIconButton(
