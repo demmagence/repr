@@ -59,6 +59,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       barrierDismissible: false,
       builder: (context) => AppDialog(
         title: 'Workout selesai',
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         actions: [
           AppButton(
             label: 'Lihat riwayat',

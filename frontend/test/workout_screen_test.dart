@@ -132,4 +132,69 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1));
     },
   );
+
+  testWidgets(
+    'AppStatCard dan dialog Workout selesai responsif pada layar sempit',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: Scaffold(
+            body: Center(
+              child: AppDialog(
+                title: 'Workout selesai',
+                insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                actions: [
+                  AppButton(
+                    label: 'Lihat riwayat',
+                    expand: false,
+                    onPressed: () {},
+                  ),
+                ],
+                child: const Row(
+                  children: [
+                    Expanded(
+                      child: AppStatCard(
+                        label: 'Durasi',
+                        value: '251 mnt',
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: AppStatCard(
+                        label: 'Set',
+                        value: '3',
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: AppStatCard(
+                        label: 'Volume',
+                        value: '20 kg',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Workout selesai'), findsOneWidget);
+      expect(find.text('251 mnt'), findsOneWidget);
+      expect(find.text('Durasi'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('Set'), findsOneWidget);
+      expect(find.text('20 kg'), findsOneWidget);
+      expect(find.text('Volume'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

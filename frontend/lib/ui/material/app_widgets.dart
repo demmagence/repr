@@ -361,20 +361,73 @@ class AppAvatar extends StatelessWidget {
 }
 
 class AppStatCard extends StatelessWidget {
-  const AppStatCard({required this.label, required this.value, super.key});
+  const AppStatCard({
+    required this.label,
+    required this.value,
+    this.padding,
+    super.key,
+  });
+
   final String label;
   final String value;
+  final EdgeInsetsGeometry? padding;
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: ListTile(
-      title: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(value, style: Theme.of(context).textTheme.titleLarge),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: theme.colorScheme.outline,
+          width: 1,
+        ),
       ),
-      subtitle: Text(label, textAlign: TextAlign.center),
-    ),
-  );
+      child: Padding(
+        padding: padding ?? const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.2,
+                ) ?? const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.secondary,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                ) ?? const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF8E8E93),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class AppEmptyState extends StatelessWidget {
@@ -412,12 +465,16 @@ class AppDialog extends StatelessWidget {
     required this.title,
     required this.child,
     this.actions = const [],
+    this.insetPadding,
+    this.contentPadding,
     super.key,
   });
 
   final String title;
   final Widget child;
   final List<Widget> actions;
+  final EdgeInsets? insetPadding;
+  final EdgeInsets? contentPadding;
 
   @override
   Widget build(BuildContext context) => AlertDialog(
@@ -425,6 +482,8 @@ class AppDialog extends StatelessWidget {
     content: child,
     actions: actions,
     scrollable: true,
+    insetPadding: insetPadding ?? const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
+    contentPadding: contentPadding,
   );
 }
 
