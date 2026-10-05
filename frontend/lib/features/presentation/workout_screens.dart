@@ -520,25 +520,25 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                       if (rest != null && !rest.isNegative) ...[
                         KineticCard(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                            horizontal: 12,
+                            vertical: 10,
                           ),
                           child: Row(
                             children: [
                               Container(
-                                width: 36,
-                                height: 36,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF1E1E20),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(
                                   Icons.hourglass_bottom_rounded,
                                   color: Colors.white,
-                                  size: 18,
+                                  size: 16,
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,7 +546,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                     const Text(
                                       'REST TIMER',
                                       style: TextStyle(
-                                        fontSize: 10.5,
+                                        fontSize: 10,
                                         color: Color(0xFF71717A),
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -554,7 +554,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                     Text(
                                       '${rest.inMinutes.toString().padLeft(2, '0')}:${(rest.inSeconds % 60).toString().padLeft(2, '0')}',
                                       style: const TextStyle(
-                                        fontSize: 18,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                         fontFeatures: tabularFigures,
@@ -563,16 +563,60 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               TextButton(
                                 style: TextButton.styleFrom(
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   backgroundColor: const Color(0xFF1E1E20),
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
+                                    horizontal: 8,
+                                    vertical: 5,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  final currentEnd = item.restEndsAt;
+                                  if (currentEnd != null) {
+                                    final newEnd = currentEnd.subtract(
+                                      const Duration(seconds: 30),
+                                    );
+                                    if (newEnd.isBefore(DateTime.now())) {
+                                      await ref
+                                          .read(databaseProvider)
+                                          .setRestEnd(widget.id, null);
+                                      await ref
+                                          .read(notificationProvider)
+                                          .cancelRestTimer();
+                                    } else {
+                                      await ref
+                                          .read(databaseProvider)
+                                          .setRestEnd(widget.id, newEnd);
+                                    }
+                                  }
+                                },
+                                child: const Text(
+                                  '-30s',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  backgroundColor: const Color(0xFF1E1E20),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 5,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
                                 ),
                                 onPressed: () async {
@@ -593,16 +637,18 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
                               TextButton(
                                 style: TextButton.styleFrom(
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   backgroundColor: const Color(0xFF1E1E20),
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
+                                    horizontal: 8,
+                                    vertical: 5,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
                                 ),
                                 onPressed: () async {

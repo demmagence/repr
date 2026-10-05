@@ -68,4 +68,68 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1));
     },
   );
+
+  testWidgets(
+    'Rest timer menampilkan tombol -30s, +30s, dan Skip yang berfungsi',
+    (tester) async {
+      final database = AppDatabase(NativeDatabase.memory());
+
+      final workoutId = (await tester.runAsync(() async {
+        final id = await database.startWorkout();
+        final now = DateTime.now();
+        await database.setRestEnd(id, now.add(const Duration(seconds: 90)));
+        return id;
+      }))!;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            databaseProvider.overrideWithValue(database),
+            notificationProvider.overrideWithValue(_NoopNotificationService()),
+          ],
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: WorkoutScreen(id: workoutId),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('REST TIMER'), findsOneWidget);
+      expect(find.text('-30s'), findsOneWidget);
+      expect(find.text('+30s'), findsOneWidget);
+      expect(find.text('Skip'), findsOneWidget);
+
+      // Tap +30s
+      await tester.tap(find.text('+30s'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      var current = await database.getActiveWorkout();
+      expect(current?.restEndsAt, isNotNull);
+
+      // Tap -30s
+      await tester.tap(find.text('-30s'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      current = await database.getActiveWorkout();
+      expect(current?.restEndsAt, isNotNull);
+
+      // Tap Skip
+      await tester.tap(find.text('Skip'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final finalWorkout = await database.getActiveWorkout();
+      expect(finalWorkout?.restEndsAt, isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.runAsync(database.close);
+      await tester.pump(const Duration(milliseconds: 1));
+    },
+  );
 }
