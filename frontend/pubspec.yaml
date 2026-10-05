@@ -83,7 +83,27 @@ flutter:
     - assets/fonts/Roboto-Regular.ttf
     - assets/fonts/Roboto-Medium.ttf
     - assets/fonts/Roboto-Bold.ttf
+    - assets/fonts/SF-Pro-Display-Regular.otf
+    - assets/fonts/SF-Pro-Display-Medium.otf
+    - assets/fonts/SF-Pro-Display-Semibold.otf
+    - assets/fonts/SF-Pro-Display-Bold.otf
     - pubspec.yaml
+
+  fonts:
+    - family: SF Pro Display
+      fonts:
+        - asset: assets/fonts/SF-Pro-Display-Regular.otf
+          weight: 400
+        - asset: assets/fonts/SF-Pro-Display-Medium.otf
+          weight: 500
+        - asset: assets/fonts/SF-Pro-Display-Semibold.otf
+          weight: 600
+        - asset: assets/fonts/SF-Pro-Display-Bold.otf
+          weight: 700
+    - family: SF Pro Display Bold
+      fonts:
+        - asset: assets/fonts/SF-Pro-Display-Bold.otf
+          weight: 700
 
 flutter_launcher_icons:
   android: "ic_launcher"
