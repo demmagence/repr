@@ -69,6 +69,7 @@ void main() {
       expect(find.text('Palet Obsidian'), findsNothing);
       expect(find.text('Ekspor Telemetri Sesi'), findsNothing);
       expect(find.text('Impor Backup Data'), findsNothing);
+      expect(find.text('Apple Health / Health Connect'), findsNothing);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
