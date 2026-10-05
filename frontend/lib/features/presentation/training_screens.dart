@@ -49,6 +49,40 @@ class TrainingScreen extends ConsumerWidget {
     if (context.mounted) context.push('/workout/$id');
   }
 
+  Future<void> _confirmAndStartRoutine(
+    BuildContext context,
+    WidgetRef ref,
+    Routine routine,
+  ) async {
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      builder: (context) => AppDialog(
+        title: 'Mulai latihan?',
+        actions: [
+          AppButton(
+            label: 'Batal',
+            expand: false,
+            variant: AppActionVariant.quiet,
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          AppButton(
+            label: 'Mulai',
+            expand: false,
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+        child: Text(
+          routine.name.trim().isEmpty
+              ? 'Mulai workout dari template routine ini?'
+              : 'Mulai workout dari routine "${routine.name}"?',
+        ),
+      ),
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+    await _start(context, ref, routineId: routine.id);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final active = ref.watch(activeWorkoutProvider).valueOrNull;
@@ -135,64 +169,7 @@ class TrainingScreen extends ConsumerWidget {
               const SizedBox(height: 14),
             ],
 
-            // Quick Start Button
-            KineticCard(
-              padding: EdgeInsets.zero,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: () => _start(context, ref),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1E20),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFF27272A)),
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Mulai Latihan Kosong',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Catat latihan baru tanpa template',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF8E8E93),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: Color(0xFF71717A),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+
 
             // Routines Header
             Row(
@@ -210,14 +187,26 @@ class TrainingScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                TextButton(
-                  onPressed: () => showRoutineEditor(context, ref),
-                  child: const Text(
-                    '+ Buat Baru',
-                    style: TextStyle(
-                      color: Color(0xFFA1A1AA),
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w500,
+                Flexible(
+                  child: TextButton(
+                    onPressed: () => showRoutineEditor(context, ref),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      '+ Buat Baru',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Color(0xFFA1A1AA),
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
@@ -248,10 +237,10 @@ class TrainingScreen extends ConsumerWidget {
                                 padding: EdgeInsets.zero,
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(24),
-                                  onTap: () => _start(
+                                  onTap: () => _confirmAndStartRoutine(
                                     context,
                                     ref,
-                                    routineId: routine.id,
+                                    routine,
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(14.0),
@@ -340,10 +329,10 @@ class TrainingScreen extends ConsumerWidget {
                                                 );
                                             if (!context.mounted) return;
                                             if (value == 'start') {
-                                              await _start(
+                                              await _confirmAndStartRoutine(
                                                 context,
                                                 ref,
-                                                routineId: routine.id,
+                                                routine,
                                               );
                                             } else if (value == 'edit') {
                                               await showRoutineEditor(
