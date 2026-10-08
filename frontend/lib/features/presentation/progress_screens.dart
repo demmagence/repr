@@ -713,44 +713,6 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
-
-            // Export CSV row
-            KineticCard(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              child: InkWell(
-                onTap: () {
-                  showMessage(
-                    context,
-                    'Mempersiapkan ekspor telemetri .CSV...',
-                  );
-                },
-                child: Row(
-                  children: const [
-                    Icon(Icons.download_rounded, color: Colors.white, size: 18),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Export Biometric Telemetry (.CSV)',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: Color(0xFF71717A),
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
