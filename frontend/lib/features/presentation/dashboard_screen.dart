@@ -86,27 +86,13 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    KineticIconButton(
-                      icon: const Icon(
-                        Icons.tune_rounded,
-                        color: Color(0xFFD4D4D8),
-                        size: 18,
-                      ),
-                      onPressed: () => context.go('/metrics'),
-                    ),
-                    const SizedBox(width: 10),
-                    KineticIconButton(
-                      icon: const Icon(
-                        Icons.add_rounded,
-                        color: Color(0xFFD4D4D8),
-                        size: 22,
-                      ),
-                      onPressed: () => _startWorkout(context, ref),
-                    ),
-                  ],
+                KineticIconButton(
+                  icon: const Icon(
+                    Icons.add_rounded,
+                    color: Color(0xFFD4D4D8),
+                    size: 22,
+                  ),
+                  onPressed: () => _startWorkout(context, ref),
                 ),
               ],
             ),

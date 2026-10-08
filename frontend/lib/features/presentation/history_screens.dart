@@ -38,9 +38,9 @@ class HistoryScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 100.0),
           children: [
             // Top App Bar
-            Row(
+            const Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Workout History',
                     maxLines: 1,
@@ -52,15 +52,6 @@ class HistoryScreen extends ConsumerWidget {
                       letterSpacing: -0.5,
                     ),
                   ),
-                ),
-                KineticIconButton(
-                  size: 38,
-                  icon: const Icon(
-                    Icons.tune_rounded,
-                    color: Color(0xFFD4D4D8),
-                    size: 18,
-                  ),
-                  onPressed: () {},
                 ),
               ],
             ),
