@@ -65,6 +65,8 @@ void main() {
 
       expect(find.text('PREFERENSI LATIHAN'), findsOneWidget);
       expect(find.text('TARGET & BIOMETRIK'), findsOneWidget);
+      expect(find.text('• SYSTEM TELEMETRY'), findsNothing);
+      expect(find.text('Sinkronisasi Cloud & Sensor Aktif'), findsNothing);
       expect(find.text('TAMPILAN & APLIKASI'), findsNothing);
       expect(find.text('Palet Obsidian'), findsNothing);
       expect(find.text('Ekspor Telemetri Sesi'), findsNothing);
