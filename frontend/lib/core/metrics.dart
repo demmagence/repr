@@ -62,6 +62,39 @@ String formatVolume(double volumeKg, {String unit = 'kg'}) {
   return volumeKg.toStringAsFixed(0);
 }
 
+String formatRestDuration(
+  int seconds, {
+  bool uppercase = true,
+  bool compact = false,
+}) {
+  if (seconds <= 0) {
+    if (compact) return '0s';
+    return uppercase ? '0 DETIK' : '0 detik';
+  }
+  final minutes = seconds ~/ 60;
+  final remainingSeconds = seconds % 60;
+
+  if (compact) {
+    if (minutes > 0 && remainingSeconds > 0) {
+      return '${minutes}m ${remainingSeconds}s';
+    } else if (minutes > 0) {
+      return '${minutes}m';
+    } else {
+      return '${remainingSeconds}s';
+    }
+  }
+
+  if (minutes > 0 && remainingSeconds > 0) {
+    return uppercase
+        ? '$minutes MENIT $remainingSeconds DETIK'
+        : '$minutes menit $remainingSeconds detik';
+  } else if (minutes > 0) {
+    return uppercase ? '$minutes MENIT' : '$minutes menit';
+  } else {
+    return uppercase ? '$remainingSeconds DETIK' : '$remainingSeconds detik';
+  }
+}
+
 class MetricSet {
   const MetricSet({
     required this.weightGrams,

@@ -1129,7 +1129,7 @@ class _RoutineExerciseEditor extends StatelessWidget {
               ),
             ),
             AppButton(
-              label: '${item.restSeconds} dtk',
+              label: formatRestDuration(item.restSeconds, compact: true),
               expand: false,
               variant: AppActionVariant.quiet,
               onPressed: () async {
@@ -1139,7 +1139,10 @@ class _RoutineExerciseEditor extends StatelessWidget {
                   actions: const [30, 60, 90, 120, 180, 300]
                       .map(
                         (seconds) =>
-                            AppAction(value: seconds, label: '$seconds detik'),
+                            AppAction(
+                              value: seconds,
+                              label: formatRestDuration(seconds, uppercase: false),
+                            ),
                       )
                       .toList(),
                 );

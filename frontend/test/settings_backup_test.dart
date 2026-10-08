@@ -113,4 +113,39 @@ void main() {
       await tester.runAsync(database.close);
     },
   );
+
+  testWidgets(
+    'SettingsScreen menampilkan Durasi Standar dalam menit dan detik (bukan hanya detik)',
+    (tester) async {
+      final database = AppDatabase(NativeDatabase.memory());
+      await pumpSettings(tester, database: database);
+
+      // Default defaultRestSeconds is 90 -> '1 MENIT 30 DETIK'
+      expect(find.text('Durasi Standar'), findsOneWidget);
+      expect(find.text('1 MENIT 30 DETIK'), findsOneWidget);
+      expect(find.text('90 DETIK'), findsNothing);
+
+      // Tap + (add 15s -> 105s -> '1 MENIT 45 DETIK')
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 MENIT 45 DETIK'), findsOneWidget);
+      expect(await database.getDefaultRestSeconds(), 105);
+
+      // Tap - twice (105 - 15 - 15 = 75s -> '1 MENIT 15 DETIK')
+      await tester.tap(find.byIcon(Icons.remove));
+      await tester.pumpAndSettle();
+      expect(find.text('1 MENIT 30 DETIK'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.remove));
+      await tester.pumpAndSettle();
+      expect(find.text('1 MENIT 15 DETIK'), findsOneWidget);
+      expect(await database.getDefaultRestSeconds(), 75);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.runAsync(database.close);
+    },
+  );
 }

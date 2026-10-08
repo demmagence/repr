@@ -36,4 +36,23 @@ void main() {
       expect(totalVolume(sets), 1000);
     });
   });
+
+  group('format durasi istirahat (formatRestDuration)', () {
+    test('format menit dan detik (uppercase, title/lowercase, dan compact)', () {
+      expect(formatRestDuration(90), '1 MENIT 30 DETIK');
+      expect(formatRestDuration(60), '1 MENIT');
+      expect(formatRestDuration(45), '45 DETIK');
+      expect(formatRestDuration(120), '2 MENIT');
+      expect(formatRestDuration(75), '1 MENIT 15 DETIK');
+
+      expect(formatRestDuration(90, uppercase: false), '1 menit 30 detik');
+      expect(formatRestDuration(60, uppercase: false), '1 menit');
+      expect(formatRestDuration(45, uppercase: false), '45 detik');
+
+      expect(formatRestDuration(90, compact: true), '1m 30s');
+      expect(formatRestDuration(60, compact: true), '1m');
+      expect(formatRestDuration(45, compact: true), '45s');
+      expect(formatRestDuration(0, compact: true), '0s');
+    });
+  });
 }

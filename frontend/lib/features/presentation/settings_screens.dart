@@ -289,8 +289,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                               }
                                             },
                                           ),
+                                          const SizedBox(width: 4),
                                           Text(
-                                            '$restSeconds DETIK',
+                                            formatRestDuration(restSeconds),
                                             style: const TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold,
@@ -298,6 +299,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                               fontFeatures: tabularFigures,
                                             ),
                                           ),
+                                          const SizedBox(width: 4),
                                           IconButton(
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(
