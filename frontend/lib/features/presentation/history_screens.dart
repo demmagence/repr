@@ -6,6 +6,8 @@ class HistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(historyProvider).valueOrNull ?? [];
+    final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
+    final isLbs = weightUnit == 'lbs';
     final now = DateTime.now();
 
     // Calculate this week's workouts
@@ -279,12 +281,12 @@ class HistoryScreen extends ConsumerWidget {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          const FittedBox(
+                          FittedBox(
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              '18,450 lbs',
-                              style: TextStyle(
+                              isLbs ? '18,450 lbs' : '8,370 kg',
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -468,7 +470,10 @@ class HistoryScreen extends ConsumerWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               _buildHistoryStat('Durasi', durationLabel),
-                              _buildHistoryStat('Volume', '3,800 lbs'),
+                              _buildHistoryStat(
+                                'Volume',
+                                isLbs ? '3,800 lbs' : '1,720 kg',
+                              ),
                               _buildHistoryStat('Latihan', 'Selesai'),
                             ],
                           ),
@@ -551,6 +556,7 @@ class HistoryDetailScreen extends ConsumerWidget {
     Workout workout,
   ) async {
     final database = ref.read(databaseProvider);
+    final unit = await database.getWeightUnit();
     final views = await database.getWorkoutExercises(workout.id);
     if (!context.mounted) return;
     final name = TextEditingController(text: workout.name);
@@ -566,7 +572,7 @@ class HistoryDetailScreen extends ConsumerWidget {
               _HistoricalSetDraft(
                 id: set.id,
                 position: set.position,
-                weight: formatKg(set.weightGrams),
+                weight: formatWeight(set.weightGrams, unit: unit),
                 reps: '${set.reps}',
                 type: set.type,
                 rpe: set.rpe,
@@ -596,7 +602,7 @@ class HistoryDetailScreen extends ConsumerWidget {
                   for (final exercise in drafts) {
                     final sets = <HistoricalSetUpdate>[];
                     for (final set in exercise.sets) {
-                      final weightGrams = parseKg(set.weight);
+                      final weightGrams = parseWeight(set.weight, unit: unit);
                       final reps = int.tryParse(set.reps) ?? 0;
                       if (weightGrams < 0 || reps < 1) {
                         return showMessage(
@@ -780,6 +786,8 @@ class HistoryDetailScreen extends ConsumerWidget {
             final items = snapshot.data;
             if (items == null)
               return const Center(child: CircularProgressIndicator());
+            final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
+            final isLbs = weightUnit == 'lbs';
             final allSets = items.expand((e) => e.sets).toList();
             final volume = totalVolume(
               allSets.map(
@@ -791,6 +799,7 @@ class HistoryDetailScreen extends ConsumerWidget {
                 ),
               ),
             );
+            final displayVolume = isLbs ? volume * kgToLbsMultiplier : volume;
             final duration = workout.endedAt?.difference(workout.startedAt);
             return ListView(
               padding: pagePadding,
@@ -822,7 +831,7 @@ class HistoryDetailScreen extends ConsumerWidget {
                     Expanded(
                       child: AppStatCard(
                         label: 'Volume',
-                        value: '${volume.toStringAsFixed(0)} kg',
+                        value: '${displayVolume.toStringAsFixed(0)} $weightUnit',
                       ),
                     ),
                   ],
@@ -855,7 +864,7 @@ class HistoryDetailScreen extends ConsumerWidget {
                                     ),
                                     Expanded(
                                       child: Text(
-                                        '${formatKg(set.weightGrams)} kg × ${set.reps}',
+                                        '${formatWeight(set.weightGrams, unit: weightUnit)} $weightUnit × ${set.reps}',
                                       ),
                                     ),
                                     Text(set.type == 'working' ? '' : set.type),

@@ -18,6 +18,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final database = ref.read(databaseProvider);
     restSeconds = await database.getDefaultRestSeconds();
     timerSound = (await database.getSetting('timerSound')) != 'false';
+    final unit = await database.getWeightUnit();
+    isLbs = unit == 'lbs';
     if (mounted) setState(() => loaded = true);
   }
 
@@ -127,7 +129,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   child: Row(
                                     children: [
                                       GestureDetector(
-                                        onTap: () => setState(() => isLbs = true),
+                                        onTap: () async {
+                                          setState(() => isLbs = true);
+                                          await ref
+                                              .read(databaseProvider)
+                                              .setWeightUnit('lbs');
+                                        },
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 10,
@@ -154,8 +161,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         ),
                                       ),
                                       GestureDetector(
-                                        onTap: () =>
-                                            setState(() => isLbs = false),
+                                        onTap: () async {
+                                          setState(() => isLbs = false);
+                                          await ref
+                                              .read(databaseProvider)
+                                              .setWeightUnit('kg');
+                                        },
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 10,
@@ -445,19 +456,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.baseline,
                                   textBaseline: TextBaseline.alphabetic,
-                                  children: const [
+                                  children: [
                                     Text(
-                                      '178.5',
-                                      style: TextStyle(
+                                      isLbs ? '178.5' : '81.0',
+                                      style: const TextStyle(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
                                     ),
-                                    SizedBox(width: 4),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      'LBS',
-                                      style: TextStyle(
+                                      isLbs ? 'LBS' : 'KG',
+                                      style: const TextStyle(
                                         fontSize: 11,
                                         color: Color(0xFF71717A),
                                       ),

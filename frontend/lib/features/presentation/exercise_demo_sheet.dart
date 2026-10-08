@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../app.dart';
+import '../../core/metrics.dart';
 import '../../data/database.dart';
 import '../../data/exercise_api_client.dart';
 import '../../ui/widgets/kinetic_components.dart';
@@ -15,7 +16,18 @@ Future<void> showExerciseDemoSheet(
   required ExerciseApiModel exercise,
   VoidCallback? onSelect,
   int initialTab = 0,
+  String? weightUnit,
 }) {
+  String resolvedUnit = weightUnit ?? 'kg';
+  if (weightUnit == null) {
+    try {
+      resolvedUnit = ProviderScope.containerOf(context, listen: false)
+              .read(weightUnitProvider)
+              .valueOrNull ??
+          'kg';
+    } catch (_) {}
+  }
+
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -25,6 +37,7 @@ Future<void> showExerciseDemoSheet(
       exercise: exercise,
       onSelect: onSelect,
       initialTab: initialTab,
+      weightUnit: resolvedUnit,
     ),
   );
 }
@@ -34,11 +47,13 @@ class _ExerciseDemoView extends StatefulWidget {
     required this.exercise,
     this.onSelect,
     this.initialTab = 0,
+    this.weightUnit = 'kg',
   });
 
   final ExerciseApiModel exercise;
   final VoidCallback? onSelect;
   final int initialTab;
+  final String weightUnit;
 
   @override
   State<_ExerciseDemoView> createState() => _ExerciseDemoViewState();
@@ -198,6 +213,8 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
       builder: (context, snapshot) {
         final sessions = (snapshot.data?[0] as List<ExerciseHistorySession>?) ?? [];
         final points = (snapshot.data?[1] as List<ProgressPoint>?) ?? [];
+        final weightUnit = widget.weightUnit;
+        final isLbs = weightUnit == 'lbs';
 
         // Compute metrics
         double maxWeightKg = 0;
@@ -434,7 +451,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                             textBaseline: TextBaseline.alphabetic,
                             children: [
                               Text(
-                                '${displayMaxWeight.toStringAsFixed(displayMaxWeight.truncateToDouble() == displayMaxWeight ? 1 : 2)} kg',
+                                '${(isLbs ? displayMaxWeight * kgToLbsMultiplier : displayMaxWeight).toStringAsFixed((isLbs ? displayMaxWeight * kgToLbsMultiplier : displayMaxWeight).truncateToDouble() == (isLbs ? displayMaxWeight * kgToLbsMultiplier : displayMaxWeight) ? 1 : 2)} $weightUnit',
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -526,7 +543,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                   child: _buildStatCard(
                     icon: Icons.emoji_events_outlined,
                     label: 'RECORD',
-                    value: '${displayMaxWeight.toStringAsFixed(1)} kg',
+                    value: '${(isLbs ? displayMaxWeight * kgToLbsMultiplier : displayMaxWeight).toStringAsFixed(1)} $weightUnit',
                     subvalue: '$displayMaxReps reps',
                   ),
                 ),
@@ -535,7 +552,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                   child: _buildStatCard(
                     icon: Icons.show_chart_rounded,
                     label: 'EST. 1RM',
-                    value: '${displayE1rm.toStringAsFixed(1)} kg',
+                    value: '${(isLbs ? displayE1rm * kgToLbsMultiplier : displayE1rm).toStringAsFixed(1)} $weightUnit',
                     subvalue: '+0.5 this mo',
                   ),
                 ),
@@ -544,7 +561,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                   child: _buildStatCard(
                     icon: Icons.layers_outlined,
                     label: 'SESSION VOL',
-                    value: '${displayVol.toInt()} kg',
+                    value: '${(isLbs ? displayVol * kgToLbsMultiplier : displayVol).toInt()} $weightUnit',
                     subvalue: '$displayTotalSets sets total',
                   ),
                 ),
@@ -1144,6 +1161,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
   Widget _buildWorkoutLogCard(ExerciseHistorySession session) {
     final dateFormat = DateFormat('d MMM yyyy, HH:mm', 'id_ID');
     final formattedDate = dateFormat.format(session.workout.startedAt);
+    final weightUnit = widget.weightUnit;
 
     return KineticCard(
       padding: const EdgeInsets.all(16),
@@ -1281,7 +1299,7 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
                   ),
                   Expanded(
                     child: Text(
-                      '${(set.weightGrams / 1000.0).toStringAsFixed(1)} kg × ${set.reps} reps',
+                      '${formatWeight(set.weightGrams, unit: weightUnit)} $weightUnit × ${set.reps} reps',
                       style: const TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,

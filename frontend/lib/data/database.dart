@@ -327,9 +327,22 @@ class AppDatabase extends _$AppDatabase {
           .getSingleOrNull()
           .then((row) => row?.value);
 
+  Stream<String?> watchSetting(String key) =>
+      (select(appSettings)..where((s) => s.key.equals(key)))
+          .watchSingleOrNull()
+          .map((row) => row?.value);
+
   Future<void> setSetting(String key, String value) => into(
     appSettings,
   ).insertOnConflictUpdate(AppSettingsCompanion.insert(key: key, value: value));
+
+  Stream<String> watchWeightUnit() =>
+      watchSetting('weightUnit').map((unit) => unit ?? 'kg');
+
+  Future<String> getWeightUnit() async =>
+      (await getSetting('weightUnit')) ?? 'kg';
+
+  Future<void> setWeightUnit(String unit) => setSetting('weightUnit', unit);
 
   Future<String> createExercise({
     required String name,

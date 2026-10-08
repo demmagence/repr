@@ -50,6 +50,8 @@ class DashboardScreen extends ConsumerWidget {
     final history = ref.watch(historyProvider).valueOrNull ?? [];
     final routines = ref.watch(routinesProvider).valueOrNull ?? [];
     final active = ref.watch(activeWorkoutProvider).valueOrNull;
+    final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
+    final isLbs = weightUnit == 'lbs';
 
     final firstRoutine = routines.isNotEmpty ? routines.first : null;
     final secondRoutine = routines.length > 1 ? routines[1] : null;
@@ -245,19 +247,19 @@ class DashboardScreen extends ConsumerWidget {
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.baseline,
                                       textBaseline: TextBaseline.alphabetic,
-                                      children: const [
+                                      children: [
                                         Text(
-                                          '200',
-                                          style: TextStyle(
+                                          isLbs ? '200' : '90',
+                                          style: const TextStyle(
                                             fontSize: 27,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white,
                                           ),
                                         ),
-                                        SizedBox(width: 3),
+                                        const SizedBox(width: 3),
                                         Text(
-                                          'lbs',
-                                          style: TextStyle(
+                                          weightUnit,
+                                          style: const TextStyle(
                                             fontSize: 13,
                                             color: Color(0xFF8E8E93),
                                             fontWeight: FontWeight.w500,
@@ -411,26 +413,26 @@ class DashboardScreen extends ConsumerWidget {
                       alignment: Alignment.centerRight,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Text(
-                            '3,200',
-                            style: TextStyle(
+                            isLbs ? '3,200' : '1,450',
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           Text(
-                            'lbs',
-                            style: TextStyle(
+                            weightUnit,
+                            style: const TextStyle(
                               fontSize: 13,
                               color: Color(0xFF8E8E93),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(width: 10),
-                          Icon(
+                          const SizedBox(width: 10),
+                          const Icon(
                             Icons.tune_rounded,
                             color: Color(0xFF52525B),
                             size: 16,

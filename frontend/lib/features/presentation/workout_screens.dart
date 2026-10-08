@@ -52,6 +52,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     );
     if (confirmed != true) return;
     final summary = await database.finishWorkoutWithSummary(widget.id);
+    final unit = await database.getWeightUnit();
+    final isLbs = unit == 'lbs';
+    final displayVolume = isLbs ? summary.volumeKg * kgToLbsMultiplier : summary.volumeKg;
     await ref.read(notificationProvider).cancelRestTimer();
     if (!mounted) return;
     await showAppDialog<void>(
@@ -90,7 +93,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                 Expanded(
                   child: AppStatCard(
                     label: 'Volume',
-                    value: '${summary.volumeKg.toStringAsFixed(0)} kg',
+                    value: '${displayVolume.toStringAsFixed(0)} $unit',
                   ),
                 ),
               ],
@@ -112,7 +115,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                   ),
                   title: record.exerciseName,
                   subtitle:
-                      '${record.kind == PersonalRecordKind.maxWeight ? 'Max weight' : 'Estimated 1RM'} • ${record.valueKg.toStringAsFixed(1)} kg',
+                      '${record.kind == PersonalRecordKind.maxWeight ? 'Max weight' : 'Estimated 1RM'} • ${(isLbs ? record.valueKg * kgToLbsMultiplier : record.valueKg).toStringAsFixed(1)} $unit',
                 ),
             ],
           ],
@@ -193,6 +196,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         final rest = item.restEndsAt?.difference(DateTime.now());
 
         final exercises = exercisesAsync.valueOrNull ?? [];
+        final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
+        final isLbs = weightUnit == 'lbs';
 
         // Real-time calculation across all sets
         int totalSets = 0;
@@ -213,6 +218,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
             }
           }
         }
+
+        final displayTotalVolume = isLbs
+            ? totalVolumeKg * kgToLbsMultiplier
+            : totalVolumeKg;
 
         final progressPercent = totalSets > 0
             ? (completedSets / totalSets * 100).round()
@@ -492,7 +501,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                     textBaseline: TextBaseline.alphabetic,
                                     children: [
                                       Text(
-                                        totalVolumeKg.toStringAsFixed(0),
+                                        displayTotalVolume.toStringAsFixed(0),
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -500,9 +509,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 3),
-                                      const Text(
-                                        'kg',
-                                        style: TextStyle(
+                                      Text(
+                                        weightUnit,
+                                        style: const TextStyle(
                                           fontSize: 12,
                                           color: Color(0xFF8E8E93),
                                         ),
@@ -885,6 +894,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final database = ref.read(databaseProvider);
+    final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
 
     // Find the first uncompleted set in this exercise
     WorkoutSet? targetSet;
@@ -924,6 +934,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                     showExerciseDemoSheet(
                       context,
                       exercise: ExerciseApiModel.fromLocal(view.exercise),
+                      weightUnit: weightUnit,
                     );
                   },
                   child: Column(
@@ -974,6 +985,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                     showExerciseDemoSheet(
                       context,
                       exercise: ExerciseApiModel.fromLocal(view.exercise),
+                      weightUnit: weightUnit,
                     );
                   } else if (val == 'delete') {
                     await database.removeWorkoutExercise(view.item.id);
@@ -1053,7 +1065,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                       ),
                       const Spacer(),
                       Text(
-                        '${formatKg(set.weightGrams)} kg  ×  ${set.reps} reps',
+                        '${formatWeight(set.weightGrams, unit: weightUnit)} $weightUnit  ×  ${set.reps} reps',
                         style: const TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w500,
@@ -1199,23 +1211,23 @@ class WorkoutExerciseCard extends ConsumerWidget {
                         // Weight Stepper
                         Expanded(
                           child: _MicroStepper(
-                            label: 'WEIGHT (KG)',
-                            value: formatKg(set.weightGrams),
+                            label: 'WEIGHT (${weightUnit.toUpperCase()})',
+                            value: formatWeight(set.weightGrams, unit: weightUnit),
                             onTapValue: () async {
-                              final ctrl = TextEditingController(text: formatKg(set.weightGrams));
+                              final ctrl = TextEditingController(text: formatWeight(set.weightGrams, unit: weightUnit));
                               final val = await showDialog<String>(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
                                   backgroundColor: const Color(0xFF161618),
-                                  title: const Text('Ubah Beban (kg)', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                  title: Text('Ubah Beban ($weightUnit)', style: const TextStyle(color: Colors.white, fontSize: 16)),
                                   content: TextField(
                                     controller: ctrl,
                                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                     autofocus: true,
                                     style: const TextStyle(color: Colors.white, fontSize: 20),
-                                    decoration: const InputDecoration(
-                                      suffixText: 'kg',
-                                      suffixStyle: TextStyle(color: Colors.white70),
+                                    decoration: InputDecoration(
+                                      suffixText: weightUnit,
+                                      suffixStyle: const TextStyle(color: Colors.white70),
                                     ),
                                   ),
                                   actions: [
@@ -1231,19 +1243,20 @@ class WorkoutExerciseCard extends ConsumerWidget {
                                 ),
                               );
                               if (val != null) {
-                                final parsed = double.tryParse(val.replaceAll(',', '.'));
-                                if (parsed != null && parsed >= 0) {
+                                final grams = parseWeight(val, unit: weightUnit);
+                                if (grams >= 0) {
                                   database.updateWorkoutSet(
                                     id: set.id,
-                                    weightGrams: (parsed * 1000).round(),
+                                    weightGrams: grams,
                                   );
                                 }
                               }
                             },
                             onMinus: () {
-                              final newGrams = (set.weightGrams - 2500).clamp(
-                                0,
-                                1000000,
+                              final newGrams = stepWeightGrams(
+                                set.weightGrams,
+                                increment: false,
+                                unit: weightUnit,
                               );
                               database.updateWorkoutSet(
                                 id: set.id,
@@ -1251,7 +1264,11 @@ class WorkoutExerciseCard extends ConsumerWidget {
                               );
                             },
                             onPlus: () {
-                              final newGrams = set.weightGrams + 2500;
+                              final newGrams = stepWeightGrams(
+                                set.weightGrams,
+                                increment: true,
+                                unit: weightUnit,
+                              );
                               database.updateWorkoutSet(
                                 id: set.id,
                                 weightGrams: newGrams,
@@ -1379,7 +1396,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                       ),
                       const Spacer(),
                       Text(
-                        '${formatKg(set.weightGrams)} kg  ×  ${set.reps > 0 ? '${set.reps} reps' : 'Target'}',
+                        '${formatWeight(set.weightGrams, unit: weightUnit)} $weightUnit  ×  ${set.reps > 0 ? '${set.reps} reps' : 'Target'}',
                         style: const TextStyle(
                           fontSize: 13,
                           color: Color(0xFF52525B),

@@ -12,6 +12,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
   @override
   Widget build(BuildContext context) {
     final history = ref.watch(historyProvider).valueOrNull ?? [];
+    final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
+    final isLbs = weightUnit == 'lbs';
 
     // Calculate total sessions in last 90 days
     final now = DateTime.now();
@@ -118,19 +120,19 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.baseline,
                               textBaseline: TextBaseline.alphabetic,
-                              children: const [
+                              children: [
                                 Text(
-                                  '198.4',
-                                  style: TextStyle(
+                                  isLbs ? '198.4' : '90.0',
+                                  style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'lbs',
-                                  style: TextStyle(
+                                  weightUnit,
+                                  style: const TextStyle(
                                     fontSize: 12.5,
                                     color: Color(0xFF8E8E93),
                                   ),
@@ -170,11 +172,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          const Text(
-                            '↘ -4.2 lbs  3M Delta',
+                          Text(
+                            isLbs
+                                ? '↘ -4.2 lbs  3M Delta'
+                                : '↘ -1.9 kg  3M Delta',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                               color: Color(0xFF71717A),
                               fontWeight: FontWeight.w600,
@@ -320,12 +324,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  const FittedBox(
+                  FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      '34,200 lbs / week avg',
-                      style: TextStyle(
+                      isLbs ? '34,200 lbs / week avg' : '15,500 kg / week avg',
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -437,11 +441,23 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      _buildBenchmarkItem('Bench Press', '225 lbs', '+10'),
+                      _buildBenchmarkItem(
+                        'Bench Press',
+                        isLbs ? '225 lbs' : '102.5 kg',
+                        isLbs ? '+10' : '+4.5',
+                      ),
                       const SizedBox(width: 10),
-                      _buildBenchmarkItem('Back Squat', '315 lbs', '+15'),
+                      _buildBenchmarkItem(
+                        'Back Squat',
+                        isLbs ? '315 lbs' : '142.5 kg',
+                        isLbs ? '+15' : '+7',
+                      ),
                       const SizedBox(width: 10),
-                      _buildBenchmarkItem('Deadlift', '405 lbs', '+20'),
+                      _buildBenchmarkItem(
+                        'Deadlift',
+                        isLbs ? '405 lbs' : '185 kg',
+                        isLbs ? '+20' : '+9',
+                      ),
                     ],
                   ),
                 ],

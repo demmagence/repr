@@ -79,4 +79,38 @@ void main() {
       await tester.runAsync(database.close);
     },
   );
+
+  testWidgets(
+    'SettingsScreen mengubah satuan beban (LBS / KG) dan menyimpannya ke database',
+    (tester) async {
+      final database = AppDatabase(NativeDatabase.memory());
+      // Default initial unit is kg
+      await pumpSettings(tester, database: database);
+
+      expect(find.text('81.0'), findsOneWidget);
+      expect(find.text('KG'), findsNWidgets(2)); // pill & card
+
+      // Tap LBS
+      await tester.tap(find.text('LBS').first);
+      await tester.pumpAndSettle();
+
+      final savedUnit = await database.getWeightUnit();
+      expect(savedUnit, 'lbs');
+      expect(find.text('178.5'), findsOneWidget);
+      expect(find.text('LBS'), findsNWidgets(2)); // pill & card
+
+      // Tap KG back
+      await tester.tap(find.text('KG').first);
+      await tester.pumpAndSettle();
+
+      final backUnit = await database.getWeightUnit();
+      expect(backUnit, 'kg');
+      expect(find.text('81.0'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.runAsync(database.close);
+    },
+  );
 }
