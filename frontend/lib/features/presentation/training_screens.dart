@@ -231,131 +231,168 @@ class TrainingScreen extends ConsumerWidget {
                   : Column(
                       children: items
                           .map(
-                            (routine) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: KineticCard(
-                                padding: EdgeInsets.zero,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(24),
-                                  onTap: () => _confirmAndStartRoutine(
-                                    context,
-                                    ref,
-                                    routine,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(14.0),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 44,
-                                          height: 44,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF1E1E20),
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
-                                            border: Border.all(
-                                              color: const Color(0xFF27272A),
-                                            ),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              routine.name
-                                                  .substring(0, 1)
-                                                  .toUpperCase(),
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                routine.name,
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                routine.notes.isEmpty
-                                                    ? 'Template tersimpan • Ketuk untuk mulai'
-                                                    : routine.notes,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontSize: 12.5,
-                                                  color: Color(0xFF8E8E93),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.more_vert_rounded,
-                                            color: Color(0xFF71717A),
-                                          ),
-                                          onPressed: () async {
-                                            final value =
-                                                await showAppActionSheet<
-                                                  String
-                                                >(
-                                                  context: context,
-                                                  title: routine.name,
-                                                  actions: const [
-                                                    AppAction(
-                                                      value: 'start',
-                                                      label: 'Mulai Latihan',
-                                                    ),
-                                                    AppAction(
-                                                      value: 'edit',
-                                                      label: 'Edit Routine',
-                                                    ),
-                                                    AppAction(
-                                                      value: 'delete',
-                                                      label: 'Hapus Routine',
-                                                    ),
-                                                  ],
-                                                );
-                                            if (!context.mounted) return;
-                                            if (value == 'start') {
-                                              await _confirmAndStartRoutine(
-                                                context,
-                                                ref,
-                                                routine,
-                                              );
-                                            } else if (value == 'edit') {
-                                              await showRoutineEditor(
-                                                context,
-                                                ref,
-                                                routine: routine,
-                                              );
-                                            } else if (value == 'delete') {
-                                              await ref
-                                                  .read(databaseProvider)
-                                                  .deleteRoutine(routine.id);
-                                            }
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                            (routine) => _RoutineCard(
+                              routine: routine,
+                              onStart: () => _confirmAndStartRoutine(
+                                context,
+                                ref,
+                                routine,
                               ),
+                              onEdit: () => showRoutineEditor(
+                                context,
+                                ref,
+                                routine: routine,
+                              ),
+                              onDelete: () => ref
+                                  .read(databaseProvider)
+                                  .deleteRoutine(routine.id),
                             ),
                           )
                           .toList(),
                     ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoutineCard extends ConsumerWidget {
+  const _RoutineCard({
+    required this.routine,
+    required this.onStart,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final Routine routine;
+  final VoidCallback onStart;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final namesAsync = ref.watch(routineExerciseNamesProvider(routine.id));
+    final exerciseNames = namesAsync.valueOrNull ?? [];
+    final exercisesText = exerciseNames.isNotEmpty
+        ? exerciseNames.join(', ')
+        : (routine.notes.isNotEmpty
+            ? routine.notes
+            : 'Belum ada latihan ditambahkan');
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: KineticCard(
+        padding: const EdgeInsets.all(16.0),
+        borderRadius: 20,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Row: Routine Name & 3-dots
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onStart,
+                    child: Text(
+                      routine.name.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.more_horiz_rounded,
+                    color: Color(0xFF8E8E93),
+                    size: 22,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  onPressed: () async {
+                    final value = await showAppActionSheet<String>(
+                      context: context,
+                      title: routine.name,
+                      actions: const [
+                        AppAction(
+                          value: 'start',
+                          label: 'Start Routine',
+                        ),
+                        AppAction(
+                          value: 'edit',
+                          label: 'Edit Routine',
+                        ),
+                        AppAction(
+                          value: 'delete',
+                          label: 'Hapus Routine',
+                        ),
+                      ],
+                    );
+                    if (value == 'start') {
+                      onStart();
+                    } else if (value == 'edit') {
+                      onEdit();
+                    } else if (value == 'delete') {
+                      onDelete();
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Exercises list / summary text
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onStart,
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                  exercisesText,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    height: 1.35,
+                    color: Color(0xFF8E8E93),
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // "Start Routine" blue button
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: onStart,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF007AFF),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: const Text('Start Routine'),
+              ),
             ),
           ],
         ),

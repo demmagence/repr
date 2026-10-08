@@ -476,6 +476,21 @@ class AppDatabase extends _$AppDatabase {
     return RoutineTemplate(routine: routine, exercises: items);
   }
 
+  Stream<List<String>> watchRoutineExerciseNames(String routineId) {
+    final query =
+        select(routineExercises).join([
+            innerJoin(
+              exercises,
+              exercises.id.equalsExp(routineExercises.exerciseId),
+            ),
+          ])
+          ..where(routineExercises.routineId.equals(routineId))
+          ..orderBy([OrderingTerm.asc(routineExercises.position)]);
+    return query.watch().map((rows) {
+      return rows.map((r) => r.readTable(exercises).name).toList();
+    });
+  }
+
   Future<void> updateRoutineTemplate({
     required String id,
     required String name,

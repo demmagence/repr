@@ -43,6 +43,10 @@ final workoutExercisesProvider = StreamProvider.autoDispose
     .family<List<WorkoutExerciseView>, String>(
       (ref, id) => ref.watch(databaseProvider).watchWorkoutExercises(id),
     );
+final routineExerciseNamesProvider = StreamProvider.autoDispose
+    .family<List<String>, String>(
+      (ref, id) => ref.watch(databaseProvider).watchRoutineExerciseNames(id),
+    );
 
 final routerProvider = Provider<GoRouter>(
   (ref) => GoRouter(

@@ -80,11 +80,12 @@ void main() {
         findsNothing,
       );
 
-      // 2. Verifikasi routine card "Leg Day Blast" ada
-      expect(find.text('Leg Day Blast'), findsOneWidget);
+      // 2. Verifikasi routine card "LEG DAY BLAST" dan tombol "Start Routine" ada
+      expect(find.text('LEG DAY BLAST'), findsOneWidget);
+      expect(find.text('Start Routine'), findsOneWidget);
 
-      // 3. Ketuk routine card -> Dialog konfirmasi harus muncul
-      await tester.tap(find.text('Leg Day Blast'));
+      // 3. Ketuk tombol Start Routine -> Dialog konfirmasi harus muncul
+      await tester.tap(find.text('Start Routine'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
@@ -105,8 +106,8 @@ void main() {
       expect(find.text('Mulai latihan?'), findsNothing);
       expect(find.textContaining('Active Workout:'), findsNothing);
 
-      // 5. Ketuk routine lagi dan konfirmasi Mulai
-      await tester.tap(find.text('Leg Day Blast'));
+      // 5. Ketuk judul routine lagi dan konfirmasi Mulai
+      await tester.tap(find.text('LEG DAY BLAST'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
