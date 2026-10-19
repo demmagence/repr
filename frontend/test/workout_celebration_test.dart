@@ -48,6 +48,7 @@ void main() {
             summary: summary,
             weightUnit: 'kg',
             userName: 'deryl',
+            initialGreeting: defaultCelebrationGreetings.first,
           ),
         ),
       );
@@ -84,6 +85,44 @@ void main() {
       // Verify Selesai button works without throwing
       await tester.tap(find.text('Selesai'));
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('memilih kalimat ucapan bervariasi setiap kali menyelesaikan workout', (tester) async {
+      final summary = WorkoutCompletionSummary(
+        duration: const Duration(minutes: 30),
+        completedSets: 10,
+        volumeKg: 1000.0,
+        personalRecords: const [],
+        workoutName: 'Pagi Hari',
+        workoutNumber: 1,
+        exerciseSummaries: const ['3x Squat'],
+        streakWeeks: 1,
+      );
+
+      final foundGreetings = <String>{};
+
+      for (var i = 0; i < 25; i++) {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: buildAppTheme(),
+            home: WorkoutCelebrationScreen(
+              key: ValueKey(i),
+              summary: summary,
+              weightUnit: 'kg',
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        for (final greeting in defaultCelebrationGreetings) {
+          if (find.text(greeting.fullTitle).evaluate().isNotEmpty) {
+            foundGreetings.add(greeting.fullTitle);
+          }
+        }
+      }
+
+      // Verifikasi bahwa kata-kata yang muncul bervariasi (tidak hanya satu)
+      expect(foundGreetings.length, greaterThan(1));
     });
   });
 }

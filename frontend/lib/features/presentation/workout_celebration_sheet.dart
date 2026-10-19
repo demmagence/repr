@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -114,11 +115,38 @@ int resolveComparisonIndex(double volumeKg) {
   return 4;
 }
 
+class CelebrationGreeting {
+  const CelebrationGreeting({required this.title, required this.emoji});
+  final String title;
+  final String emoji;
+
+  String get fullTitle => '$title $emoji';
+}
+
+const List<CelebrationGreeting> defaultCelebrationGreetings = [
+  CelebrationGreeting(title: 'Kerja bagus!', emoji: '🎉'),
+  CelebrationGreeting(title: 'Latihan mantap!', emoji: '🔥'),
+  CelebrationGreeting(title: 'Keren banget!', emoji: '💥'),
+  CelebrationGreeting(title: 'Gokil, tuntas!', emoji: '🚀'),
+  CelebrationGreeting(title: 'Luar biasa!', emoji: '🏆'),
+  CelebrationGreeting(title: 'Disiplin juara!', emoji: '👑'),
+  CelebrationGreeting(title: 'Level up hari ini!', emoji: '⚡'),
+  CelebrationGreeting(title: 'Tak terhentikan!', emoji: '🦾'),
+  CelebrationGreeting(title: 'Sesi yang solid!', emoji: '🏋️'),
+  CelebrationGreeting(title: 'Terus konsisten!', emoji: '🎯'),
+  CelebrationGreeting(title: 'Power maksimal!', emoji: '💪'),
+  CelebrationGreeting(title: 'Habis-habisan!', emoji: '🔥'),
+  CelebrationGreeting(title: 'Gaspol terus!', emoji: '🏎️'),
+  CelebrationGreeting(title: 'Hasil tak bohong!', emoji: '✨'),
+  CelebrationGreeting(title: 'Fokus & konsisten!', emoji: '💯'),
+];
+
 Future<void> showWorkoutCelebration(
   BuildContext context, {
   required WorkoutCompletionSummary summary,
   required String weightUnit,
   String? userName,
+  CelebrationGreeting? initialGreeting,
 }) async {
   await Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute(
@@ -127,6 +155,7 @@ Future<void> showWorkoutCelebration(
         summary: summary,
         weightUnit: weightUnit,
         userName: userName,
+        initialGreeting: initialGreeting,
       ),
     ),
   );
@@ -137,12 +166,14 @@ class WorkoutCelebrationScreen extends StatefulWidget {
     required this.summary,
     required this.weightUnit,
     this.userName,
+    this.initialGreeting,
     super.key,
   });
 
   final WorkoutCompletionSummary summary;
   final String weightUnit;
   final String? userName;
+  final CelebrationGreeting? initialGreeting;
 
   @override
   State<WorkoutCelebrationScreen> createState() =>
@@ -155,6 +186,7 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
 
   int _currentPage = 0;
   late int _selectedComparisonIndex;
+  late final CelebrationGreeting _greeting;
   CelebrationThemeStyle _themeStyle = CelebrationThemeStyle.classicWhite;
   bool _isProcessingAction = false;
 
@@ -163,6 +195,9 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
     super.initState();
     _pageController = PageController();
     _selectedComparisonIndex = resolveComparisonIndex(widget.summary.volumeKg);
+    _greeting = widget.initialGreeting ??
+        defaultCelebrationGreetings[
+            Random().nextInt(defaultCelebrationGreetings.length)];
   }
 
   @override
@@ -346,7 +381,7 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
             : '\n🏆 PR Baru:\n${widget.summary.personalRecords.map((r) => '• ${r.exerciseName}: ${(isLbs ? r.valueKg * kgToLbsMultiplier : r.valueKg).toStringAsFixed(1)} ${widget.weightUnit} (${r.kind == PersonalRecordKind.maxWeight ? 'Max Weight' : 'Est. 1RM'})').join('\n')}';
 
     final text =
-        '💪 Latihan Selesai di Repr!\n'
+        '${_greeting.emoji} ${_greeting.title} di Repr!\n'
         '📅 ${widget.summary.workoutName}\n'
         '⏱️ Durasi: ${widget.summary.duration.inMinutes} mnt\n'
         '📊 Total Set: ${widget.summary.completedSets}\n'
@@ -432,9 +467,9 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Kerja bagus! 🎉',
-                          style: TextStyle(
+                        Text(
+                          _greeting.fullTitle,
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
@@ -461,8 +496,8 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: const Color(0xFF27272A)),
                     ),
-                    child: const Center(
-                      child: Text('🎉', style: TextStyle(fontSize: 20)),
+                    child: Center(
+                      child: Text(_greeting.emoji, style: const TextStyle(fontSize: 20)),
                     ),
                   ),
                 ],
