@@ -841,6 +841,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
 
     if (widget.routine != null) {
       final template = await database.getRoutineTemplate(widget.routine!.id);
+      final weightUnit = ref.read(weightUnitProvider).valueOrNull ?? 'kg';
       _nameController.text = template.routine.name;
       _notesController.text = template.routine.notes;
       for (final item in template.exercises) {
@@ -851,7 +852,15 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
               exercise: ex,
               notes: item.notes,
               restSeconds: item.restSeconds,
-              setTypes: [...item.setTypes],
+              sets: item.sets
+                  .map(
+                    (s) => _RoutineSetDraft(
+                      type: s.type,
+                      weight: formatWeight(s.weightGrams, unit: weightUnit),
+                      reps: s.reps > 0 ? s.reps.toString() : '10',
+                    ),
+                  )
+                  .toList(),
             ),
           );
         }
@@ -875,13 +884,21 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       return;
     }
     final database = ref.read(databaseProvider);
+    final weightUnit = ref.read(weightUnitProvider).valueOrNull ?? 'kg';
     final exerciseTemplates = [
       for (final item in _items)
         RoutineExerciseTemplate(
           exerciseId: item.exercise.id,
           notes: item.notes,
           restSeconds: item.restSeconds,
-          setTypes: [...item.setTypes],
+          sets: [
+            for (final set in item.sets)
+              RoutineSetTemplate(
+                type: set.type,
+                weightGrams: parseWeight(set.weight, unit: weightUnit).clamp(0, 100000000),
+                reps: (int.tryParse(set.reps.trim()) ?? 0).clamp(0, 9999),
+              ),
+          ],
         ),
     ];
     if (widget.routine == null) {
@@ -905,6 +922,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
     return Scaffold(
       backgroundColor: const Color(0xFF09090B),
       appBar: AppBar(
@@ -1042,6 +1060,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                         child: _RoutineExerciseEditor(
                           index: index,
                           item: _items[index],
+                          weightUnit: weightUnit,
                           onChanged: () => setState(() {}),
                           onDelete: () => setState(() => _items.removeAt(index)),
                         ),
@@ -1054,30 +1073,56 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
   }
 }
 
+class _RoutineSetDraft {
+  _RoutineSetDraft({
+    String? id,
+    this.type = 'working',
+    this.weight = '0',
+    this.reps = '10',
+  }) : id = id ?? const Uuid().v4();
+
+  final String id;
+  String type;
+  String weight;
+  String reps;
+}
+
 class _RoutineExerciseDraft {
   _RoutineExerciseDraft({
     required this.exercise,
     this.notes = '',
     this.restSeconds = 90,
+    List<_RoutineSetDraft>? sets,
     List<String>? setTypes,
-  }) : setTypes = setTypes ?? ['working', 'working', 'working'];
+  }) : sets = sets ??
+           (setTypes != null
+               ? setTypes.map((t) => _RoutineSetDraft(type: t)).toList()
+               : [
+                   _RoutineSetDraft(type: 'working'),
+                   _RoutineSetDraft(type: 'working'),
+                   _RoutineSetDraft(type: 'working'),
+                 ]);
 
   final Exercise exercise;
   String notes;
   int restSeconds;
-  final List<String> setTypes;
+  final List<_RoutineSetDraft> sets;
+
+  List<String> get setTypes => sets.map((s) => s.type).toList();
 }
 
 class _RoutineExerciseEditor extends StatelessWidget {
   const _RoutineExerciseEditor({
     required this.index,
     required this.item,
+    required this.weightUnit,
     required this.onChanged,
     required this.onDelete,
   });
 
   final int index;
   final _RoutineExerciseDraft item;
+  final String weightUnit;
   final VoidCallback onChanged;
   final VoidCallback onDelete;
 
@@ -1090,7 +1135,7 @@ class _RoutineExerciseEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AppCard(
-    padding: const EdgeInsets.all(10),
+    padding: const EdgeInsets.all(12),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1099,14 +1144,16 @@ class _RoutineExerciseEditor extends StatelessWidget {
             ReorderableDragStartListener(
               index: index,
               child: const SizedBox.square(
-                dimension: 48,
-                child: Icon(Icons.drag_handle),
+                dimension: 40,
+                child: Icon(Icons.drag_handle, color: Color(0xFF71717A)),
               ),
             ),
             Expanded(
               child: Text(
                 item.exercise.name,
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             AppButton(
@@ -1147,28 +1194,91 @@ class _RoutineExerciseEditor extends StatelessWidget {
           hint: 'Opsional',
           onChanged: (value) => item.notes = value,
         ),
-        const SizedBox(height: 8),
-        ...List.generate(item.setTypes.length, (setIndex) {
-          final type = item.setTypes[setIndex];
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 22,
+                child: Text(
+                  '#',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF71717A),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Expanded(
+                flex: 3,
+                child: Text(
+                  'TIPE',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF71717A),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'BEBAN (${weightUnit.toUpperCase()})',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF71717A),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Expanded(
+                flex: 2,
+                child: Text(
+                  'REPS',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF71717A),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 76),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        ...List.generate(item.sets.length, (setIndex) {
+          final set = item.sets[setIndex];
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2.0),
+            padding: const EdgeInsets.symmetric(vertical: 3.0),
             child: Row(
               children: [
                 SizedBox(
-                  width: 28,
+                  width: 22,
                   child: Text(
                     '${setIndex + 1}.',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                      fontSize: 12,
+                      color: Color(0xFFA1A1AA),
                     ),
                   ),
                 ),
+                const SizedBox(width: 4),
+                // Type selector
                 Expanded(
-                  child: AppButton(
-                    label: setLabels[type]!,
-                    variant: AppActionVariant.secondary,
-                    onPressed: () async {
+                  flex: 3,
+                  child: InkWell(
+                    onTap: () async {
                       final selected = await showAppActionSheet<String>(
                         context: context,
                         title: 'Jenis set ${setIndex + 1}',
@@ -1180,62 +1290,217 @@ class _RoutineExerciseEditor extends StatelessWidget {
                             .toList(),
                       );
                       if (selected != null) {
-                        item.setTypes[setIndex] = selected;
+                        set.type = selected;
                         onChanged();
                       }
                     },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      height: 38,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E20),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF27272A)),
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              setLabels[set.type] ?? 'Working',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(
+                            Icons.arrow_drop_down,
+                            size: 14,
+                            color: Color(0xFF71717A),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),
-                IconButton(
-                  icon: const Icon(Icons.arrow_upward, size: 18),
-                  tooltip: 'Naikkan set ${setIndex + 1}',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  onPressed: setIndex == 0
-                      ? null
-                      : () {
-                          final value = item.setTypes.removeAt(setIndex);
-                          item.setTypes.insert(setIndex - 1, value);
-                          onChanged();
-                        },
+                // Weight input
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF09090B),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF27272A)),
+                    ),
+                    alignment: Alignment.center,
+                    child: TextFormField(
+                      key: ValueKey('routine-weight-${set.id}'),
+                      initialValue: set.weight,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
+                      ],
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        fontFeatures: tabularFigures,
+                      ),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+                        border: InputBorder.none,
+                        hintText: '0',
+                        hintStyle: TextStyle(color: Color(0xFF52525B)),
+                      ),
+                      onChanged: (value) => set.weight = value,
+                    ),
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_downward, size: 18),
-                  tooltip: 'Turunkan set ${setIndex + 1}',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  onPressed: setIndex == item.setTypes.length - 1
-                      ? null
-                      : () {
-                          final value = item.setTypes.removeAt(setIndex);
-                          item.setTypes.insert(setIndex + 1, value);
-                          onChanged();
-                        },
+                const SizedBox(width: 4),
+                // Reps input
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF09090B),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF27272A)),
+                    ),
+                    alignment: Alignment.center,
+                    child: TextFormField(
+                      key: ValueKey('routine-reps-${set.id}'),
+                      initialValue: set.reps,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        fontFeatures: tabularFigures,
+                      ),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+                        border: InputBorder.none,
+                        hintText: '0',
+                        hintStyle: TextStyle(color: Color(0xFF52525B)),
+                      ),
+                      onChanged: (value) => set.reps = value,
+                    ),
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline, size: 18),
-                  tooltip: 'Hapus set ${setIndex + 1}',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  onPressed: item.setTypes.length == 1
-                      ? null
-                      : () {
-                          item.setTypes.removeAt(setIndex);
-                          onChanged();
-                        },
+                const SizedBox(width: 2),
+                // Reorder / Delete Actions
+                SizedBox(
+                  width: 76,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Tooltip(
+                        message: 'Naikkan set ${setIndex + 1}',
+                        child: InkWell(
+                          onTap: setIndex == 0
+                              ? null
+                              : () {
+                                  final value = item.sets.removeAt(setIndex);
+                                  item.sets.insert(setIndex - 1, value);
+                                  onChanged();
+                                },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+                            child: Icon(
+                              Icons.arrow_upward_rounded,
+                              size: 16,
+                              color: setIndex == 0
+                                  ? const Color(0xFF3F3F46)
+                                  : const Color(0xFFA1A1AA),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        message: 'Turunkan set ${setIndex + 1}',
+                        child: InkWell(
+                          onTap: setIndex == item.sets.length - 1
+                              ? null
+                              : () {
+                                  final value = item.sets.removeAt(setIndex);
+                                  item.sets.insert(setIndex + 1, value);
+                                  onChanged();
+                                },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+                            child: Icon(
+                              Icons.arrow_downward_rounded,
+                              size: 16,
+                              color: setIndex == item.sets.length - 1
+                                  ? const Color(0xFF3F3F46)
+                                  : const Color(0xFFA1A1AA),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        message: 'Hapus set ${setIndex + 1}',
+                        child: InkWell(
+                          onTap: item.sets.length == 1
+                              ? null
+                              : () {
+                                  item.sets.removeAt(setIndex);
+                                  onChanged();
+                                },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+                            child: Icon(
+                              Icons.remove_circle_outline_rounded,
+                              size: 16,
+                              color: item.sets.length == 1
+                                  ? const Color(0xFF3F3F46)
+                                  : const Color(0xFFEF4444),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           );
         }),
+        const SizedBox(height: 6),
         AppButton(
           label: 'Tambah set',
           icon: Icons.add,
           expand: false,
           variant: AppActionVariant.quiet,
           onPressed: () {
-            item.setTypes.add('working');
+            final lastSet = item.sets.isNotEmpty ? item.sets.last : null;
+            item.sets.add(
+              _RoutineSetDraft(
+                type: 'working',
+                weight: lastSet?.weight ?? '0',
+                reps: lastSet?.reps ?? '10',
+              ),
+            );
             onChanged();
           },
         ),

@@ -55,6 +55,8 @@ class RoutineSets extends Table {
       text().references(RoutineExercises, #id)();
   IntColumn get position => integer()();
   TextColumn get type => text().withDefault(const Constant('working'))();
+  IntColumn get weightGrams => integer().withDefault(const Constant(0))();
+  IntColumn get reps => integer().withDefault(const Constant(0))();
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -126,7 +128,7 @@ class AppDatabase extends _$AppDatabase {
   static const uuid = Uuid();
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -196,6 +198,15 @@ class AppDatabase extends _$AppDatabase {
               ),
             );
           }
+        }
+      }
+      if (from < 6) {
+        final tableNames = await customSelect(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='routine_sets'",
+        ).get();
+        if (tableNames.isNotEmpty) {
+          await m.addColumn(routineSets, routineSets.weightGrams);
+          await m.addColumn(routineSets, routineSets.reps);
         }
       }
     },
@@ -482,7 +493,15 @@ class AppDatabase extends _$AppDatabase {
           exerciseId: row.exerciseId,
           notes: row.notes,
           restSeconds: row.restSeconds,
-          setTypes: sets.map((set) => set.type).toList(),
+          sets: sets
+              .map(
+                (set) => RoutineSetTemplate(
+                  type: set.type,
+                  weightGrams: set.weightGrams,
+                  reps: set.reps,
+                ),
+              )
+              .toList(),
         ),
       );
     }
@@ -534,11 +553,14 @@ class AppDatabase extends _$AppDatabase {
       throw ArgumentError('Routine wajib memiliki minimal satu exercise.');
     }
     for (final exercise in exercises) {
-      if (exercise.restSeconds < 0 || exercise.setTypes.isEmpty) {
+      if (exercise.restSeconds < 0 || exercise.sets.isEmpty) {
         throw ArgumentError('Konfigurasi exercise routine tidak valid.');
       }
-      if (exercise.setTypes.any((type) => !allowedTypes.contains(type))) {
+      if (exercise.sets.any((set) => !allowedTypes.contains(set.type))) {
         throw ArgumentError('Jenis set routine tidak valid.');
+      }
+      if (exercise.sets.any((set) => set.weightGrams < 0 || set.reps < 0)) {
+        throw ArgumentError('Berat dan repetisi routine tidak boleh negatif.');
       }
     }
   }
@@ -560,13 +582,16 @@ class AppDatabase extends _$AppDatabase {
           restSeconds: Value(item.restSeconds),
         ),
       );
-      for (var setIndex = 0; setIndex < item.setTypes.length; setIndex++) {
+      for (var setIndex = 0; setIndex < item.sets.length; setIndex++) {
+        final set = item.sets[setIndex];
         await into(routineSets).insert(
           RoutineSetsCompanion.insert(
             id: uuid.v4(),
             routineExerciseId: routineExerciseId,
             position: setIndex,
-            type: Value(item.setTypes[setIndex]),
+            type: Value(set.type),
+            weightGrams: Value(set.weightGrams),
+            reps: Value(set.reps),
           ),
         );
       }
@@ -645,6 +670,8 @@ class AppDatabase extends _$AppDatabase {
                 workoutExerciseId: workoutExerciseId,
                 position: set.position,
                 type: Value(set.type),
+                weightGrams: Value(set.weightGrams),
+                reps: Value(set.reps),
               ),
             );
           }
@@ -1372,7 +1399,9 @@ class AppDatabase extends _$AppDatabase {
           (row) =>
               !routineExerciseIds.contains(row.routineExerciseId) ||
               row.position < 0 ||
-              !setTypes.contains(row.type),
+              !setTypes.contains(row.type) ||
+              row.weightGrams < 0 ||
+              row.reps < 0,
         ) ||
         backup.workouts.any(
           (row) =>
@@ -1429,17 +1458,33 @@ class RoutineTemplate {
   final List<RoutineExerciseTemplate> exercises;
 }
 
+class RoutineSetTemplate {
+  const RoutineSetTemplate({
+    required this.type,
+    this.weightGrams = 0,
+    this.reps = 0,
+  });
+
+  final String type;
+  final int weightGrams;
+  final int reps;
+}
+
 class RoutineExerciseTemplate {
-  const RoutineExerciseTemplate({
+  RoutineExerciseTemplate({
     required this.exerciseId,
-    required this.setTypes,
+    List<RoutineSetTemplate>? sets,
+    List<String>? setTypes,
     this.notes = '',
     this.restSeconds = 90,
-  });
+  })  : sets = sets ??
+            (setTypes ?? const []).map((t) => RoutineSetTemplate(type: t)).toList(),
+        setTypes = setTypes ?? (sets ?? const []).map((s) => s.type).toList();
 
   final String exerciseId;
   final String notes;
   final int restSeconds;
+  final List<RoutineSetTemplate> sets;
   final List<String> setTypes;
 }
 

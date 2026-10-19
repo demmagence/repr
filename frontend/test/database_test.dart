@@ -77,7 +77,7 @@ void main() {
         )
         .getSingleOrNull();
 
-    expect(legacy.schemaVersion, 5);
+    expect(legacy.schemaVersion, 6);
     expect(index?.read<String>('name'), 'one_active_workout_idx');
   });
 
@@ -181,7 +181,7 @@ void main() {
       );
       addTearDown(legacy.close);
 
-      expect(legacy.schemaVersion, 5);
+      expect(legacy.schemaVersion, 6);
       final migrated = await (legacy.select(
         legacy.exercises,
       )..where((e) => e.id.equals('ex-1'))).getSingle();
@@ -262,6 +262,46 @@ void main() {
       'working',
       'warmUp',
     ]);
+  });
+
+  test('routine menyimpan berat dan repetisi serta mengisi workout sets saat dimulai', () async {
+    final library = await database.watchExercises().first;
+    final id = await database.createRoutineTemplate(
+      name: 'Chest Strength',
+      notes: 'Heavy bench',
+      exercises: [
+        RoutineExerciseTemplate(
+          exerciseId: library[0].id,
+          sets: const [
+            RoutineSetTemplate(type: 'warmUp', weightGrams: 40000, reps: 15),
+            RoutineSetTemplate(type: 'working', weightGrams: 80000, reps: 8),
+            RoutineSetTemplate(type: 'failure', weightGrams: 85000, reps: 6),
+          ],
+        ),
+      ],
+    );
+
+    final template = await database.getRoutineTemplate(id);
+    expect(template.exercises.single.sets, hasLength(3));
+    expect(template.exercises.single.sets[0].weightGrams, 40000);
+    expect(template.exercises.single.sets[0].reps, 15);
+    expect(template.exercises.single.sets[1].weightGrams, 80000);
+    expect(template.exercises.single.sets[1].reps, 8);
+    expect(template.exercises.single.sets[2].weightGrams, 85000);
+    expect(template.exercises.single.sets[2].reps, 6);
+
+    final workoutId = await database.startWorkout(routineId: id);
+    final workoutExercise = (await database.getWorkoutExercises(workoutId)).single;
+    expect(workoutExercise.sets, hasLength(3));
+    expect(workoutExercise.sets[0].weightGrams, 40000);
+    expect(workoutExercise.sets[0].reps, 15);
+    expect(workoutExercise.sets[0].type, 'warmUp');
+    expect(workoutExercise.sets[1].weightGrams, 80000);
+    expect(workoutExercise.sets[1].reps, 8);
+    expect(workoutExercise.sets[1].type, 'working');
+    expect(workoutExercise.sets[2].weightGrams, 85000);
+    expect(workoutExercise.sets[2].reps, 6);
+    expect(workoutExercise.sets[2].type, 'failure');
   });
 
   test('finish memerlukan set selesai dan membuang set kosong', () async {

@@ -125,4 +125,77 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1));
     },
   );
+
+  testWidgets(
+    'RoutineEditorScreen menampilkan input beban dan repetisi serta menyimpannya',
+    (tester) async {
+      final database = AppDatabase(NativeDatabase.memory());
+      late String routineId;
+
+      late Routine routine;
+      await tester.runAsync(() async {
+        final exercise = (await database.watchExercises().first).first;
+        routineId = await database.createRoutineTemplate(
+          name: 'Shoulder Press Routine',
+          exercises: [
+            RoutineExerciseTemplate(
+              exerciseId: exercise.id,
+              sets: const [
+                RoutineSetTemplate(type: 'working', weightGrams: 20000, reps: 12),
+              ],
+            ),
+          ],
+        );
+        routine = (await database.watchRoutines().first).single;
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            databaseProvider.overrideWithValue(database),
+          ],
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: RoutineEditorScreen(routine: routine),
+          ),
+        ),
+      );
+
+      await tester.runAsync(() async {
+        await Future.delayed(const Duration(milliseconds: 300));
+      });
+      await tester.pump();
+
+      // Verifikasi header dan field beban & reps
+      expect(find.text('Edit routine'), findsOneWidget);
+      expect(find.text('BEBAN (KG)'), findsOneWidget);
+      expect(find.text('REPS'), findsOneWidget);
+      expect(find.text('20'), findsOneWidget);
+      expect(find.text('12'), findsOneWidget);
+
+      // Edit repetisi dari 12 menjadi 15
+      await tester.enterText(find.text('12'), '15');
+      await tester.pump();
+
+      // Simpan routine
+      await tester.tap(find.text('Simpan'));
+      await tester.runAsync(
+        () => Future.delayed(const Duration(milliseconds: 400)),
+      );
+      await tester.pump();
+
+      // Verifikasi data tersimpan di database
+      late RoutineTemplate updated;
+      await tester.runAsync(() async {
+        updated = await database.getRoutineTemplate(routineId);
+      });
+      expect(updated.exercises.single.sets.single.reps, 15);
+      expect(updated.exercises.single.sets.single.weightGrams, 20000);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.runAsync(database.close);
+      await tester.pump(const Duration(milliseconds: 1));
+    },
+  );
 }
