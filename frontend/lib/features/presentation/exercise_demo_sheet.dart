@@ -30,6 +30,7 @@ Future<void> showExerciseDemoSheet(
 
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: const Color(0xFF09090B),

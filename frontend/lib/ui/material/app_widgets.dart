@@ -491,9 +491,11 @@ Future<T?> showAppDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool barrierDismissible = true,
+  bool useRootNavigator = true,
 }) => showDialog<T>(
   context: context,
   barrierDismissible: barrierDismissible,
+  useRootNavigator: useRootNavigator,
   builder: builder,
 );
 
@@ -507,8 +509,10 @@ Future<T?> showAppActionSheet<T>({
   required BuildContext context,
   required String title,
   required List<AppAction<T>> actions,
+  bool useRootNavigator = true,
 }) => showModalBottomSheet<T>(
   context: context,
+  useRootNavigator: useRootNavigator,
   showDragHandle: true,
   isScrollControlled: true,
   builder: (context) => SafeArea(
@@ -585,8 +589,10 @@ Future<DateTime?> showAppDatePicker({
   required DateTime initialDate,
   required DateTime firstDate,
   required DateTime lastDate,
+  bool useRootNavigator = true,
 }) => showDatePicker(
   context: context,
+  useRootNavigator: useRootNavigator,
   initialDate: initialDate,
   firstDate: firstDate,
   lastDate: lastDate,

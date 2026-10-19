@@ -1274,6 +1274,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                               final ctrl = TextEditingController(text: formatWeight(set.weightGrams, unit: weightUnit));
                               final val = await showDialog<String>(
                                 context: context,
+                                useRootNavigator: true,
                                 builder: (ctx) => AlertDialog(
                                   backgroundColor: const Color(0xFF161618),
                                   title: Text('Ubah Beban ($weightUnit)', style: const TextStyle(color: Colors.white, fontSize: 16)),
@@ -1343,6 +1344,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                               final ctrl = TextEditingController(text: '${set.reps}');
                               final val = await showDialog<String>(
                                 context: context,
+                                useRootNavigator: true,
                                 builder: (ctx) => AlertDialog(
                                   backgroundColor: const Color(0xFF161618),
                                   title: const Text('Ubah Repetisi', style: TextStyle(color: Colors.white, fontSize: 16)),

@@ -1,10 +1,324 @@
 part of '../screens.dart';
 
-class HistoryScreen extends ConsumerWidget {
-  const HistoryScreen({super.key});
+class HistoryScreen extends ConsumerStatefulWidget {
+  const HistoryScreen({super.key, this.initialMonth});
+
+  final DateTime? initialMonth;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _MonthFilterResult {
+  const _MonthFilterResult(this.date);
+  final DateTime? date;
+}
+
+class _HistoryScreenState extends ConsumerState<HistoryScreen> {
+  DateTime? _selectedMonth;
+  bool _hasExplicitSelection = false;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMonth = widget.initialMonth;
+    if (widget.initialMonth != null) {
+      _hasExplicitSelection = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openMonthFilterSheet(
+    BuildContext context,
+    List<Workout> history,
+  ) async {
+    final now = DateTime.now();
+    var pickerYear = _selectedMonth?.year ?? now.year;
+
+    final result = await showModalBottomSheet<_MonthFilterResult?>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: const Color(0xFF161618),
+      barrierColor: Colors.black54,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (bottomSheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final monthNames = [
+              'Januari',
+              'Februari',
+              'Maret',
+              'April',
+              'Mei',
+              'Juni',
+              'Juli',
+              'Agustus',
+              'September',
+              'Oktober',
+              'November',
+              'Desember',
+            ];
+
+            return SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Pilih Bulan',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (_selectedMonth != null)
+                          TextButton(
+                            key: const Key('history-reset-month-filter'),
+                            onPressed: () => Navigator.pop(
+                              context,
+                              const _MonthFilterResult(null),
+                            ),
+                            child: const Text(
+                              'Reset Filter',
+                              style: TextStyle(
+                                color: Color(0xFFA1A1AA),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E20),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF27272A)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            key: const Key('history-prev-year'),
+                            icon: const Icon(
+                              Icons.chevron_left_rounded,
+                              color: Colors.white,
+                            ),
+                            tooltip: 'Tahun Sebelumnya',
+                            onPressed: () {
+                              setModalState(() {
+                                pickerYear--;
+                              });
+                            },
+                          ),
+                          Text(
+                            '$pickerYear',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          IconButton(
+                            key: const Key('history-next-year'),
+                            icon: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Colors.white,
+                            ),
+                            tooltip: 'Tahun Berikutnya',
+                            onPressed: () {
+                              setModalState(() {
+                                pickerYear++;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 2.1,
+                      ),
+                      itemCount: 12,
+                      itemBuilder: (context, index) {
+                        final monthNum = index + 1;
+                        final isSelected =
+                            _selectedMonth != null &&
+                            _selectedMonth!.year == pickerYear &&
+                            _selectedMonth!.month == monthNum;
+                        final isCurrentMonth =
+                            now.year == pickerYear && now.month == monthNum;
+
+                        final workoutCount = history.where((w) {
+                          return w.startedAt.year == pickerYear &&
+                              w.startedAt.month == monthNum;
+                        }).length;
+
+                        return Material(
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF1E1E20),
+                          borderRadius: BorderRadius.circular(14),
+                          child: InkWell(
+                            key: Key('history-month-$monthNum'),
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () {
+                              Navigator.pop(
+                                context,
+                                _MonthFilterResult(
+                                  DateTime(pickerYear, monthNum),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : (isCurrentMonth
+                                          ? const Color(0xFF71717A)
+                                          : const Color(0xFF27272A)),
+                                  width: isSelected || isCurrentMonth ? 1.5 : 1,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 6,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      monthNames[index],
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: isSelected || isCurrentMonth
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? Colors.black
+                                            : Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  if (workoutCount > 0) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '$workoutCount latihan',
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected
+                                            ? const Color(0xFF27272A)
+                                            : const Color(0xFFA1A1AA),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            key: const Key('history-current-month-btn'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Color(0xFF27272A)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(
+                                context,
+                                _MonthFilterResult(
+                                  DateTime(now.year, now.month),
+                                ),
+                              );
+                            },
+                            child: const Text('Bulan Ini'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            key: const Key('history-all-months-btn'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF27272A),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(
+                                context,
+                                const _MonthFilterResult(null),
+                              );
+                            },
+                            child: const Text('Semua Bulan'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedMonth = result.date;
+        _hasExplicitSelection = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final history = ref.watch(historyProvider).valueOrNull ?? [];
     final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
     final isLbs = weightUnit == 'lbs';
@@ -29,6 +343,26 @@ class HistoryScreen extends ConsumerWidget {
     }
     final weeklyHours = weeklyMinutes ~/ 60;
     final weeklyRemMins = weeklyMinutes % 60;
+
+    var filteredHistory = _selectedMonth == null
+        ? history
+        : history.where((w) {
+            return w.startedAt.year == _selectedMonth!.year &&
+                w.startedAt.month == _selectedMonth!.month;
+          }).toList();
+
+    if (_searchQuery.trim().isNotEmpty) {
+      final q = _searchQuery.trim().toLowerCase();
+      filteredHistory = filteredHistory.where((w) {
+        return w.name.toLowerCase().contains(q);
+      }).toList();
+    }
+
+    final monthText = _selectedMonth != null
+        ? DateFormat('MMMM yyyy', 'id_ID').format(_selectedMonth!)
+        : (_hasExplicitSelection
+            ? 'Semua Bulan'
+            : DateFormat('MMMM yyyy', 'id_ID').format(now));
 
     return Scaffold(
       backgroundColor: const Color(0xFF09090B),
@@ -64,40 +398,71 @@ class HistoryScreen extends ConsumerWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF161618),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        key: const Key('history-month-filter'),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF27272A)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_rounded,
-                            size: 14,
-                            color: Colors.white,
+                        onTap: () => _openMonthFilterSheet(context, history),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            DateFormat('MMMM yyyy', 'id_ID').format(now),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF161618),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _selectedMonth != null
+                                  ? Colors.white70
+                                  : const Color(0xFF27272A)),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 16,
-                            color: Color(0xFF8E8E93),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_rounded,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                monthText,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              if (_selectedMonth != null) ...[
+                                GestureDetector(
+                                  key: const Key('history-clear-month-filter'),
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedMonth = null;
+                                      _hasExplicitSelection = true;
+                                    });
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Icon(
+                                      Icons.close_rounded,
+                                      size: 16,
+                                      color: Color(0xFF8E8E93),
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  size: 16,
+                                  color: Color(0xFF8E8E93),
+                                ),
+                              ],
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -105,15 +470,72 @@ class HistoryScreen extends ConsumerWidget {
                 const SizedBox(width: 8),
                 KineticIconButton(
                   size: 36,
-                  icon: const Icon(
-                    Icons.search_rounded,
+                  icon: Icon(
+                    _isSearching ? Icons.close_rounded : Icons.search_rounded,
                     size: 18,
-                    color: Color(0xFFD4D4D8),
+                    color: const Color(0xFFD4D4D8),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      _isSearching = !_isSearching;
+                      if (!_isSearching) {
+                        _searchController.clear();
+                        _searchQuery = '';
+                      }
+                    });
+                  },
                 ),
               ],
             ),
+            if (_isSearching) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Cari riwayat latihan...',
+                  hintStyle: const TextStyle(color: Color(0xFF71717A)),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: Color(0xFF8E8E93),
+                    size: 18,
+                  ),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(
+                            Icons.clear_rounded,
+                            color: Color(0xFF8E8E93),
+                            size: 16,
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: const Color(0xFF161618),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFF27272A)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFF27272A)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Colors.white),
+                  ),
+                ),
+                onChanged: (val) => setState(() => _searchQuery = val),
+              ),
+            ],
             const SizedBox(height: 16),
 
             // Week Calendar Strip Card
@@ -378,7 +800,7 @@ class HistoryScreen extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  DateFormat('MMMM yyyy', 'id_ID').format(now),
+                  monthText,
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF71717A),
@@ -390,18 +812,50 @@ class HistoryScreen extends ConsumerWidget {
             const SizedBox(height: 12),
 
             // History List
-            if (history.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40.0),
+            if (filteredHistory.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40.0),
                 child: Center(
-                  child: Text(
-                    'Belum ada riwayat latihan tersimpan',
-                    style: TextStyle(color: Color(0xFF71717A)),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.event_busy_rounded,
+                        size: 40,
+                        color: Color(0xFF52525B),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _selectedMonth != null
+                            ? 'Tidak ada riwayat latihan pada $monthText'
+                            : (_searchQuery.isNotEmpty
+                                ? 'Tidak ada latihan yang cocok dengan "$_searchQuery"'
+                                : 'Belum ada riwayat latihan tersimpan'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Color(0xFF71717A)),
+                      ),
+                      if (_selectedMonth != null || _searchQuery.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedMonth = null;
+                              _hasExplicitSelection = true;
+                              _searchController.clear();
+                              _searchQuery = '';
+                            });
+                          },
+                          child: const Text(
+                            'Tampilkan Semua Riwayat',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               )
             else
-              ...history.map((workout) {
+              ...filteredHistory.map((workout) {
                 final duration = workout.endedAt?.difference(workout.startedAt);
                 final durationLabel = duration != null
                     ? (duration.inHours > 0

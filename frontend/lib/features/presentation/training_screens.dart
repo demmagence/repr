@@ -380,6 +380,7 @@ Future<List<Exercise>?> showExercisePicker(
   if (!context.mounted) return null;
   return showModalBottomSheet<List<Exercise>>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     builder: (context) =>
