@@ -304,6 +304,88 @@ void main() {
     expect(workoutExercise.sets[2].type, 'failure');
   });
 
+  test('finishWorkout memperbarui berat dan repetisi pada template routine asal', () async {
+    final library = await database.watchExercises().first;
+    final routineId = await database.createRoutineTemplate(
+      name: 'Leg Day',
+      notes: 'Squats',
+      exercises: [
+        RoutineExerciseTemplate(
+          exerciseId: library[0].id,
+          sets: const [
+            RoutineSetTemplate(type: 'working', weightGrams: 50000, reps: 10),
+            RoutineSetTemplate(type: 'working', weightGrams: 50000, reps: 10),
+          ],
+        ),
+      ],
+    );
+
+    // Mulai workout dari routine
+    final workoutId = await database.startWorkout(routineId: routineId);
+    final workoutExercise = (await database.getWorkoutExercises(workoutId)).single;
+    expect(workoutExercise.sets, hasLength(2));
+    expect(workoutExercise.sets[0].weightGrams, 50000);
+    expect(workoutExercise.sets[1].weightGrams, 50000);
+
+    // Naikkan beban saat workout: Set 1 jadi 52.5kg x 10, Set 2 jadi 55kg x 8
+    await database.updateWorkoutSet(
+      id: workoutExercise.sets[0].id,
+      weightGrams: 52500,
+      reps: 10,
+      completed: true,
+    );
+    await database.updateWorkoutSet(
+      id: workoutExercise.sets[1].id,
+      weightGrams: 55000,
+      reps: 8,
+      completed: true,
+    );
+
+    // Selesaikan workout
+    await database.finishWorkout(workoutId);
+
+    // Template routine harus sudah ter-update dengan beban dan reps baru
+    final updatedTemplate = await database.getRoutineTemplate(routineId);
+    expect(updatedTemplate.exercises.single.sets[0].weightGrams, 52500);
+    expect(updatedTemplate.exercises.single.sets[0].reps, 10);
+    expect(updatedTemplate.exercises.single.sets[1].weightGrams, 55000);
+    expect(updatedTemplate.exercises.single.sets[1].reps, 8);
+
+    // Saat memulai routine berikutnya, nilai baru langsung terisi otomatis
+    final nextWorkoutId = await database.startWorkout(routineId: routineId);
+    final nextExercise = (await database.getWorkoutExercises(nextWorkoutId)).single;
+    expect(nextExercise.sets[0].weightGrams, 52500);
+    expect(nextExercise.sets[0].reps, 10);
+    expect(nextExercise.sets[1].weightGrams, 55000);
+    expect(nextExercise.sets[1].reps, 8);
+  });
+
+  test('getLastCompletedSetForExercise mengembalikan set terakhir yang selesai', () async {
+    final library = await database.watchExercises().first;
+    final exerciseId = library[0].id;
+
+    // Belum pernah latihan
+    expect(await database.getLastCompletedSetForExercise(exerciseId), isNull);
+
+    // Latihan pertama
+    final wId = await database.startWorkout();
+    await database.addExerciseToWorkout(wId, exerciseId);
+    final view = (await database.getWorkoutExercises(wId)).single;
+    await database.updateWorkoutSet(
+      id: view.sets[0].id,
+      weightGrams: 60000,
+      reps: 12,
+      completed: true,
+    );
+    await database.finishWorkout(wId);
+
+    // Harusnya mengembalikan set 60kg x 12
+    final lastSet = await database.getLastCompletedSetForExercise(exerciseId);
+    expect(lastSet, isNotNull);
+    expect(lastSet!.weightGrams, 60000);
+    expect(lastSet.reps, 12);
+  });
+
   test('finish memerlukan set selesai dan membuang set kosong', () async {
     final exercise = (await database.watchExercises().first).first;
     final workoutId = await database.startWorkout();

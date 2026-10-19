@@ -719,6 +719,51 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+  Future<WorkoutSet?> getLastCompletedSetForExercise(String exerciseId) async {
+    final query = select(workoutExercises).join([
+      innerJoin(workouts, workouts.id.equalsExp(workoutExercises.workoutId)),
+      innerJoin(
+        workoutSets,
+        workoutSets.workoutExerciseId.equalsExp(workoutExercises.id),
+      ),
+    ])
+      ..where(
+        workoutExercises.exerciseId.equals(exerciseId) &
+            workouts.status.equals('completed') &
+            workoutSets.completed.equals(true) &
+            workoutSets.type.equals('warmUp').not(),
+      )
+      ..orderBy([
+        OrderingTerm.desc(workouts.startedAt),
+        OrderingTerm.desc(workoutSets.position),
+      ])
+      ..limit(1);
+
+    final row = await query.getSingleOrNull();
+    if (row != null) return row.readTable(workoutSets);
+
+    final fallbackQuery = select(workoutExercises).join([
+      innerJoin(workouts, workouts.id.equalsExp(workoutExercises.workoutId)),
+      innerJoin(
+        workoutSets,
+        workoutSets.workoutExerciseId.equalsExp(workoutExercises.id),
+      ),
+    ])
+      ..where(
+        workoutExercises.exerciseId.equals(exerciseId) &
+            workouts.status.equals('completed') &
+            workoutSets.completed.equals(true),
+      )
+      ..orderBy([
+        OrderingTerm.desc(workouts.startedAt),
+        OrderingTerm.desc(workoutSets.position),
+      ])
+      ..limit(1);
+    final fallbackRow = await fallbackQuery.getSingleOrNull();
+    if (fallbackRow == null) return null;
+    return fallbackRow.readTable(workoutSets);
+  }
+
   Future<void> addExerciseToWorkout(String workoutId, String exerciseId) async {
     final count =
         await (select(workoutExercises)
@@ -726,6 +771,9 @@ class AppDatabase extends _$AppDatabase {
             .get()
             .then((rows) => rows.length);
     final id = uuid.v4();
+    final lastSet = await getLastCompletedSetForExercise(exerciseId);
+    final defaultWeight = lastSet?.weightGrams ?? 0;
+    final defaultReps = (lastSet != null && lastSet.reps > 0) ? lastSet.reps : 10;
     await transaction(() async {
       await into(workoutExercises).insert(
         WorkoutExercisesCompanion.insert(
@@ -742,6 +790,8 @@ class AppDatabase extends _$AppDatabase {
             id: uuid.v4(),
             workoutExerciseId: id,
             position: i,
+            weightGrams: Value(defaultWeight),
+            reps: Value(defaultReps),
           ),
         );
       }
@@ -811,16 +861,18 @@ class AppDatabase extends _$AppDatabase {
   );
 
   Future<void> addSet(String workoutExerciseId) async {
-    final count =
-        await (select(workoutSets)
-              ..where((s) => s.workoutExerciseId.equals(workoutExerciseId)))
-            .get()
-            .then((rows) => rows.length);
+    final existingSets = await (select(workoutSets)
+          ..where((s) => s.workoutExerciseId.equals(workoutExerciseId))
+          ..orderBy([(s) => OrderingTerm.asc(s.position)]))
+        .get();
+    final lastSet = existingSets.isNotEmpty ? existingSets.last : null;
     await into(workoutSets).insert(
       WorkoutSetsCompanion.insert(
         id: uuid.v4(),
         workoutExerciseId: workoutExerciseId,
-        position: count,
+        position: existingSets.length,
+        weightGrams: Value(lastSet?.weightGrams ?? 0),
+        reps: Value(lastSet?.reps ?? 10),
       ),
     );
   }
@@ -910,11 +962,81 @@ class AppDatabase extends _$AppDatabase {
         .then((rows) => rows.length);
   }
 
+  Future<void> _syncWorkoutSetsToRoutine(
+    String routineId,
+    String workoutId,
+  ) async {
+    final rExercises = await (select(routineExercises)
+          ..where((re) => re.routineId.equals(routineId))
+          ..orderBy([(re) => OrderingTerm.asc(re.position)]))
+        .get();
+
+    final wExercises = await (select(workoutExercises)
+          ..where((we) => we.workoutId.equals(workoutId))
+          ..orderBy([(we) => OrderingTerm.asc(we.position)]))
+        .get();
+
+    for (final wEx in wExercises) {
+      RoutineExercise? matchingREx;
+      try {
+        matchingREx = rExercises.firstWhere(
+          (re) => re.position == wEx.position && re.exerciseId == wEx.exerciseId,
+        );
+      } catch (_) {
+        try {
+          matchingREx = rExercises.firstWhere(
+            (re) => re.exerciseId == wEx.exerciseId,
+          );
+        } catch (_) {
+          matchingREx = null;
+        }
+      }
+      if (matchingREx == null) continue;
+
+      final rSets = await (select(routineSets)
+            ..where((rs) => rs.routineExerciseId.equals(matchingREx!.id))
+            ..orderBy([(rs) => OrderingTerm.asc(rs.position)]))
+          .get();
+
+      final wSets = await (select(workoutSets)
+            ..where(
+              (ws) =>
+                  ws.workoutExerciseId.equals(wEx.id) &
+                  ws.completed.equals(true),
+            )
+            ..orderBy([(ws) => OrderingTerm.asc(ws.position)]))
+          .get();
+
+      for (final wSet in wSets) {
+        final matchingRSet =
+            rSets.where((rs) => rs.position == wSet.position).firstOrNull;
+        if (matchingRSet != null) {
+          await (update(routineSets)..where((rs) => rs.id.equals(matchingRSet.id)))
+              .write(
+            RoutineSetsCompanion(
+              weightGrams: Value(wSet.weightGrams),
+              reps: Value(wSet.reps),
+            ),
+          );
+        }
+      }
+    }
+
+    await (update(routines)..where((r) => r.id.equals(routineId))).write(
+      RoutinesCompanion(updatedAt: Value(DateTime.now())),
+    );
+  }
+
   Future<void> finishWorkout(String id) async {
     if (await completedSetCount(id) == 0) {
       throw StateError('Selesaikan minimal satu set.');
     }
     await transaction(() async {
+      final workout =
+          await (select(workouts)..where((w) => w.id.equals(id))).getSingle();
+      if (workout.routineId != null) {
+        await _syncWorkoutSetsToRoutine(workout.routineId!, id);
+      }
       final exerciseIds =
           await (select(workoutExercises)..where((e) => e.workoutId.equals(id)))
               .get()

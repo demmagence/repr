@@ -1018,16 +1018,53 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                             multiple: true,
                           );
                           if (selected == null || !mounted) return;
-                          setState(() {
-                            final existing =
-                                _items.map((item) => item.exercise.id).toSet();
-                            for (final exercise in selected) {
-                              if (existing.add(exercise.id)) {
-                                _items.add(
-                                  _RoutineExerciseDraft(exercise: exercise),
-                                );
-                              }
+                          final database = ref.read(databaseProvider);
+                          final weightUnit =
+                              ref.read(weightUnitProvider).valueOrNull ?? 'kg';
+                          final existing =
+                              _items.map((item) => item.exercise.id).toSet();
+                          final newDrafts = <_RoutineExerciseDraft>[];
+                          for (final exercise in selected) {
+                            if (existing.add(exercise.id)) {
+                              final lastSet = await database
+                                  .getLastCompletedSetForExercise(exercise.id);
+                              final weightStr = lastSet != null
+                                  ? formatWeight(
+                                      lastSet.weightGrams,
+                                      unit: weightUnit,
+                                    )
+                                  : '0';
+                              final repsStr =
+                                  (lastSet != null && lastSet.reps > 0)
+                                      ? '${lastSet.reps}'
+                                      : '10';
+                              newDrafts.add(
+                                _RoutineExerciseDraft(
+                                  exercise: exercise,
+                                  sets: [
+                                    _RoutineSetDraft(
+                                      type: 'working',
+                                      weight: weightStr,
+                                      reps: repsStr,
+                                    ),
+                                    _RoutineSetDraft(
+                                      type: 'working',
+                                      weight: weightStr,
+                                      reps: repsStr,
+                                    ),
+                                    _RoutineSetDraft(
+                                      type: 'working',
+                                      weight: weightStr,
+                                      reps: repsStr,
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
+                          }
+                          if (!mounted) return;
+                          setState(() {
+                            _items.addAll(newDrafts);
                           });
                         },
                         icon: const Icon(Icons.add, size: 16),
