@@ -70,10 +70,15 @@ void main() {
       // Verify Action Buttons
       expect(find.text('Background'), findsOneWidget);
       expect(find.text('Stories'), findsOneWidget);
+      expect(find.byType(InstagramLogoIcon), findsOneWidget);
       expect(find.text('Lainnya'), findsOneWidget);
       expect(find.text('Salin Teks'), findsOneWidget);
       expect(find.text('Download'), findsOneWidget);
       expect(find.text('Selesai'), findsOneWidget);
+
+      // Tap Stories button
+      await tester.tap(find.text('Stories'));
+      await tester.pumpAndSettle();
 
       // Tap Background to cycle theme
       await tester.tap(find.text('Background'));

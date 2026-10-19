@@ -264,19 +264,23 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
       final file = File('${tempDir.path}/repr_card_$timestamp.png');
       await file.writeAsBytes(bytes);
 
-      final shareText =
-          'Selesai latihan di Repr! 💪🏋️ ${widget.summary.workoutName} • '
-          '${widget.summary.completedSets} Set • '
-          '${(widget.weightUnit == 'lbs' ? widget.summary.volumeKg * kgToLbsMultiplier : widget.summary.volumeKg).toStringAsFixed(0)} ${widget.weightUnit}\n'
-          '#Repr #Workout #Fitness';
+      if (isInstagramStory) {
+        await _shareToInstagramStory(file);
+      } else {
+        final shareText =
+            'Selesai latihan di Repr! 💪🏋️ ${widget.summary.workoutName} • '
+            '${widget.summary.completedSets} Set • '
+            '${(widget.weightUnit == 'lbs' ? widget.summary.volumeKg * kgToLbsMultiplier : widget.summary.volumeKg).toStringAsFixed(0)} ${widget.weightUnit}\n'
+            '#Repr #Workout #Fitness';
 
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path, mimeType: 'image/png')],
-          text: shareText,
-          subject: 'Workout Repr',
-        ),
-      );
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path, mimeType: 'image/png')],
+            text: shareText,
+            subject: 'Workout Repr',
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -285,6 +289,32 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
       }
     } finally {
       if (mounted) setState(() => _isProcessingAction = false);
+    }
+  }
+
+  Future<void> _shareToInstagramStory(File imageFile) async {
+    bool launchedDirectly = false;
+    if (Platform.isAndroid) {
+      try {
+        const platform = MethodChannel('com.demmagence.repr/instagram_story');
+        final result = await platform.invokeMethod<bool>(
+          'shareToInstagramStory',
+          {'filePath': imageFile.path},
+        );
+        launchedDirectly = result == true;
+      } catch (e) {
+        debugPrint('Instagram story direct intent error: $e');
+      }
+    }
+
+    if (!launchedDirectly) {
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(imageFile.path, mimeType: 'image/png')],
+          text: 'Selesai latihan di Repr! 💪🏋️\n#Repr #Workout',
+          subject: 'Workout Repr Story',
+        ),
+      );
     }
   }
 
@@ -583,7 +613,7 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
                   _CelebrationActionButton(
                     label: 'Stories',
                     isInstagram: true,
-                    icon: Icons.camera_alt_rounded,
+                    customIcon: const InstagramLogoIcon(size: 24, color: Colors.white),
                     onTap: () => _shareCard(isInstagramStory: true),
                   ),
                   _CelebrationActionButton(
@@ -1231,18 +1261,90 @@ class _CardFooterWatermark extends StatelessWidget {
 }
 
 // -------------------------------------------------------------
+// Instagram Logo Icon Widget
+// -------------------------------------------------------------
+class InstagramLogoIcon extends StatelessWidget {
+  const InstagramLogoIcon({
+    super.key,
+    this.size = 22,
+    this.color = Colors.white,
+  });
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _InstagramLogoPainter(color: color),
+      ),
+    );
+  }
+}
+
+class _InstagramLogoPainter extends CustomPainter {
+  const _InstagramLogoPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final strokeWidth = size.width * 0.1;
+    final strokePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final fillPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    // Outer rounded square
+    final padding = strokeWidth / 2 + size.width * 0.04;
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        padding,
+        padding,
+        size.width - 2 * padding,
+        size.height - 2 * padding,
+      ),
+      Radius.circular(size.width * 0.28),
+    );
+    canvas.drawRRect(rrect, strokePaint);
+
+    // Center circle lens
+    final center = Offset(size.width / 2, size.height / 2);
+    canvas.drawCircle(center, size.width * 0.23, strokePaint);
+
+    // Top-right flash dot
+    final dotCenter = Offset(size.width * 0.72, size.height * 0.28);
+    canvas.drawCircle(dotCenter, size.width * 0.055, fillPaint);
+  }
+
+  @override
+  bool shouldRepaint(_InstagramLogoPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
+// -------------------------------------------------------------
 // Action Button (Background, Stories, More, Copy, Download)
 // -------------------------------------------------------------
 class _CelebrationActionButton extends StatelessWidget {
   const _CelebrationActionButton({
     required this.label,
-    required this.icon,
+    this.icon,
+    this.customIcon,
     required this.onTap,
     this.isInstagram = false,
   });
 
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final Widget? customIcon;
   final VoidCallback onTap;
   final bool isInstagram;
 
@@ -1275,10 +1377,13 @@ class _CelebrationActionButton extends StatelessWidget {
                 width: 1.2,
               ),
             ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 22,
+            child: Center(
+              child: customIcon ??
+                  Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 22,
+                  ),
             ),
           ),
           const SizedBox(height: 6),
