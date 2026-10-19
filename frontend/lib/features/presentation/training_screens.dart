@@ -679,7 +679,12 @@ class _ExercisePickerState extends State<_ExercisePicker> {
                     body: 'Ubah pencarian atau filter yang dipilih.',
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.only(bottom: 24),
+                    padding: EdgeInsets.fromLTRB(
+                      0,
+                      0,
+                      0,
+                      MediaQuery.paddingOf(context).bottom + 120.0,
+                    ),
                     itemCount: items.length,
                     separatorBuilder: (_, __) => const Divider(
                       height: 1,
@@ -799,7 +804,7 @@ Future<void> showRoutineEditor(
   WidgetRef ref, {
   Routine? routine,
 }) {
-  return Navigator.of(context).push(
+  return Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute(
       builder: (_) => RoutineEditorScreen(routine: routine),
     ),
@@ -943,7 +948,12 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  MediaQuery.paddingOf(context).bottom + 120.0,
+                ),
                 children: [
                   AppTextField(
                     controller: _nameController,

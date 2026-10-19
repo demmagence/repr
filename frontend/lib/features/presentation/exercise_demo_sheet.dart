@@ -254,7 +254,12 @@ class _ExerciseDemoViewState extends State<_ExerciseDemoView> {
         final displayTotalSets = totalSetsInLatest > 0 ? totalSetsInLatest : 3;
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            8,
+            16,
+            MediaQuery.paddingOf(context).bottom + 100.0,
+          ),
           children: [
             // Add to Workout CTA Button
             SizedBox(
