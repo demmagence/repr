@@ -92,74 +92,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     if (confirmed != true) return;
     final summary = await database.finishWorkoutWithSummary(widget.id);
     final unit = await database.getWeightUnit();
-    final isLbs = unit == 'lbs';
-    final displayVolume = isLbs ? summary.volumeKg * kgToLbsMultiplier : summary.volumeKg;
     await ref.read(notificationProvider).cancelRestTimer();
     if (!mounted) return;
-    await showAppDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AppDialog(
-        title: 'Workout selesai',
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-        actions: [
-          AppButton(
-            label: 'Lihat riwayat',
-            expand: false,
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: AppStatCard(
-                    label: 'Durasi',
-                    value: '${summary.duration.inMinutes} mnt',
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: AppStatCard(
-                    label: 'Set',
-                    value: '${summary.completedSets}',
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: AppStatCard(
-                    label: 'Volume',
-                    value: '${displayVolume.toStringAsFixed(0)} $unit',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (summary.personalRecords.isEmpty)
-              const AppEmptyState(
-                icon: Icons.emoji_events_outlined,
-                title: 'Belum ada PR baru',
-                body: 'Konsistensi hari ini tetap tercatat.',
-              )
-            else ...[
-              Text('PR BARU', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              for (final record in summary.personalRecords)
-                AppListRow(
-                  leading: const AppAvatar(
-                    child: Icon(Icons.emoji_events, size: 18),
-                  ),
-                  title: record.exerciseName,
-                  subtitle:
-                      '${record.kind == PersonalRecordKind.maxWeight ? 'Max weight' : 'Estimated 1RM'} • ${(isLbs ? record.valueKg * kgToLbsMultiplier : record.valueKg).toStringAsFixed(1)} $unit',
-                ),
-            ],
-          ],
-        ),
-      ),
+    await showWorkoutCelebration(
+      context,
+      summary: summary,
+      weightUnit: unit,
     );
     if (mounted) context.go('/history');
   }

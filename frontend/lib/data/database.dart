@@ -945,11 +945,16 @@ class AppDatabase extends _$AppDatabase {
     final records = <WorkoutPersonalRecord>[];
     var completedSets = 0;
     var volume = 0.0;
+    final exerciseSummaries = <String>[];
     for (final view in views) {
       final relevant = view.sets
           .where((set) => set.completed && set.type != 'warmUp')
           .toList();
-      completedSets += view.sets.where((set) => set.completed).length;
+      final totalInExercise = view.sets.where((set) => set.completed).length;
+      completedSets += totalInExercise;
+      if (totalInExercise > 0) {
+        exerciseSummaries.add('${totalInExercise}x ${view.exercise.name}');
+      }
       volume += relevant.fold<double>(
         0,
         (sum, set) => sum + set.weightGrams / 1000 * set.reps,
@@ -988,12 +993,53 @@ class AppDatabase extends _$AppDatabase {
     }
     final endedAt = DateTime.now();
     await finishWorkout(id);
+    final completedWorkouts = await (select(workouts)
+          ..where((w) => w.status.equals('completed'))
+          ..orderBy([(w) => OrderingTerm.desc(w.startedAt)]))
+        .get();
+    final streak = _calculateWeeklyStreak(completedWorkouts);
+
     return WorkoutCompletionSummary(
       duration: endedAt.difference(workout.startedAt),
       completedSets: completedSets,
       volumeKg: volume,
       personalRecords: records,
+      workoutName: workout.name.trim().isEmpty ? 'Latihan' : workout.name.trim(),
+      workoutNumber: completedWorkouts.length,
+      exerciseSummaries: exerciseSummaries,
+      streakWeeks: streak,
     );
+  }
+
+  int _calculateWeeklyStreak(List<Workout> completed) {
+    if (completed.isEmpty) return 1;
+    final now = DateTime.now();
+    int weekIndex(DateTime dt) {
+      final startOfYear = DateTime(dt.year, 1, 1);
+      final days = dt.difference(startOfYear).inDays;
+      return dt.year * 100 + (days ~/ 7);
+    }
+
+    final activeWeeks = completed.map((w) => weekIndex(w.startedAt)).toSet();
+    final currentWeek = weekIndex(now);
+    if (!activeWeeks.contains(currentWeek) &&
+        !activeWeeks.contains(currentWeek - 1)) {
+      return 1;
+    }
+    var streak = 0;
+    var checkWeek =
+        activeWeeks.contains(currentWeek) ? currentWeek : currentWeek - 1;
+    while (activeWeeks.contains(checkWeek)) {
+      streak++;
+      final year = checkWeek ~/ 100;
+      final week = checkWeek % 100;
+      if (week == 0) {
+        checkWeek = (year - 1) * 100 + 51;
+      } else {
+        checkWeek--;
+      }
+    }
+    return streak < 1 ? 1 : streak;
   }
 
   Future<_BestPerformance> _bestPerformanceBefore(
@@ -1522,12 +1568,20 @@ class WorkoutCompletionSummary {
     required this.completedSets,
     required this.volumeKg,
     required this.personalRecords,
+    this.workoutName = 'Latihan',
+    this.workoutNumber = 1,
+    this.exerciseSummaries = const [],
+    this.streakWeeks = 1,
   });
 
   final Duration duration;
   final int completedSets;
   final double volumeKg;
   final List<WorkoutPersonalRecord> personalRecords;
+  final String workoutName;
+  final int workoutNumber;
+  final List<String> exerciseSummaries;
+  final int streakWeeks;
 }
 
 class HistoricalExerciseUpdate {
