@@ -64,7 +64,8 @@ void main() {
       expect(find.text('1.600 kg'), findsOneWidget);
       expect(find.text('Itu setara dengan mengangkat seekor gajah!'), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
-      expect(find.text('@deryl'), findsOneWidget);
+      expect(find.text('REPR'), findsWidgets);
+      expect(find.text('@deryl'), findsNothing);
 
       // Verify Action Buttons
       expect(find.text('Background'), findsOneWidget);

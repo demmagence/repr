@@ -1202,8 +1202,19 @@ class _CardFooterWatermark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.fitness_center_rounded, color: logoColor, size: 20),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: Image.asset(
+            'assets/icon/repr_icon.png',
+            width: 20,
+            height: 20,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                Icon(Icons.fitness_center_rounded, color: logoColor, size: 20),
+          ),
+        ),
         const SizedBox(width: 8),
         Text(
           'REPR',
@@ -1212,19 +1223,6 @@ class _CardFooterWatermark extends StatelessWidget {
             fontWeight: FontWeight.w900,
             color: textColor,
             letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            '@${userName ?? 'athlete'}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: textColor.withValues(alpha: 0.7),
-            ),
           ),
         ),
       ],
