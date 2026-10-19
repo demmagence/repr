@@ -153,11 +153,13 @@ class DashboardScreen extends ConsumerWidget {
                     child: KineticCard(
                       padding: const EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: () => _startWorkout(
-                          context,
-                          ref,
-                          routineId: firstRoutine?.id,
-                        ),
+                        onTap: () {
+                          if (firstRoutine != null) {
+                            context.push('/routine/${firstRoutine.id}');
+                          } else {
+                            _startWorkout(context, ref);
+                          }
+                        },
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(minHeight: 110),
                           child: Column(
@@ -310,11 +312,13 @@ class DashboardScreen extends ConsumerWidget {
                   const Divider(color: Color(0xFF27272A), height: 1),
                   const SizedBox(height: 16),
                   InkWell(
-                    onTap: () => _startWorkout(
-                      context,
-                      ref,
-                      routineId: secondRoutine?.id,
-                    ),
+                    onTap: () {
+                      if (secondRoutine != null) {
+                        context.push('/routine/${secondRoutine.id}');
+                      } else {
+                        _startWorkout(context, ref);
+                      }
+                    },
                     child: Row(
                       children: [
                         const CircularProgressBadge(

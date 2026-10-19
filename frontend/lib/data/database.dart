@@ -508,6 +508,88 @@ class AppDatabase extends _$AppDatabase {
     return RoutineTemplate(routine: routine, exercises: items);
   }
 
+  Future<List<RoutineWorkoutHistoryPoint>> getRoutineHistoryPoints(
+    String routineId,
+  ) async {
+    final completedWorkouts = await (select(workouts)
+          ..where(
+            (w) =>
+                w.routineId.equals(routineId) &
+                w.status.equals('completed'),
+          )
+          ..orderBy([(w) => OrderingTerm.asc(w.startedAt)]))
+        .get();
+
+    final points = <RoutineWorkoutHistoryPoint>[];
+    for (final w in completedWorkouts) {
+      final views = await getWorkoutExercises(w.id);
+      var volumeKg = 0.0;
+      var totalReps = 0;
+      for (final view in views) {
+        for (final s in view.sets) {
+          if (s.completed && s.type != 'warmUp') {
+            volumeKg += (s.weightGrams / 1000.0) * s.reps;
+            totalReps += s.reps;
+          }
+        }
+      }
+      final duration =
+          w.endedAt?.difference(w.startedAt) ?? Duration.zero;
+      points.add(
+        RoutineWorkoutHistoryPoint(
+          workout: w,
+          volumeKg: volumeKg,
+          totalReps: totalReps,
+          durationMinutes: duration.inMinutes,
+        ),
+      );
+    }
+    return points;
+  }
+
+  Future<RoutineDetailData> getRoutineDetail(String routineId) async {
+    final routine = await (select(
+      routines,
+    )..where((row) => row.id.equals(routineId))).getSingle();
+
+    final rExerciseRows = await (select(routineExercises).join([
+      innerJoin(
+        exercises,
+        exercises.id.equalsExp(routineExercises.exerciseId),
+      ),
+    ])
+          ..where(routineExercises.routineId.equals(routineId))
+          ..orderBy([OrderingTerm.asc(routineExercises.position)]))
+        .get();
+
+    final detailExercises = <RoutineDetailExercise>[];
+    for (final row in rExerciseRows) {
+      final rExercise = row.readTable(routineExercises);
+      final exercise = row.readTable(exercises);
+      final sets = await (select(routineSets)
+            ..where((s) => s.routineExerciseId.equals(rExercise.id))
+            ..orderBy([(s) => OrderingTerm.asc(s.position)]))
+          .get();
+
+      detailExercises.add(
+        RoutineDetailExercise(
+          exercise: exercise,
+          notes: rExercise.notes,
+          restSeconds: rExercise.restSeconds,
+          sets: sets,
+        ),
+      );
+    }
+
+    final historyPoints = await getRoutineHistoryPoints(routineId);
+
+    return RoutineDetailData(
+      routine: routine,
+      exercises: detailExercises,
+      historyPoints: historyPoints,
+    );
+  }
+
   Stream<List<String>> watchRoutineExerciseNames(String routineId) {
     final query =
         select(routineExercises).join([
@@ -1617,6 +1699,46 @@ class ProgressPoint {
   final double maxWeight;
   final double e1rm;
   final double volume;
+}
+
+class RoutineWorkoutHistoryPoint {
+  const RoutineWorkoutHistoryPoint({
+    required this.workout,
+    required this.volumeKg,
+    required this.totalReps,
+    required this.durationMinutes,
+  });
+
+  final Workout workout;
+  final double volumeKg;
+  final int totalReps;
+  final int durationMinutes;
+}
+
+class RoutineDetailExercise {
+  const RoutineDetailExercise({
+    required this.exercise,
+    required this.notes,
+    required this.restSeconds,
+    required this.sets,
+  });
+
+  final Exercise exercise;
+  final String notes;
+  final int restSeconds;
+  final List<RoutineSet> sets;
+}
+
+class RoutineDetailData {
+  const RoutineDetailData({
+    required this.routine,
+    required this.exercises,
+    required this.historyPoints,
+  });
+
+  final Routine routine;
+  final List<RoutineDetailExercise> exercises;
+  final List<RoutineWorkoutHistoryPoint> historyPoints;
 }
 
 class RoutineTemplate {

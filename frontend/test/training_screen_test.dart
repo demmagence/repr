@@ -50,6 +50,11 @@ void main() {
             builder: (_, __) => const TrainingScreen(),
           ),
           GoRoute(
+            path: '/routine/:id',
+            builder: (_, state) =>
+                RoutineDetailScreen(id: state.pathParameters['id']!),
+          ),
+          GoRoute(
             path: '/workout/:id',
             builder: (_, state) =>
                 Text('Active Workout: ${state.pathParameters['id']}'),
@@ -84,7 +89,7 @@ void main() {
       expect(find.text('LEG DAY BLAST'), findsOneWidget);
       expect(find.text('Start Routine'), findsOneWidget);
 
-      // 3. Ketuk tombol Start Routine -> Dialog konfirmasi harus muncul
+      // 3. Ketuk tombol Start Routine pada card -> Dialog konfirmasi harus muncul
       await tester.tap(find.text('Start Routine'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
@@ -106,8 +111,23 @@ void main() {
       expect(find.text('Mulai latihan?'), findsNothing);
       expect(find.textContaining('Active Workout:'), findsNothing);
 
-      // 5. Ketuk judul routine lagi dan konfirmasi Mulai
+      // 5. Ketuk card routine (LEG DAY BLAST) -> Harus masuk ke halaman Detail Routine
       await tester.tap(find.text('LEG DAY BLAST'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Verifikasi komponen pada halaman Routine Detail
+      expect(find.text('Routine'), findsOneWidget);
+      expect(find.text('Fokus paha & betis'), findsOneWidget);
+      expect(find.text('Volume'), findsOneWidget);
+      expect(find.text('Reps'), findsOneWidget);
+      expect(find.text('Duration'), findsOneWidget);
+      expect(find.text('SET'), findsOneWidget);
+      expect(find.text('BEBAN (KG)'), findsOneWidget);
+      expect(find.byKey(const Key('routine-detail-start-button')), findsOneWidget);
+
+      // 6. Tekan tombol Start Routine pada halaman detail -> Konfirmasi muncul dan mulai workout
+      await tester.tap(find.byKey(const Key('routine-detail-start-button')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 

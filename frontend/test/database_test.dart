@@ -636,4 +636,46 @@ void main() {
     expect(updatedList.first.sets.first.weightGrams, 50000);
     expect(updatedList.first.sets.first.reps, 12);
   });
+
+  test('getRoutineDetail dan getRoutineHistoryPoints memuat detail dan riwayat latihan', () async {
+    final exercise = (await database.watchExercises().first).first;
+    final routineId = await database.createRoutineTemplate(
+      name: 'Chest & Arms',
+      notes: 'Push focus',
+      exercises: [
+        RoutineExerciseTemplate(
+          exerciseId: exercise.id,
+          restSeconds: 120,
+          sets: const [
+            RoutineSetTemplate(type: 'working', weightGrams: 40000, reps: 10),
+            RoutineSetTemplate(type: 'working', weightGrams: 45000, reps: 8),
+          ],
+        ),
+      ],
+    );
+
+    final detailBefore = await database.getRoutineDetail(routineId);
+    expect(detailBefore.routine.name, 'Chest & Arms');
+    expect(detailBefore.routine.notes, 'Push focus');
+    expect(detailBefore.exercises, hasLength(1));
+    expect(detailBefore.exercises.first.exercise.id, exercise.id);
+    expect(detailBefore.exercises.first.restSeconds, 120);
+    expect(detailBefore.exercises.first.sets, hasLength(2));
+    expect(detailBefore.exercises.first.sets.first.weightGrams, 40000);
+    expect(detailBefore.exercises.first.sets.first.reps, 10);
+    expect(detailBefore.historyPoints, isEmpty);
+
+    // Complete a workout from this routine
+    final workoutId = await database.startWorkout(routineId: routineId);
+    final workoutExercises = await database.getWorkoutExercises(workoutId);
+    for (final s in workoutExercises.first.sets) {
+      await database.updateWorkoutSet(id: s.id, weightGrams: 50000, reps: 10, completed: true);
+    }
+    await database.finishWorkout(workoutId);
+
+    final detailAfter = await database.getRoutineDetail(routineId);
+    expect(detailAfter.historyPoints, hasLength(1));
+    expect(detailAfter.historyPoints.first.totalReps, greaterThan(0));
+    expect(detailAfter.historyPoints.first.volumeKg, greaterThan(0));
+  });
 }

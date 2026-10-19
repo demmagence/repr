@@ -109,6 +109,11 @@ final routerProvider = Provider<GoRouter>(
         builder: (_, state) => WorkoutScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/routine/:id',
+        builder: (_, state) =>
+            RoutineDetailScreen(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/history/:id',
         builder: (_, state) =>
             HistoryDetailScreen(id: state.pathParameters['id']!),

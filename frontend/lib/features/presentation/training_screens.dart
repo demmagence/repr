@@ -1,87 +1,87 @@
 part of '../screens.dart';
 
-class TrainingScreen extends ConsumerWidget {
-  const TrainingScreen({super.key});
-
-  Future<void> _start(
-    BuildContext context,
-    WidgetRef ref, {
-    String? routineId,
-    Workout? copied,
-  }) async {
-    final database = ref.read(databaseProvider);
-    final active = await database.getActiveWorkout();
-    if (!context.mounted) return;
-    if (active != null) {
-      final discard = await showAppDialog<bool>(
-        context: context,
-        builder: (context) => AppDialog(
-          title: 'Workout masih aktif',
-          actions: [
-            AppButton(
-              label: 'Lanjutkan',
-              expand: false,
-              variant: AppActionVariant.secondary,
-              onPressed: () {
-                Navigator.pop(context, false);
-                context.push('/workout/${active.id}');
-              },
-            ),
-            AppButton(
-              label: 'Buang draft',
-              expand: false,
-              variant: AppActionVariant.destructive,
-              onPressed: () => Navigator.pop(context, true),
-            ),
-          ],
-          child: const Text(
-            'Lanjutkan workout yang sedang berjalan atau buang draftnya.',
-          ),
-        ),
-      );
-      if (discard != true) return;
-      await database.discardWorkout(active.id);
-    }
-    final id = await database.startWorkout(
-      routineId: routineId,
-      copied: copied,
-    );
-    if (context.mounted) context.push('/workout/$id');
-  }
-
-  Future<void> _confirmAndStartRoutine(
-    BuildContext context,
-    WidgetRef ref,
-    Routine routine,
-  ) async {
-    final confirmed = await showAppDialog<bool>(
+Future<void> _startWorkoutSession(
+  BuildContext context,
+  WidgetRef ref, {
+  String? routineId,
+  Workout? copied,
+}) async {
+  final database = ref.read(databaseProvider);
+  final active = await database.getActiveWorkout();
+  if (!context.mounted) return;
+  if (active != null) {
+    final discard = await showAppDialog<bool>(
       context: context,
       builder: (context) => AppDialog(
-        title: 'Mulai latihan?',
+        title: 'Workout masih aktif',
         actions: [
           AppButton(
-            label: 'Batal',
+            label: 'Lanjutkan',
             expand: false,
-            variant: AppActionVariant.quiet,
-            onPressed: () => Navigator.pop(context, false),
+            variant: AppActionVariant.secondary,
+            onPressed: () {
+              Navigator.pop(context, false);
+              context.push('/workout/${active.id}');
+            },
           ),
           AppButton(
-            label: 'Mulai',
+            label: 'Buang draft',
             expand: false,
+            variant: AppActionVariant.destructive,
             onPressed: () => Navigator.pop(context, true),
           ),
         ],
-        child: Text(
-          routine.name.trim().isEmpty
-              ? 'Mulai workout dari template routine ini?'
-              : 'Mulai workout dari routine "${routine.name}"?',
+        child: const Text(
+          'Lanjutkan workout yang sedang berjalan atau buang draftnya.',
         ),
       ),
     );
-    if (confirmed != true) return;
-    if (!context.mounted) return;
-    await _start(context, ref, routineId: routine.id);
+    if (discard != true) return;
+    await database.discardWorkout(active.id);
   }
+  final id = await database.startWorkout(
+    routineId: routineId,
+    copied: copied,
+  );
+  if (context.mounted) context.push('/workout/$id');
+}
+
+Future<void> _confirmAndStartRoutine(
+  BuildContext context,
+  WidgetRef ref,
+  Routine routine,
+) async {
+  final confirmed = await showAppDialog<bool>(
+    context: context,
+    builder: (context) => AppDialog(
+      title: 'Mulai latihan?',
+      actions: [
+        AppButton(
+          label: 'Batal',
+          expand: false,
+          variant: AppActionVariant.quiet,
+          onPressed: () => Navigator.pop(context, false),
+        ),
+        AppButton(
+          label: 'Mulai',
+          expand: false,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+      ],
+      child: Text(
+        routine.name.trim().isEmpty
+            ? 'Mulai workout dari template routine ini?'
+            : 'Mulai workout dari routine "${routine.name}"?',
+      ),
+    ),
+  );
+  if (confirmed != true) return;
+  if (!context.mounted) return;
+  await _startWorkoutSession(context, ref, routineId: routine.id);
+}
+
+class TrainingScreen extends ConsumerWidget {
+  const TrainingScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -203,6 +203,8 @@ class TrainingScreen extends ConsumerWidget {
                           .map(
                             (routine) => _RoutineCard(
                               routine: routine,
+                              onTap: () =>
+                                  context.push('/routine/${routine.id}'),
                               onStart: () => _confirmAndStartRoutine(
                                 context,
                                 ref,
@@ -231,12 +233,14 @@ class TrainingScreen extends ConsumerWidget {
 class _RoutineCard extends ConsumerWidget {
   const _RoutineCard({
     required this.routine,
+    required this.onTap,
     required this.onStart,
     required this.onEdit,
     required this.onDelete,
   });
 
   final Routine routine;
+  final VoidCallback onTap;
   final VoidCallback onStart;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -256,18 +260,18 @@ class _RoutineCard extends ConsumerWidget {
       child: KineticCard(
         padding: const EdgeInsets.all(16.0),
         borderRadius: 20,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row: Routine Name & 3-dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: onStart,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row: Routine Name & 3-dots
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
                     child: Text(
                       routine.name.toUpperCase(),
                       maxLines: 1,
@@ -280,54 +284,50 @@ class _RoutineCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.more_horiz_rounded,
-                    color: Color(0xFF8E8E93),
-                    size: 22,
+                  IconButton(
+                    icon: const Icon(
+                      Icons.more_horiz_rounded,
+                      color: Color(0xFF8E8E93),
+                      size: 22,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    onPressed: () async {
+                      final value = await showAppActionSheet<String>(
+                        context: context,
+                        title: routine.name,
+                        actions: const [
+                          AppAction(
+                            value: 'start',
+                            label: 'Start Routine',
+                          ),
+                          AppAction(
+                            value: 'edit',
+                            label: 'Edit Routine',
+                          ),
+                          AppAction(
+                            value: 'delete',
+                            label: 'Hapus Routine',
+                          ),
+                        ],
+                      );
+                      if (value == 'start') {
+                        onStart();
+                      } else if (value == 'edit') {
+                        onEdit();
+                      } else if (value == 'delete') {
+                        onDelete();
+                      }
+                    },
                   ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  onPressed: () async {
-                    final value = await showAppActionSheet<String>(
-                      context: context,
-                      title: routine.name,
-                      actions: const [
-                        AppAction(
-                          value: 'start',
-                          label: 'Start Routine',
-                        ),
-                        AppAction(
-                          value: 'edit',
-                          label: 'Edit Routine',
-                        ),
-                        AppAction(
-                          value: 'delete',
-                          label: 'Hapus Routine',
-                        ),
-                      ],
-                    );
-                    if (value == 'start') {
-                      onStart();
-                    } else if (value == 'edit') {
-                      onEdit();
-                    } else if (value == 'delete') {
-                      onDelete();
-                    }
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            // Exercises list / summary text
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onStart,
-              child: SizedBox(
+                ],
+              ),
+              const SizedBox(height: 6),
+              // Exercises list / summary text
+              SizedBox(
                 width: double.infinity,
                 child: Text(
                   exercisesText,
@@ -341,30 +341,30 @@ class _RoutineCard extends ConsumerWidget {
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // "Start Routine" white button
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton(
-                onPressed: onStart,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 16),
+              // "Start Routine" white button
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: onStart,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  textStyle: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  child: const Text('Start Routine'),
                 ),
-                child: const Text('Start Routine'),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1544,4 +1544,686 @@ class _RoutineExerciseEditor extends StatelessWidget {
       ],
     ),
   );
+}
+
+final routineDetailProvider =
+    FutureProvider.autoDispose.family<RoutineDetailData, String>((ref, id) {
+  return ref.watch(databaseProvider).getRoutineDetail(id);
+});
+
+enum _RoutineMetricType { volume, reps, duration }
+
+class RoutineDetailScreen extends ConsumerStatefulWidget {
+  const RoutineDetailScreen({super.key, required this.id});
+  final String id;
+
+  @override
+  ConsumerState<RoutineDetailScreen> createState() =>
+      _RoutineDetailScreenState();
+}
+
+class _RoutineDetailScreenState extends ConsumerState<RoutineDetailScreen> {
+  _RoutineMetricType _selectedMetric = _RoutineMetricType.volume;
+
+  Future<void> _start(Routine routine) async {
+    await _confirmAndStartRoutine(context, ref, routine);
+  }
+
+  Future<void> _edit(Routine routine) async {
+    await showRoutineEditor(context, ref, routine: routine);
+    ref.invalidate(routineDetailProvider(widget.id));
+  }
+
+  Future<void> _delete(Routine routine) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF161618),
+        title: const Text(
+          'Hapus Routine',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus routine "${routine.name}"?',
+          style: const TextStyle(color: Color(0xFFD4D4D8), fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child:
+                const Text('Batal', style: TextStyle(color: Color(0xFF71717A))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child:
+                const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true && mounted) {
+      await ref.read(databaseProvider).deleteRoutine(routine.id);
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  void _showMoreOptions(Routine routine) async {
+    final val = await showAppActionSheet<String>(
+      context: context,
+      title: routine.name,
+      actions: const [
+        AppAction(value: 'start', label: 'Start Routine'),
+        AppAction(value: 'edit', label: 'Edit Routine'),
+        AppAction(value: 'delete', label: 'Hapus Routine'),
+      ],
+    );
+    if (!mounted) return;
+    if (val == 'start') {
+      _start(routine);
+    } else if (val == 'edit') {
+      _edit(routine);
+    } else if (val == 'delete') {
+      _delete(routine);
+    }
+  }
+
+  Widget _buildMetricPill({
+    required String label,
+    required _RoutineMetricType type,
+  }) {
+    final isSelected = _selectedMetric == type;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedMetric = type),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color:
+                isSelected ? const Color(0xFF0284C7) : const Color(0xFF161618),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF38BDF8)
+                  : const Color(0xFF27272A),
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.white : const Color(0xFF8E8E93),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final detailAsync = ref.watch(routineDetailProvider(widget.id));
+    final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
+    final isLbs = weightUnit == 'lbs';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF09090B),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF09090B),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Routine',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          detailAsync.maybeWhen(
+            data: (detail) => IconButton(
+              icon: const Icon(
+                Icons.more_horiz_rounded,
+                color: Color(0xFF8E8E93),
+              ),
+              onPressed: () => _showMoreOptions(detail.routine),
+            ),
+            orElse: () => const SizedBox.shrink(),
+          ),
+        ],
+      ),
+      body: detailAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+        error: (err, stack) => Center(
+          child: Text(
+            'Gagal memuat routine: $err',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
+        data: (detail) {
+          final points = detail.historyPoints;
+
+          // Target calculations
+          var plannedVolumeGrams = 0;
+          var plannedTotalReps = 0;
+          for (final ex in detail.exercises) {
+            for (final s in ex.sets) {
+              if (s.type != 'warmUp') {
+                plannedVolumeGrams += s.weightGrams * s.reps;
+                plannedTotalReps += s.reps;
+              }
+            }
+          }
+
+          // Metric Card Headline
+          String metricHeadline;
+          String metricSubtitle;
+          if (points.isNotEmpty) {
+            final lastPoint = points.last;
+            final dateStr = DateFormat(
+              'd MMM',
+              'id_ID',
+            ).format(lastPoint.workout.startedAt);
+            if (_selectedMetric == _RoutineMetricType.volume) {
+              metricHeadline =
+                  '${formatWeight((lastPoint.volumeKg * 1000).round(), unit: weightUnit)} $weightUnit';
+              metricSubtitle = dateStr;
+            } else if (_selectedMetric == _RoutineMetricType.reps) {
+              metricHeadline = '${lastPoint.totalReps} reps';
+              metricSubtitle = dateStr;
+            } else {
+              metricHeadline = '${lastPoint.durationMinutes}m';
+              metricSubtitle = dateStr;
+            }
+          } else {
+            if (_selectedMetric == _RoutineMetricType.volume) {
+              metricHeadline =
+                  '${formatWeight(plannedVolumeGrams, unit: weightUnit)} $weightUnit';
+              metricSubtitle = 'Target per sesi';
+            } else if (_selectedMetric == _RoutineMetricType.reps) {
+              metricHeadline = '$plannedTotalReps reps';
+              metricSubtitle = 'Target per sesi';
+            } else {
+              metricHeadline = 'Est. 45m';
+              metricSubtitle = 'Estimasi sesi';
+            }
+          }
+
+          // Chart values
+          final chartValues = <double>[];
+          if (_selectedMetric == _RoutineMetricType.volume) {
+            chartValues.addAll(
+              points.map(
+                (p) => isLbs ? p.volumeKg * 2.20462 : p.volumeKg,
+              ),
+            );
+          } else if (_selectedMetric == _RoutineMetricType.reps) {
+            chartValues.addAll(points.map((p) => p.totalReps.toDouble()));
+          } else {
+            chartValues.addAll(points.map((p) => p.durationMinutes.toDouble()));
+          }
+
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+            children: [
+              // Routine Title
+              Text(
+                detail.routine.name.toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                detail.routine.notes.isNotEmpty
+                    ? detail.routine.notes
+                    : 'Template Routine',
+                style: const TextStyle(
+                  color: Color(0xFF8E8E93),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Start Routine Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  key: const Key('routine-detail-start-button'),
+                  onPressed: () => _start(detail.routine),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Start Routine'),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Metrics & Chart Card
+              KineticCard(
+                padding: const EdgeInsets.all(16),
+                borderRadius: 18,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              metricHeadline,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              metricSubtitle,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF38BDF8),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          points.isNotEmpty
+                              ? '${points.length} Sesi'
+                              : '0 Sesi',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF71717A),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Chart area
+                    if (points.isEmpty)
+                      Container(
+                        height: 110,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF101012),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF27272A)),
+                        ),
+                        child: const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'Belum ada riwayat sesi.\nSelesaikan routine ini untuk melihat grafik perkembangan.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xFF71717A),
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 130,
+                        child: LineChart(
+                          LineChartData(
+                            gridData: FlGridData(
+                              show: true,
+                              drawVerticalLine: false,
+                              getDrawingHorizontalLine: (_) => const FlLine(
+                                color: Color(0xFF27272A),
+                                strokeWidth: 1,
+                              ),
+                            ),
+                            titlesData: FlTitlesData(
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              leftTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 22,
+                                  interval: (points.length > 5
+                                      ? (points.length / 4).ceilToDouble()
+                                      : 1),
+                                  getTitlesWidget: (val, meta) {
+                                    final idx = val.toInt();
+                                    if (idx < 0 || idx >= points.length) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: Text(
+                                        DateFormat(
+                                          'd MMM',
+                                          'id_ID',
+                                        ).format(points[idx].workout.startedAt),
+                                        style: const TextStyle(
+                                          color: Color(0xFF71717A),
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            borderData: FlBorderData(show: false),
+                            minX: 0,
+                            maxX: (points.length - 1)
+                                .toDouble()
+                                .clamp(1.0, 1000.0),
+                            minY: (chartValues.reduce((a, b) => a < b ? a : b) *
+                                    0.85)
+                                .floorToDouble()
+                                .clamp(0.0, double.infinity),
+                            maxY: (chartValues.reduce((a, b) => a > b ? a : b) *
+                                    1.15 +
+                                1),
+                            lineBarsData: [
+                              LineChartBarData(
+                                spots: [
+                                  if (chartValues.length == 1) ...[
+                                    FlSpot(0, chartValues[0]),
+                                    FlSpot(1, chartValues[0]),
+                                  ] else
+                                    for (var i = 0; i < chartValues.length; i++)
+                                      FlSpot(i.toDouble(), chartValues[i]),
+                                ],
+                                isCurved: chartValues.length > 2,
+                                color: const Color(0xFF38BDF8),
+                                barWidth: 2.5,
+                                isStrokeCapRound: true,
+                                dotData: FlDotData(
+                                  show: true,
+                                  getDotPainter:
+                                      (spot, percent, barData, index) =>
+                                          FlDotCirclePainter(
+                                    radius: 3.5,
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                    strokeColor: const Color(0xFF38BDF8),
+                                  ),
+                                ),
+                                belowBarData: BarAreaData(
+                                  show: true,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      const Color(0xFF38BDF8)
+                                          .withValues(alpha: 0.25),
+                                      const Color(0xFF38BDF8)
+                                          .withValues(alpha: 0.0),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 14),
+
+                    // Metric toggles: Volume, Reps, Duration
+                    Row(
+                      children: [
+                        _buildMetricPill(
+                          label: 'Volume',
+                          type: _RoutineMetricType.volume,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildMetricPill(
+                          label: 'Reps',
+                          type: _RoutineMetricType.reps,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildMetricPill(
+                          label: 'Duration',
+                          type: _RoutineMetricType.duration,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Exercises Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Exercises (${detail.exercises.length})',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => _edit(detail.routine),
+                    borderRadius: BorderRadius.circular(8),
+                    child: const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      child: Text(
+                        'Edit Routine',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF38BDF8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Exercises List
+              for (final item in detail.exercises)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: KineticCard(
+                    padding: const EdgeInsets.all(16),
+                    borderRadius: 18,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Exercise Header
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF27272A),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.fitness_center_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                item.exercise.name,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF38BDF8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Rest Timer
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.timer_outlined,
+                              size: 14,
+                              color: Color(0xFF8E8E93),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Rest Timer: ${item.restSeconds ~/ 60}min ${item.restSeconds % 60}s',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8E8E93),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Table Header
+                        Row(
+                          children: [
+                            const SizedBox(
+                              width: 48,
+                              child: Text(
+                                'SET',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF71717A),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                'BEBAN (${weightUnit.toUpperCase()})',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF71717A),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 60,
+                              child: Text(
+                                'REPS',
+                                textAlign: TextAlign.end,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF71717A),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(color: Color(0xFF27272A), height: 1),
+                        const SizedBox(height: 8),
+
+                        // Sets Rows
+                        for (var i = 0; i < item.sets.length; i++)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 48,
+                                  child: Text(
+                                    '${i + 1}',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    formatWeight(
+                                      item.sets[i].weightGrams,
+                                      unit: weightUnit,
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 60,
+                                  child: Text(
+                                    '${item.sets[i].reps}',
+                                    textAlign: TextAlign.end,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
