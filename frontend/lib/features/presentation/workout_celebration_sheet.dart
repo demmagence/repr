@@ -650,7 +650,6 @@ class _WeightComparisonCard extends StatelessWidget {
         color: themeData.backgroundColor,
         gradient: themeData.gradient,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: themeData.borderColor, width: 1.2),
         boxShadow: [themeData.boxShadow],
       ),
       padding: const EdgeInsets.fromLTRB(24, 26, 24, 20),
@@ -772,7 +771,6 @@ class _WorkoutOverviewCard extends StatelessWidget {
         color: themeData.backgroundColor,
         gradient: themeData.gradient,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: themeData.borderColor, width: 1.2),
         boxShadow: [themeData.boxShadow],
       ),
       padding: const EdgeInsets.fromLTRB(24, 26, 24, 20),
@@ -971,7 +969,6 @@ class _PersonalRecordsCard extends StatelessWidget {
         color: themeData.backgroundColor,
         gradient: themeData.gradient,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: themeData.borderColor, width: 1.2),
         boxShadow: [themeData.boxShadow],
       ),
       padding: const EdgeInsets.fromLTRB(24, 26, 24, 20),
@@ -1094,7 +1091,6 @@ class _StreakCard extends StatelessWidget {
         color: themeData.backgroundColor,
         gradient: themeData.gradient,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: themeData.borderColor, width: 1.2),
         boxShadow: [themeData.boxShadow],
       ),
       padding: const EdgeInsets.fromLTRB(24, 26, 24, 20),
@@ -1284,7 +1280,6 @@ class _CelebrationActionButton extends StatelessWidget {
 class _CardThemeData {
   const _CardThemeData({
     required this.backgroundColor,
-    required this.borderColor,
     required this.primaryTextColor,
     required this.subtitleColor,
     required this.boxShadow,
@@ -1292,7 +1287,6 @@ class _CardThemeData {
   });
 
   final Color backgroundColor;
-  final Color borderColor;
   final Color primaryTextColor;
   final Color subtitleColor;
   final BoxShadow boxShadow;
@@ -1304,7 +1298,6 @@ _CardThemeData _resolveCardTheme(CelebrationThemeStyle style) {
     case CelebrationThemeStyle.classicWhite:
       return _CardThemeData(
         backgroundColor: Colors.white,
-        borderColor: const Color(0xFFE2E8F0),
         primaryTextColor: const Color(0xFF0F172A),
         subtitleColor: const Color(0xFF475569),
         boxShadow: BoxShadow(
@@ -1316,7 +1309,6 @@ _CardThemeData _resolveCardTheme(CelebrationThemeStyle style) {
     case CelebrationThemeStyle.obsidianDark:
       return _CardThemeData(
         backgroundColor: const Color(0xFF161618),
-        borderColor: const Color(0xFF27272A),
         primaryTextColor: Colors.white,
         subtitleColor: const Color(0xFFA1A1AA),
         boxShadow: BoxShadow(
@@ -1328,7 +1320,6 @@ _CardThemeData _resolveCardTheme(CelebrationThemeStyle style) {
     case CelebrationThemeStyle.cyberNeon:
       return _CardThemeData(
         backgroundColor: const Color(0xFF0F172A),
-        borderColor: const Color(0xFF6366F1),
         primaryTextColor: Colors.white,
         subtitleColor: const Color(0xFFC7D2FE),
         gradient: const LinearGradient(
