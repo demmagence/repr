@@ -218,4 +218,77 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1));
     },
   );
+
+  testWidgets(
+    'showRoutineActionSheet menampilkan opsi routine dengan styling modern dan mengembalikan nilai yang dipilih',
+    (tester) async {
+      String? selectedResult;
+      final routine = Routine(
+        id: 'r1',
+        name: 'push',
+        notes: 'Dada & Tricep',
+        position: 0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildAppTheme(),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  selectedResult = await showRoutineActionSheet(
+                    context: context,
+                    routine: routine,
+                    subtitle: '3 Latihan • Rutinitas',
+                  );
+                },
+                child: const Text('Buka Menu Routine'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // 1. Buka sheet
+      await tester.tap(find.text('Buka Menu Routine'));
+      await tester.pumpAndSettle();
+
+      // 2. Verifikasi konten header
+      expect(find.text('PUSH'), findsOneWidget);
+      expect(find.text('3 Latihan • Rutinitas'), findsOneWidget);
+      expect(find.byIcon(Icons.fitness_center_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+
+      // 3. Verifikasi aksi-aksi yang tersedia
+      expect(find.text('Start Routine'), findsOneWidget);
+      expect(find.text('Mulai sesi latihan dari rutinitas ini'), findsOneWidget);
+
+      expect(find.text('Edit Routine'), findsOneWidget);
+      expect(
+        find.text('Ubah latihan, urutan, dan target beban'),
+        findsOneWidget,
+      );
+
+      expect(find.text('Hapus Routine'), findsOneWidget);
+      expect(find.text('Hapus rutinitas ini secara permanen'), findsOneWidget);
+
+      // 4. Ketuk "Start Routine" dan verifikasi hasilnya 'start'
+      await tester.tap(find.text('Start Routine'));
+      await tester.pumpAndSettle();
+      expect(selectedResult, 'start');
+
+      // 5. Buka kembali dan coba tombol tutup (X)
+      await tester.tap(find.text('Buka Menu Routine'));
+      await tester.pumpAndSettle();
+      expect(find.text('PUSH'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Tutup'));
+      await tester.pumpAndSettle();
+      expect(find.text('PUSH'), findsNothing);
+    },
+  );
 }
+

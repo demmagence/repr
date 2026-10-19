@@ -500,9 +500,18 @@ Future<T?> showAppDialog<T>({
 );
 
 class AppAction<T> {
-  const AppAction({required this.value, required this.label});
+  const AppAction({
+    required this.value,
+    required this.label,
+    this.icon,
+    this.subtitle,
+    this.isDestructive = false,
+  });
   final T value;
   final String label;
+  final IconData? icon;
+  final String? subtitle;
+  final bool isDestructive;
 }
 
 Future<T?> showAppActionSheet<T>({
@@ -534,7 +543,25 @@ Future<T?> showAppActionSheet<T>({
               children: actions
                   .map(
                     (action) => ListTile(
-                      title: Text(action.label),
+                      leading: action.icon != null
+                          ? Icon(
+                              action.icon,
+                              color: action.isDestructive
+                                  ? Colors.redAccent
+                                  : null,
+                            )
+                          : null,
+                      title: Text(
+                        action.label,
+                        style: TextStyle(
+                          color: action.isDestructive
+                              ? Colors.redAccent
+                              : null,
+                        ),
+                      ),
+                      subtitle: action.subtitle != null
+                          ? Text(action.subtitle!)
+                          : null,
                       onTap: () => Navigator.pop(context, action.value),
                     ),
                   )
