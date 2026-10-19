@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -86,16 +88,45 @@ class NotificationService {
       body: 'Saatnya melanjutkan set berikutnya.',
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
-          'rest_timer',
+          'rest_timer_v2',
           'Rest timer',
           channelDescription: 'Pengingat waktu istirahat antar set',
-          importance: Importance.high,
+          importance: Importance.max,
           priority: Priority.high,
           playSound: sound,
+          enableVibration: true,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
+          category: AndroidNotificationCategory.alarm,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: sound,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
+  }
+
+  Future<void> playRestAlarm({bool vibrate = true}) async {
+    try {
+      await FlutterRingtonePlayer().play(
+        android: AndroidSounds.notification,
+        ios: IosSounds.electronic,
+        volume: 1.0,
+        looping: false,
+        asAlarm: true,
+      );
+    } catch (_) {
+      try {
+        await SystemSound.play(SystemSoundType.alert);
+      } catch (_) {}
+    }
+    if (vibrate) {
+      try {
+        await HapticFeedback.vibrate();
+      } catch (_) {}
+    }
   }
 
   Future<void> cancelRestTimer() => _plugin.cancel(id: timerNotificationId);

@@ -9,6 +9,9 @@ class WorkoutScreen extends ConsumerStatefulWidget {
 
 class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   Timer? ticker;
+  DateTime? _lastRestEndsAt;
+  bool _restAlarmPlayed = false;
+
   @override
   void initState() {
     super.initState();
@@ -21,6 +24,41 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   void dispose() {
     ticker?.cancel();
     super.dispose();
+  }
+
+  void _checkRestTimer(Workout? item) {
+    if (item == null) return;
+    final endsAt = item.restEndsAt;
+    if (endsAt == null) {
+      _lastRestEndsAt = null;
+      _restAlarmPlayed = false;
+      return;
+    }
+
+    if (_lastRestEndsAt != endsAt) {
+      _lastRestEndsAt = endsAt;
+      _restAlarmPlayed = false;
+    }
+
+    if (!_restAlarmPlayed && DateTime.now().isAfter(endsAt)) {
+      _restAlarmPlayed = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _triggerRestAlarm();
+      });
+    }
+  }
+
+  Future<void> _triggerRestAlarm() async {
+    final database = ref.read(databaseProvider);
+    final sound = (await database.getSetting('timerSound')) != 'false';
+    if (sound) {
+      await ref.read(notificationProvider).playRestAlarm();
+    }
+    await database.setRestEnd(widget.id, null);
+    await ref.read(notificationProvider).cancelRestTimer();
+    if (mounted) {
+      showMessage(context, 'Waktu istirahat selesai! Siap untuk set berikutnya.');
+    }
   }
 
   Future<void> _finish() async {
@@ -189,6 +227,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
             ),
           );
         }
+
+        _checkRestTimer(item);
 
         final elapsed = DateTime.now().difference(item.startedAt);
         final elapsedLabel =
@@ -595,6 +635,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                       const Duration(seconds: 30),
                                     );
                                     if (newEnd.isBefore(DateTime.now())) {
+                                      _restAlarmPlayed = true;
                                       await ref
                                           .read(databaseProvider)
                                           .setRestEnd(widget.id, null);
@@ -663,6 +704,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                   ),
                                 ),
                                 onPressed: () async {
+                                  _restAlarmPlayed = true;
                                   await ref
                                       .read(databaseProvider)
                                       .setRestEnd(widget.id, null);

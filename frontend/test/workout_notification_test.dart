@@ -31,9 +31,16 @@ class _DeniedNotificationService extends NotificationService {
     );
   }
 
+  var playAlarmCalls = 0;
+
   @override
   Future<void> scheduleRestEnd(DateTime when, {required bool sound}) async {
     scheduleCalls++;
+  }
+
+  @override
+  Future<void> playRestAlarm({bool vibrate = true}) async {
+    playAlarmCalls++;
   }
 
   @override
@@ -127,6 +134,46 @@ void main() {
 
       await tester.pump(const Duration(seconds: 4));
       await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.runAsync(database.close);
+    },
+  );
+
+  testWidgets(
+    'alarm berbunyi saat waktu istirahat habis pada WorkoutScreen',
+    (tester) async {
+      final database = AppDatabase(NativeDatabase.memory());
+      final service = _DeniedNotificationService();
+      final workoutId = (await tester.runAsync(() async {
+        final exercise = (await database.watchExercises().first).first;
+        final id = await database.startWorkout();
+        await database.addExerciseToWorkout(id, exercise.id);
+        await database.setRestEnd(
+          id,
+          DateTime.now().add(const Duration(milliseconds: 100)),
+        );
+        return id;
+      }))!;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            databaseProvider.overrideWithValue(database),
+            notificationProvider.overrideWithValue(service),
+          ],
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: WorkoutScreen(id: workoutId),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pump(const Duration(milliseconds: 150));
+
+      expect(service.playAlarmCalls, greaterThanOrEqualTo(1));
+
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(milliseconds: 1));
       await tester.runAsync(database.close);
