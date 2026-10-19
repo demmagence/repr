@@ -66,7 +66,35 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     final database = ref.read(databaseProvider);
     final count = await database.completedSetCount(widget.id);
     if (!mounted) return;
-    if (count == 0) return showMessage(context, 'Selesaikan minimal satu set.');
+    if (count == 0) {
+      final discard = await showAppDialog<bool>(
+        context: context,
+        builder: (context) => AppDialog(
+          title: 'Belum ada set yang selesai',
+          actions: [
+            AppButton(
+              label: 'Kembali',
+              expand: false,
+              variant: AppActionVariant.quiet,
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            AppButton(
+              label: 'Buang workout',
+              expand: false,
+              variant: AppActionVariant.destructive,
+              onPressed: () => Navigator.pop(context, true),
+            ),
+          ],
+          child: const Text(
+            'Selesaikan minimal satu set untuk menyimpan, atau buang draft ini jika tidak ingin disimpan.',
+          ),
+        ),
+      );
+      if (discard == true) {
+        await _discard();
+      }
+      return;
+    }
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AppDialog(
@@ -241,32 +269,29 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                           ),
                         ),
                       ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(
-                          Icons.more_vert_rounded,
-                          color: Color(0xFF8E8E93),
+                      ElevatedButton(
+                        onPressed: _finish,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        color: const Color(0xFF161618),
-                        onSelected: (val) {
-                          if (val == 'finish') _finish();
-                          if (val == 'discard') _discard();
-                        },
-                        itemBuilder: (ctx) => [
-                          const PopupMenuItem(
-                            value: 'finish',
-                            child: Text(
-                              'Selesaikan Workout',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                        child: const Text(
+                          'Selesai',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const PopupMenuItem(
-                            value: 'discard',
-                            child: Text(
-                              'Buang Draft Workout',
-                              style: TextStyle(color: Colors.redAccent),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
