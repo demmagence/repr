@@ -51,11 +51,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   Future<void> _triggerRestAlarm() async {
     final database = ref.read(databaseProvider);
     final sound = (await database.getSetting('timerSound')) != 'false';
+    final notifications = ref.read(notificationProvider);
     if (sound) {
-      await ref.read(notificationProvider).playRestAlarm();
+      await notifications.playRestAlarm();
     }
+    await notifications.showRestCompletedNotification(sound: sound);
     await database.setRestEnd(widget.id, null);
-    await ref.read(notificationProvider).cancelRestTimer();
     if (mounted) {
       showMessage(context, 'Waktu istirahat selesai! Siap untuk set berikutnya.');
     }
@@ -646,6 +647,13 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                       await ref
                                           .read(databaseProvider)
                                           .setRestEnd(widget.id, newEnd);
+                                      final sound = (await ref
+                                              .read(databaseProvider)
+                                              .getSetting('timerSound')) !=
+                                          'false';
+                                      await ref
+                                          .read(notificationProvider)
+                                          .scheduleRestEnd(newEnd, sound: sound);
                                     }
                                   }
                                 },
@@ -679,6 +687,13 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                     await ref
                                         .read(databaseProvider)
                                         .setRestEnd(widget.id, newEnd);
+                                    final sound = (await ref
+                                            .read(databaseProvider)
+                                            .getSetting('timerSound')) !=
+                                        'false';
+                                    await ref
+                                        .read(notificationProvider)
+                                        .scheduleRestEnd(newEnd, sound: sound);
                                   }
                                 },
                                 child: const Text(

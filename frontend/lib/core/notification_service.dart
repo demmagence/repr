@@ -79,33 +79,99 @@ class NotificationService {
     );
   }
 
+  static const timerOngoingNotificationId = 9002;
+
   Future<void> scheduleRestEnd(DateTime when, {required bool sound}) async {
     await cancelRestTimer();
-    await _plugin.zonedSchedule(
-      id: timerNotificationId,
-      scheduledDate: tz.TZDateTime.from(when, tz.local),
-      title: 'Waktu istirahat selesai',
-      body: 'Saatnya melanjutkan set berikutnya.',
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          'rest_timer_v2',
-          'Rest timer',
-          channelDescription: 'Pengingat waktu istirahat antar set',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: sound,
-          enableVibration: true,
-          audioAttributesUsage: AudioAttributesUsage.alarm,
-          category: AndroidNotificationCategory.alarm,
+
+    // 1. Tampilkan notifikasi live countdown di menu notifikasi (notification drawer)
+    try {
+      await _plugin.show(
+        id: timerOngoingNotificationId,
+        title: 'Waktu Istirahat',
+        body: 'Istirahat antar set sedang berjalan',
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            'rest_timer_live',
+            'Rest timer aktif',
+            channelDescription:
+                'Menampilkan hitungan mundur waktu istirahat di notification menu',
+            importance: Importance.low,
+            priority: Priority.low,
+            ongoing: true,
+            autoCancel: false,
+            showWhen: true,
+            when: when.millisecondsSinceEpoch,
+            usesChronometer: true,
+            chronometerCountDown: true,
+            onlyAlertOnce: true,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: false,
+            presentSound: false,
+          ),
         ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: sound,
+      );
+    } catch (_) {}
+
+    // 2. Jadwalkan alarm notifikasi bersuara/getar ketika waktu istirahat habis
+    try {
+      await _plugin.zonedSchedule(
+        id: timerNotificationId,
+        scheduledDate: tz.TZDateTime.from(when, tz.local),
+        title: 'Waktu istirahat selesai',
+        body: 'Saatnya melanjutkan set berikutnya.',
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            'rest_timer_v2',
+            'Rest timer',
+            channelDescription: 'Pengingat waktu istirahat antar set',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: sound,
+            enableVibration: true,
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+            category: AndroidNotificationCategory.alarm,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: sound,
+          ),
         ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } catch (_) {}
+  }
+
+  Future<void> showRestCompletedNotification({required bool sound}) async {
+    try {
+      await _plugin.cancel(id: timerOngoingNotificationId);
+      await _plugin.show(
+        id: timerNotificationId,
+        title: 'Waktu istirahat selesai!',
+        body: 'Saatnya melanjutkan set berikutnya.',
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            'rest_timer_v2',
+            'Rest timer',
+            channelDescription: 'Pengingat waktu istirahat antar set',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: sound,
+            enableVibration: true,
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+            category: AndroidNotificationCategory.alarm,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: sound,
+          ),
+        ),
+      );
+    } catch (_) {}
   }
 
   Future<void> playRestAlarm({bool vibrate = true}) async {
@@ -129,5 +195,10 @@ class NotificationService {
     }
   }
 
-  Future<void> cancelRestTimer() => _plugin.cancel(id: timerNotificationId);
+  Future<void> cancelRestTimer() async {
+    try {
+      await _plugin.cancel(id: timerOngoingNotificationId);
+      await _plugin.cancel(id: timerNotificationId);
+    } catch (_) {}
+  }
 }
