@@ -465,7 +465,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            // Right: Volume Lifted & Live BPM indicator
+                            // Right: Volume Lifted
                             Expanded(
                               child: KineticCard(
                                 padding: const EdgeInsets.all(14),
@@ -476,50 +476,26 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Expanded(
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 3,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF1E1E20),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color:
-                                                      const Color(0xFF27272A),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: const [
-                                                  Icon(
-                                                    Icons.favorite,
-                                                    color: Colors.white,
-                                                    size: 12,
-                                                  ),
-                                                  SizedBox(width: 4),
-                                                  Text(
-                                                    '134 bpm',
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                        Container(
+                                          width: 38,
+                                          height: 38,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF1E1E20),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFF27272A),
+                                            ),
+                                          ),
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.fitness_center_rounded,
+                                              color: Colors.white,
+                                              size: 18,
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 4),
                                         const Icon(
-                                          Icons.sensors_rounded,
+                                          Icons.show_chart_rounded,
                                           color: Color(0xFF52525B),
                                           size: 16,
                                         ),
