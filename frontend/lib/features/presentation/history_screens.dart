@@ -335,11 +335,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       return w.startedAt.isAfter(startOfWeek.subtract(const Duration(days: 1)));
     }).toList();
 
-    final workoutDaysSet = history.map((w) {
-      final d = w.startedAt;
-      return '${d.year}-${d.month}-${d.day}';
-    }).toSet();
-
     // Total duration in minutes this week
     var weeklyMinutes = 0;
     for (final w in thisWeekWorkouts) {
@@ -554,9 +549,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          'MINGGU INI • MINGGU KE-${((now.difference(DateTime(now.year, 1, 1)).inDays) / 7).ceil()}',
+                          'MINGGU INI',
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.bold,
@@ -570,7 +564,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            '• ${thisWeekWorkouts.length} Hari Selesai',
+                            '${thisWeekWorkouts.length} Hari Selesai',
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -588,9 +582,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       final dayDate = startOfWeek.add(Duration(days: i));
                       final isToday =
                           dayDate.day == now.day && dayDate.month == now.month;
-                      final dayKey =
-                          '${dayDate.year}-${dayDate.month}-${dayDate.day}';
-                      final hasWorkout = workoutDaysSet.contains(dayKey);
 
                       final dayName = switch (i) {
                         0 => 'Sen',
@@ -640,17 +631,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                     color: isToday
                                         ? Colors.white
                                         : const Color(0xFFA1A1AA),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: hasWorkout
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    shape: BoxShape.circle,
                                   ),
                                 ),
                               ],
