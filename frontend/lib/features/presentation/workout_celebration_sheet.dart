@@ -488,18 +488,7 @@ class _WorkoutCelebrationScreenState extends State<WorkoutCelebrationScreen> {
                       ],
                     ),
                   ),
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF161618),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF27272A)),
-                    ),
-                    child: Center(
-                      child: Text(_greeting.emoji, style: const TextStyle(fontSize: 20)),
-                    ),
-                  ),
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
