@@ -165,7 +165,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         crossAxisCount: 3,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
-                        childAspectRatio: 2.1,
+                        childAspectRatio: 1.75,
                       ),
                       itemCount: 12,
                       itemBuilder: (context, index) {
@@ -211,41 +211,46 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                 ),
                               ),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 6,
+                                horizontal: 4,
+                                vertical: 4,
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      monthNames[index],
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: isSelected || isCurrentMonth
-                                            ? FontWeight.bold
-                                            : FontWeight.w500,
-                                        color: isSelected
-                                            ? Colors.black
-                                            : Colors.white,
+                              child: Center(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        monthNames[index],
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: isSelected || isCurrentMonth
+                                              ? FontWeight.bold
+                                              : FontWeight.w500,
+                                          color: isSelected
+                                              ? Colors.black
+                                              : Colors.white,
+                                        ),
                                       ),
-                                    ),
+                                      if (workoutCount > 0) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '$workoutCount latihan',
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: isSelected
+                                                ? const Color(0xFF27272A)
+                                                : const Color(0xFFA1A1AA),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                  if (workoutCount > 0) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '$workoutCount latihan',
-                                      style: TextStyle(
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: isSelected
-                                            ? const Color(0xFF27272A)
-                                            : const Color(0xFFA1A1AA),
-                                      ),
-                                    ),
-                                  ],
-                                ],
+                                ),
                               ),
                             ),
                           ),

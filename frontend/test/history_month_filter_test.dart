@@ -152,4 +152,73 @@ void main() {
       await tester.runAsync(database.close);
     },
   );
+
+  testWidgets(
+    'HistoryScreen month picker tidak overflow pada layar 360x800',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final database = AppDatabase(NativeDatabase.memory());
+      await tester.runAsync(() async {
+        final exercises = await database.watchExercises().first;
+        final ex1 = exercises.first;
+        final r1 = await database.createRoutineTemplate(
+          name: 'Latihan 1',
+          exercises: [
+            RoutineExerciseTemplate(
+              exerciseId: ex1.id,
+              setTypes: const ['working'],
+            ),
+          ],
+        );
+        final id1 = await database.startWorkout(routineId: r1);
+        final v1 = (await database.getWorkoutExercises(id1)).single;
+        await database.updateWorkoutSet(
+          id: v1.sets.first.id,
+          weightGrams: 50000,
+          reps: 10,
+          completed: true,
+        );
+        await database.finishWorkout(id1);
+        await database.updateWorkoutDate(id1, DateTime(2026, 9, 15, 10, 0));
+      });
+
+      final router = GoRouter(
+        initialLocation: '/history',
+        routes: [
+          GoRoute(
+            path: '/history',
+            builder: (_, __) => const HistoryScreen(),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [databaseProvider.overrideWithValue(database)],
+          child: MaterialApp.router(
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open month picker
+      await tester.tap(find.byKey(const Key('history-month-filter')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pilih Bulan'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 10));
+      await tester.runAsync(database.close);
+    },
+  );
 }
+
