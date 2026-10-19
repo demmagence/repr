@@ -17,9 +17,6 @@ class _MonthFilterResult {
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   DateTime? _selectedMonth;
   bool _hasExplicitSelection = false;
-  bool _isSearching = false;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
 
   @override
   void initState() {
@@ -28,12 +25,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     if (widget.initialMonth != null) {
       _hasExplicitSelection = true;
     }
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   Future<void> _openMonthFilterSheet(
@@ -344,19 +335,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final weeklyHours = weeklyMinutes ~/ 60;
     final weeklyRemMins = weeklyMinutes % 60;
 
-    var filteredHistory = _selectedMonth == null
+    final filteredHistory = _selectedMonth == null
         ? history
         : history.where((w) {
             return w.startedAt.year == _selectedMonth!.year &&
                 w.startedAt.month == _selectedMonth!.month;
           }).toList();
-
-    if (_searchQuery.trim().isNotEmpty) {
-      final q = _searchQuery.trim().toLowerCase();
-      filteredHistory = filteredHistory.where((w) {
-        return w.name.toLowerCase().contains(q);
-      }).toList();
-    }
 
     final monthText = _selectedMonth != null
         ? DateFormat('MMMM yyyy', 'id_ID').format(_selectedMonth!)
@@ -467,75 +451,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                KineticIconButton(
-                  size: 36,
-                  icon: Icon(
-                    _isSearching ? Icons.close_rounded : Icons.search_rounded,
-                    size: 18,
-                    color: const Color(0xFFD4D4D8),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isSearching = !_isSearching;
-                      if (!_isSearching) {
-                        _searchController.clear();
-                        _searchQuery = '';
-                      }
-                    });
-                  },
-                ),
               ],
             ),
-            if (_isSearching) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: _searchController,
-                autofocus: true,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Cari riwayat latihan...',
-                  hintStyle: const TextStyle(color: Color(0xFF71717A)),
-                  prefixIcon: const Icon(
-                    Icons.search_rounded,
-                    color: Color(0xFF8E8E93),
-                    size: 18,
-                  ),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(
-                            Icons.clear_rounded,
-                            color: Color(0xFF8E8E93),
-                            size: 16,
-                          ),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: const Color(0xFF161618),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFF27272A)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFF27272A)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Colors.white),
-                  ),
-                ),
-                onChanged: (val) => setState(() => _searchQuery = val),
-              ),
-            ],
             const SizedBox(height: 16),
 
             // Week Calendar Strip Card
@@ -812,21 +729,17 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       Text(
                         _selectedMonth != null
                             ? 'Tidak ada riwayat latihan pada $monthText'
-                            : (_searchQuery.isNotEmpty
-                                ? 'Tidak ada latihan yang cocok dengan "$_searchQuery"'
-                                : 'Belum ada riwayat latihan tersimpan'),
+                            : 'Belum ada riwayat latihan tersimpan',
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Color(0xFF71717A)),
                       ),
-                      if (_selectedMonth != null || _searchQuery.isNotEmpty) ...[
+                      if (_selectedMonth != null) ...[
                         const SizedBox(height: 12),
                         TextButton(
                           onPressed: () {
                             setState(() {
                               _selectedMonth = null;
                               _hasExplicitSelection = true;
-                              _searchController.clear();
-                              _searchQuery = '';
                             });
                           },
                           child: const Text(
