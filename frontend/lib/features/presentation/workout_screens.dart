@@ -361,23 +361,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        CircularProgressBadge(
-                                          progress: totalSets > 0
-                                              ? (completedSets / totalSets)
-                                              : 0,
-                                          label: '$completedSets/$totalSets',
-                                          size: 38,
-                                        ),
-                                        const Icon(
-                                          Icons.tune_rounded,
-                                          color: Color(0xFF52525B),
-                                          size: 16,
-                                        ),
-                                      ],
+                                    CircularProgressBadge(
+                                      progress: totalSets > 0
+                                          ? (completedSets / totalSets)
+                                          : 0,
+                                      label: '$completedSets/$totalSets',
+                                      size: 38,
                                     ),
                                     const SizedBox(height: 12),
                                     const Text(
@@ -410,34 +399,23 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                          width: 38,
-                                          height: 38,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF1E1E20),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: const Color(0xFF27272A),
-                                            ),
-                                          ),
-                                          child: const Center(
-                                            child: Icon(
-                                              Icons.fitness_center_rounded,
-                                              color: Colors.white,
-                                              size: 18,
-                                            ),
-                                          ),
+                                    Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1E1E20),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color(0xFF27272A),
                                         ),
-                                        const Icon(
-                                          Icons.show_chart_rounded,
-                                          color: Color(0xFF52525B),
-                                          size: 16,
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.fitness_center_rounded,
+                                          color: Colors.white,
+                                          size: 18,
                                         ),
-                                      ],
+                                      ),
                                     ),
                                     const SizedBox(height: 12),
                                     const Text(
