@@ -343,15 +343,15 @@ class _RoutineCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            // "Start Routine" blue button
+            // "Start Routine" white button
             SizedBox(
               width: double.infinity,
               height: 44,
               child: ElevatedButton(
                 onPressed: onStart,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF007AFF),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
