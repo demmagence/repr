@@ -138,6 +138,10 @@ void main() {
     (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
 
       await tester.pumpWidget(
         MaterialApp(
@@ -195,6 +199,65 @@ void main() {
       expect(find.text('20 kg'), findsOneWidget);
       expect(find.text('Volume'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Bagian input beban dan reps hanya muncul saat reps set ditekan',
+    (tester) async {
+      final database = AppDatabase(NativeDatabase.memory());
+
+      final workoutId = (await tester.runAsync(() async {
+        final exercise = (await database.watchExercises().first).first;
+        final id = await database.startWorkout();
+        await database.addExerciseToWorkout(id, exercise.id);
+        return id;
+      }))!;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            databaseProvider.overrideWithValue(database),
+            notificationProvider.overrideWithValue(_NoopNotificationService()),
+          ],
+          child: MaterialApp(
+            theme: buildAppTheme(),
+            home: WorkoutScreen(id: workoutId),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // 1. Secara default, stepper input beban dan reps belum tampil (tampilan ringkas)
+      expect(find.text('WEIGHT (KG)'), findsNothing);
+      expect(find.text('TARGET REPS'), findsNothing);
+
+      // 2. Baris set ringkas tampil dengan pill berat x reps
+      expect(find.textContaining('0 kg  ×'), findsWidgets);
+
+      // 3. Tekan reps pada Set 1 -> Bagian input beban dan reps muncul
+      await tester.tap(find.textContaining('0 kg  ×').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Sekarang stepper input muncul
+      expect(find.text('WEIGHT (KG)'), findsOneWidget);
+      expect(find.text('TARGET REPS'), findsOneWidget);
+
+      // 4. Tekan tombol collapse (keyboard_arrow_up) -> Bagian input tertutup kembali
+      await tester.tap(find.byIcon(Icons.keyboard_arrow_up_rounded));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('WEIGHT (KG)'), findsNothing);
+      expect(find.text('TARGET REPS'), findsNothing);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.runAsync(database.close);
+      await tester.pump(const Duration(milliseconds: 1));
     },
   );
 }

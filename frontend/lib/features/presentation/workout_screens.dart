@@ -801,7 +801,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   }
 }
 
-class WorkoutExerciseCard extends ConsumerWidget {
+class WorkoutExerciseCard extends ConsumerStatefulWidget {
   const WorkoutExerciseCard({
     super.key,
     required this.workoutId,
@@ -811,6 +811,14 @@ class WorkoutExerciseCard extends ConsumerWidget {
   final String workoutId;
   final WorkoutExerciseView view;
 
+  @override
+  ConsumerState<WorkoutExerciseCard> createState() =>
+      _WorkoutExerciseCardState();
+}
+
+class _WorkoutExerciseCardState extends ConsumerState<WorkoutExerciseCard> {
+  String? _editingSetId;
+
   Future<void> _complete(
     BuildContext context,
     WidgetRef ref,
@@ -818,6 +826,9 @@ class WorkoutExerciseCard extends ConsumerWidget {
     bool value,
   ) async {
     if (value && (set.reps < 1 || set.weightGrams < 0)) {
+      if (mounted) {
+        setState(() => _editingSetId = set.id);
+      }
       return showMessage(
         context,
         'Isi berat dan reps yang valid terlebih dahulu.',
@@ -826,8 +837,13 @@ class WorkoutExerciseCard extends ConsumerWidget {
     final database = ref.read(databaseProvider);
     await database.updateWorkoutSet(id: set.id, completed: value);
     if (!value) return;
-    final end = DateTime.now().add(Duration(seconds: view.item.restSeconds));
-    await database.setRestEnd(workoutId, end);
+    if (mounted && _editingSetId == set.id) {
+      setState(() => _editingSetId = null);
+    }
+    final end = DateTime.now().add(
+      Duration(seconds: widget.view.item.restSeconds),
+    );
+    await database.setRestEnd(widget.workoutId, end);
     final sound = (await database.getSetting('timerSound')) != 'false';
     final service = ref.read(notificationProvider);
     final alreadyPrompted =
@@ -863,13 +879,13 @@ class WorkoutExerciseCard extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final database = ref.read(databaseProvider);
     final weightUnit = ref.watch(weightUnitProvider).valueOrNull ?? 'kg';
 
     // Find the first uncompleted set in this exercise
     WorkoutSet? targetSet;
-    for (final s in view.sets) {
+    for (final s in widget.view.sets) {
       if (!s.completed) {
         targetSet = s;
         break;
@@ -904,7 +920,8 @@ class WorkoutExerciseCard extends ConsumerWidget {
                   onTap: () {
                     showExerciseDemoSheet(
                       context,
-                      exercise: ExerciseApiModel.fromLocal(view.exercise),
+                      exercise:
+                          ExerciseApiModel.fromLocal(widget.view.exercise),
                       weightUnit: weightUnit,
                     );
                   },
@@ -912,7 +929,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ACTIVE LIFT • SET ${targetSet != null ? targetSet.position + 1 : view.sets.length}',
+                        'ACTIVE LIFT • SET ${targetSet != null ? targetSet.position + 1 : widget.view.sets.length}',
                         style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
@@ -925,7 +942,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              view.exercise.name,
+                              widget.view.exercise.name,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -955,11 +972,12 @@ class WorkoutExerciseCard extends ConsumerWidget {
                   if (val == 'demo') {
                     showExerciseDemoSheet(
                       context,
-                      exercise: ExerciseApiModel.fromLocal(view.exercise),
+                      exercise:
+                          ExerciseApiModel.fromLocal(widget.view.exercise),
                       weightUnit: weightUnit,
                     );
                   } else if (val == 'delete') {
-                    await database.removeWorkoutExercise(view.item.id);
+                    await database.removeWorkoutExercise(widget.view.item.id);
                   }
                 },
                 itemBuilder: (ctx) => [
@@ -984,85 +1002,12 @@ class WorkoutExerciseCard extends ConsumerWidget {
           const SizedBox(height: 14),
 
           // Sets list
-          ...view.sets.map((set) {
+          ...widget.view.sets.map((set) {
             final isTarget = set.id == targetSet?.id;
+            final isEditing = set.id == _editingSetId;
 
-            if (set.completed) {
-              // Completed Set Row
-              return Dismissible(
-                key: ValueKey('completed-${set.id}'),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 12),
-                  child: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: Colors.redAccent,
-                    size: 18,
-                  ),
-                ),
-                onDismissed: (_) => database.removeSet(set.id),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                  child: Row(
-                    children: [
-                      Semantics(
-                        label: 'Selesaikan set ${set.position + 1}',
-                        child: InkWell(
-                          onTap: () => _complete(context, ref, set, false),
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF27272A),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.check,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'SET ${set.position + 1}',
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF71717A),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${formatWeight(set.weightGrams, unit: weightUnit)} $weightUnit  ×  ${set.reps} reps',
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFFA1A1AA),
-                          fontFeatures: tabularFigures,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () => database.removeSet(set.id),
-                        borderRadius: BorderRadius.circular(12),
-                        child: const Padding(
-                          padding: EdgeInsets.all(4.0),
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 16,
-                            color: Color(0xFF52525B),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            } else if (isTarget) {
-              // TARGET ACTIVE SET BOX (Micro-steppers matching Stitch)
+            if (isEditing) {
+              // EXPANDED EDITING SET BOX (bagian input beban dan reps yang muncul saat ditekan)
               return Container(
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 padding: const EdgeInsets.all(14.0),
@@ -1070,7 +1015,7 @@ class WorkoutExerciseCard extends ConsumerWidget {
                   color: const Color(0xFF101012),
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: const Color(0xFF27272A),
+                    color: const Color(0xFF38BDF8).withValues(alpha: 0.6),
                     width: 1.2,
                   ),
                 ),
@@ -1084,27 +1029,36 @@ class WorkoutExerciseCard extends ConsumerWidget {
                           child: Semantics(
                             label: 'Selesaikan set ${set.position + 1}',
                             child: InkWell(
-                              onTap: () => _complete(context, ref, set, true),
+                              onTap: () =>
+                                  _complete(context, ref, set, !set.completed),
                               child: Row(
                                 children: [
                                   Container(
                                     width: 18,
                                     height: 18,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF27272A),
+                                      color: set.completed
+                                          ? const Color(0xFF38BDF8)
+                                          : const Color(0xFF27272A),
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white70),
+                                      border: Border.all(
+                                        color: set.completed
+                                            ? const Color(0xFF38BDF8)
+                                            : Colors.white70,
+                                      ),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.check,
                                       size: 12,
-                                      color: Colors.white,
+                                      color: set.completed
+                                          ? Colors.black
+                                          : Colors.white,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'SET ${set.position + 1} (TARGET SET)',
+                                      'SET ${set.position + 1}${isTarget ? ' (TARGET SET)' : ''}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -1135,8 +1089,9 @@ class WorkoutExerciseCard extends ConsumerWidget {
                                 );
                               }),
                             );
-                            if (val != null)
+                            if (val != null) {
                               database.updateWorkoutSet(id: set.id, rpe: val);
+                            }
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -1158,6 +1113,25 @@ class WorkoutExerciseCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
+                        // Collapse editor button
+                        InkWell(
+                          onTap: () => setState(() => _editingSetId = null),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E1E20),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.keyboard_arrow_up_rounded,
+                              size: 15,
+                              color: Color(0xFF38BDF8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        // Remove set button
                         InkWell(
                           onTap: () => database.removeSet(set.id),
                           borderRadius: BorderRadius.circular(10),
@@ -1183,33 +1157,67 @@ class WorkoutExerciseCard extends ConsumerWidget {
                         Expanded(
                           child: _MicroStepper(
                             label: 'WEIGHT (${weightUnit.toUpperCase()})',
-                            value: formatWeight(set.weightGrams, unit: weightUnit),
+                            value: formatWeight(
+                              set.weightGrams,
+                              unit: weightUnit,
+                            ),
                             onTapValue: () async {
-                              final ctrl = TextEditingController(text: formatWeight(set.weightGrams, unit: weightUnit));
+                              final ctrl = TextEditingController(
+                                text: formatWeight(
+                                  set.weightGrams,
+                                  unit: weightUnit,
+                                ),
+                              );
                               final val = await showDialog<String>(
                                 context: context,
                                 useRootNavigator: true,
                                 builder: (ctx) => AlertDialog(
                                   backgroundColor: const Color(0xFF161618),
-                                  title: Text('Ubah Beban ($weightUnit)', style: const TextStyle(color: Colors.white, fontSize: 16)),
+                                  title: Text(
+                                    'Ubah Beban ($weightUnit)',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                   content: TextField(
                                     controller: ctrl,
-                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
                                     autofocus: true,
-                                    style: const TextStyle(color: Colors.white, fontSize: 20),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                    ),
                                     decoration: InputDecoration(
                                       suffixText: weightUnit,
-                                      suffixStyle: const TextStyle(color: Colors.white70),
+                                      suffixStyle: const TextStyle(
+                                        color: Colors.white70,
+                                      ),
                                     ),
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('Batal', style: TextStyle(color: Color(0xFF71717A))),
+                                      child: const Text(
+                                        'Batal',
+                                        style: TextStyle(
+                                          color: Color(0xFF71717A),
+                                        ),
+                                      ),
                                     ),
                                     TextButton(
-                                      onPressed: () => Navigator.pop(ctx, ctrl.text),
-                                      child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, ctrl.text),
+                                      child: const Text(
+                                        'Simpan',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1255,31 +1263,55 @@ class WorkoutExerciseCard extends ConsumerWidget {
                             label: 'TARGET REPS',
                             value: '${set.reps}',
                             onTapValue: () async {
-                              final ctrl = TextEditingController(text: '${set.reps}');
+                              final ctrl =
+                                  TextEditingController(text: '${set.reps}');
                               final val = await showDialog<String>(
                                 context: context,
                                 useRootNavigator: true,
                                 builder: (ctx) => AlertDialog(
                                   backgroundColor: const Color(0xFF161618),
-                                  title: const Text('Ubah Repetisi', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                  title: const Text(
+                                    'Ubah Repetisi',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                   content: TextField(
                                     controller: ctrl,
                                     keyboardType: TextInputType.number,
                                     autofocus: true,
-                                    style: const TextStyle(color: Colors.white, fontSize: 20),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                    ),
                                     decoration: const InputDecoration(
                                       suffixText: 'reps',
-                                      suffixStyle: TextStyle(color: Colors.white70),
+                                      suffixStyle: TextStyle(
+                                        color: Colors.white70,
+                                      ),
                                     ),
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('Batal', style: TextStyle(color: Color(0xFF71717A))),
+                                      child: const Text(
+                                        'Batal',
+                                        style: TextStyle(
+                                          color: Color(0xFF71717A),
+                                        ),
+                                      ),
                                     ),
                                     TextButton(
-                                      onPressed: () => Navigator.pop(ctx, ctrl.text),
-                                      child: const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, ctrl.text),
+                                      child: const Text(
+                                        'Simpan',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1314,93 +1346,175 @@ class WorkoutExerciseCard extends ConsumerWidget {
                   ],
                 ),
               );
-            } else {
-              // Upcoming set
-              return Dismissible(
-                key: ValueKey('upcoming-${set.id}'),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 12),
-                  child: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: Colors.redAccent,
-                    size: 18,
-                  ),
+            }
+
+            // CLEAN COMPACT ROW (Default for all sets: completed, target, and upcoming)
+            return Dismissible(
+              key: ValueKey('set-${set.id}'),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 12),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                  size: 18,
                 ),
-                onDismissed: (_) => database.removeSet(set.id),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                  child: Row(
-                    children: [
-                      Semantics(
-                        label: 'Selesaikan set ${set.position + 1}',
-                        child: InkWell(
-                          onTap: () => _complete(context, ref, set, true),
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF161618),
-                              border: Border.all(color: const Color(0xFF27272A)),
-                              shape: BoxShape.circle,
+              ),
+              onDismissed: (_) => database.removeSet(set.id),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: Row(
+                  children: [
+                    // Complete check/number button
+                    Semantics(
+                      label: 'Selesaikan set ${set.position + 1}',
+                      child: InkWell(
+                        onTap: () =>
+                            _complete(context, ref, set, !set.completed),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: set.completed
+                                ? const Color(0xFF27272A)
+                                : const Color(0xFF161618),
+                            border: Border.all(
+                              color: isTarget && !set.completed
+                                  ? const Color(0xFF38BDF8)
+                                  : const Color(0xFF27272A),
+                              width: isTarget && !set.completed ? 1.5 : 1,
                             ),
-                            child: Center(
-                              child: Text(
-                                '${set.position + 1}',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Color(0xFF71717A),
-                                  fontWeight: FontWeight.bold,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: set.completed
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 14,
+                                    color: Colors.white,
+                                  )
+                                : Text(
+                                    '${set.position + 1}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: isTarget
+                                          ? Colors.white
+                                          : const Color(0xFF71717A),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Set label
+                    Text(
+                      'SET ${set.position + 1}',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: isTarget && !set.completed
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        color: isTarget && !set.completed
+                            ? Colors.white
+                            : (set.completed
+                                ? const Color(0xFF71717A)
+                                : const Color(0xFF52525B)),
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    // Reps & Weight Pill (Tapping opens "bagian input beban dan reps")
+                    Flexible(
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _editingSetId = set.id;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isTarget && !set.completed
+                                ? const Color(0xFF1E1E20)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isTarget && !set.completed
+                                  ? const Color(0xFF27272A)
+                                  : Colors.transparent,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  '${formatWeight(set.weightGrams, unit: weightUnit)} $weightUnit  ×  ${set.reps > 0 ? '${set.reps} reps' : 'Target'}',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: isTarget && !set.completed
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    color: set.completed
+                                        ? const Color(0xFFA1A1AA)
+                                        : (isTarget
+                                            ? Colors.white
+                                            : const Color(0xFF71717A)),
+                                    fontFeatures: tabularFigures,
+                                  ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 13,
+                                color: isTarget && !set.completed
+                                    ? const Color(0xFF38BDF8)
+                                    : const Color(0xFF52525B),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'SET ${set.position + 1}',
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Delete set button
+                    InkWell(
+                      onTap: () => database.removeSet(set.id),
+                      borderRadius: BorderRadius.circular(12),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4.0),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 16,
                           color: Color(0xFF52525B),
                         ),
                       ),
-                      const Spacer(),
-                      Text(
-                        '${formatWeight(set.weightGrams, unit: weightUnit)} $weightUnit  ×  ${set.reps > 0 ? '${set.reps} reps' : 'Target'}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF52525B),
-                          fontFeatures: tabularFigures,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () => database.removeSet(set.id),
-                        borderRadius: BorderRadius.circular(12),
-                        child: const Padding(
-                          padding: EdgeInsets.all(4.0),
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 16,
-                            color: Color(0xFF52525B),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              );
-            }
+              ),
+            );
           }),
           const SizedBox(height: 10),
 
           // Add set button
           Center(
             child: TextButton.icon(
-              onPressed: () => database.addSet(view.item.id),
+              onPressed: () => database.addSet(widget.view.item.id),
               icon: const Icon(Icons.add, size: 16, color: Color(0xFF8E8E93)),
               label: const Text(
                 'Tambah Set',
